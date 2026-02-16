@@ -114,7 +114,7 @@ export const LandingScreen = () => {
           <View className="h-8 w-8 items-center justify-center rounded-full bg-primary">
             <MaterialCommunityIcons name="bread-slice" size={18} color="#221d10" />
           </View>
-          <Text className="text-lg font-bold tracking-tight text-text-main">ABC Bakery</Text>
+          <Text className="text-lg font-bold tracking-tight text-text-main">ABC</Text>
         </View>
         <Pressable
           className="h-10 w-10 items-center justify-center rounded-full bg-surface-light"
