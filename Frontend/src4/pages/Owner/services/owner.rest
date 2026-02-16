@@ -1,0 +1,194 @@
+### Register Owner 1
+POST http://localhost:5000/api/auth/register
+Content-Type: application/json
+
+{
+    "name": "Owner One",
+    "email": "owner1@example.com",
+    "password": "password123",
+    "phone": "+251912345678",
+    "role": "owner"
+}
+
+### Register Owner 2
+POST http://localhost:5000/api/auth/register
+Content-Type: application/json
+
+{
+    "name": "Owner Two",
+    "email": "owner2@example.com",
+    "password": "password123",
+    "phone": "+251912345679",
+    "role": "owner"
+}
+
+### Register Owner 3
+POST http://localhost:5000/api/auth/register
+Content-Type: application/json
+
+{
+    "name": "Owner Three",
+    "email": "owner3@example.com",
+    "password": "password123",
+    "phone": "+251912345680",
+    "role": "owner"
+}
+
+### Register Owner 4
+POST http://localhost:5000/api/auth/register
+Content-Type: application/json
+
+{
+    "name": "Owner Four",
+    "email": "owner4@example.com",
+    "password": "password123",
+    "phone": "+251912345681",
+    "role": "owner"
+}
+
+### Register Owner 5
+POST http://localhost:5000/api/auth/register
+Content-Type: application/json
+
+{
+    "name": "Owner Five",
+    "email": "owner5@example.com",
+    "password": "password123",
+    "phone": "+251912345682",
+    "role": "owner"
+}
+
+### Login Owner 1
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+    "email": "owner1@example.com",
+    "password": "password123"
+}
+
+### Login Owner 2
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+    "email": "owner2@example.com",
+    "password": "password123"
+}
+
+### Login Owner 3
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+     "email": "owner3@example.com",
+    "password": "password123"
+}
+
+### Login Owner 4
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+    "email": "owner4@example.com",
+    "password": "password123"
+}
+
+### Login Owner 5
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+    "email": "owner5@example.com",
+    "password": "password123"
+}
+
+### Additional Info for Owner 1
+POST http://localhost:5000/api/owners/additional-info
+Content-Type: application/json
+
+{
+    "companyName": "Sweet Bakery",
+    "companyImage": "https://example.com/image1.jpg",
+    "branches": 2,
+    "location": "Addis Ababa",
+    "address": "123 Sweet Street",
+    "tradingLicense": "license1.pdf",
+    "companyVerified": false,
+    "completed": false,
+    "accountNumber": "123456789",
+    "mapLocation": "https://maps.google.com/?q=Addis+Ababa",
+    "firstLogin": true
+}
+
+### Additional Info for Owner 2
+POST http://localhost:5000/api/owners/additional-info
+Content-Type: application/json
+
+{
+    "companyName": "Delight Cakes",
+    "companyImage": "https://example.com/image2.jpg",
+    "branches": 1,
+    "location": "Dire Dawa",
+    "address": "456 Cake Avenue",
+    "tradingLicense": "license2.pdf",
+    "companyVerified": false,
+    "completed": false,
+    "accountNumber": "987654321",
+    "mapLocation": "https://maps.google.com/?q=Dire+Dawa",
+    "firstLogin": true
+}
+
+### Additional Info for Owner 3
+POST http://localhost:5000/api/owners/additional-info
+Content-Type: application/json
+
+{
+    "companyName": "Choco Delight",
+    "companyImage": "https://example.com/image3.jpg",
+    "branches": 3,
+    "location": "Mekelle",
+    "address": "789 Choco Lane",
+    "tradingLicense": "license3.pdf",
+    "companyVerified": false,
+    "completed": false,
+    "accountNumber": "456123789",
+    "mapLocation": "https://maps.google.com/?q=Mekelle",
+    "firstLogin": true
+}
+
+### Additional Info for Owner 4
+POST http://localhost:5000/api/owners/additional-info
+Content-Type: application/json
+
+{
+    "companyName": "Fruity Bakes",
+    "companyImage": "https://example.com/image4.jpg",
+    "branches": 4,
+    "location": "Bahir Dar",
+    "address": "321 Fruity Boulevard",
+    "tradingLicense": "license4.pdf",
+    "companyVerified": false,
+    "completed": false,
+    "accountNumber": "789123456",
+    "mapLocation": "https://maps.google.com/?q=Bahir+Dar",
+    "firstLogin": true
+}
+
+### Additional Info for Owner 5
+POST http://localhost:5000/api/owners/additional-info
+Content-Type: application/json
+
+{
+    "companyName": "Savory Treats",
+    "companyImage": "https://example.com/image5.jpg",
+    "branches": 5,
+    "location": "Gondar",
+    "address": "654 Savory Street",
+    "tradingLicense": "license5.pdf",
+    "companyVerified": false,
+    "completed": false,
+    "accountNumber": "321654987",
+    "mapLocation": "https://maps.google.com/?q=Gondar",
+    "firstLogin": true
+}

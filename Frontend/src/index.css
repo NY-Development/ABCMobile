@@ -1,0 +1,67 @@
+@import 'tailwindcss';
+/* --- Custom layers --- */
+
+/* Utility-style classes (small helpers) */
+@layer utilities {
+  .cp {
+    @apply cursor-pointer;
+  }
+
+  /* Hide scrollbar but keep scrolling (works in Chrome/Safari/Edge/Firefox) */
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Safari and Chrome */
+  }
+}
+
+/* Custom keyframes (used by .spinner-border) */
+@keyframes custom-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@layer utilities {
+  .animate-spin-slow {
+    animation: spin 2s linear infinite;
+  }
+
+  .animate-bounce-slow {
+    animation: bounce 2s infinite;
+  }
+}
+
+body {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.bg-gray-900 {
+    background-color: #1a202c; /* Dark background */
+}
+
+.bg-white {
+    background-color: #ffffff; /* Light background */
+}
+
+.text-white {
+    color: #ffffff; /* White text */
+}
+
+.text-black {
+    color: #000000; /* Black text */
+}
+
+/* rotate flip */
+/* Flip Card Utilities */
+.perspective {
+  perspective: 1000px;
+}
+.backface-hidden {
+  backface-visibility: hidden;
+}
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
