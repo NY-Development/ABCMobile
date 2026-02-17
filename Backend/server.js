@@ -23,6 +23,7 @@ app.use(passport.initialize());
 
 const allowedOrigins = [
   "http://localhost:5173", // local dev
+  "http://localhost:8081", // local mobile dev
   "https://adama-bakery.vercel.app" //deployed url
 ];
 
