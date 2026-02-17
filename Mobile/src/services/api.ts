@@ -3,7 +3,7 @@ import { tokenStorage } from '../utils/storage';
 
 const baseURL =
   process.env.EXPO_PUBLIC_API_BASE_URL ??
-  'https://bakerybackend-nine.vercel.app/api';
+  'http://localhost:5000/api';
 
 const API = axios.create({
   baseURL,

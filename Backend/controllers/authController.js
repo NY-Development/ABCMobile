@@ -81,12 +81,17 @@ export const register = async (req, res) => {
 // ================== Verify OTP ==================
 export const verifyOtp = async (req, res) => {
   try {
-    const { email, otp } = req.body;
+    const { email, otp, code } = req.body;
+    const verificationCode = otp ?? code;
+
+    if (!email || !verificationCode) {
+      return res.status(400).json({ message: "Email and OTP are required" });
+    }
 
     const user = await User.findOne({ email});
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    if (user.verifyOtp !== otp || user.verifyOtpExpireAt < Date.now()) {
+    if (user.verifyOtp !== verificationCode || user.verifyOtpExpireAt < Date.now()) {
       return res.status(400).json({ message: "Invalid or expired OTP" });
     }
 
@@ -152,12 +157,17 @@ export const requestPasswordReset = async (req, res) => {
 // ================== Reset Password ==================
 export const resetPassword = async (req, res) => {
   try {
-    const { email, otp, newPassword } = req.body;
+    const { email, otp, code, newPassword } = req.body;
+    const resetCode = otp ?? code;
+
+    if (!email || !resetCode || !newPassword) {
+      return res.status(400).json({ message: "Email, code, and new password are required" });
+    }
 
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    if (user.resetOtp !== otp || user.resetOtpExpireAt < Date.now()) {
+    if (user.resetOtp !== resetCode || user.resetOtpExpireAt < Date.now()) {
       return res.status(400).json({ message: "Invalid or expired OTP" });
     }
 
@@ -177,8 +187,16 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required" });
+    }
+
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (!user.password) {
+      return res.status(400).json({ message: "Password not set. Please reset your password or use social login." });
+    }
 
     if (!user.isAccountVerified) {
       return res.status(400).json({ message: "Please verify your account first" });
