@@ -21,3 +21,35 @@ export type CustomerTabsParamList = {
   About: undefined;
   Settings: undefined;
 };
+
+export type CustomerStackParamList = {
+  CustomerTabs: undefined;
+  CustomerStorefront: {
+    ownerId: string;
+    ownerName: string;
+    ownerImage?: string;
+    rating?: number;
+    reviewsCount?: number;
+    location?: string;
+    status?: string;
+  };
+  BakeryDetail: {
+    ownerId: string;
+    ownerName: string;
+    ownerImage?: string;
+    rating?: number;
+    reviewsCount?: number;
+    location?: string;
+    status?: string;
+  };
+  ProductDetail: {
+    productId: string;
+    name: string;
+    price: number;
+    image?: string;
+    description?: string;
+    ownerName?: string;
+    rating?: number;
+    reviewsCount?: number;
+  };
+};
