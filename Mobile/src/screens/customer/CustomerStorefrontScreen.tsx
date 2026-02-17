@@ -43,12 +43,12 @@ export const CustomerStorefrontScreen = () => {
 
   useEffect(() => {
     let isMounted = true;
-    const load = async () => {
+    const load = async (currentOwnerId: string) => {
       try {
         setLoading(true);
         const [productsResponse, reviewsResponse] = await Promise.all([
-          fetchOwnerProducts(ownerId),
-          fetchOwnerReviews(ownerId),
+          fetchOwnerProducts(currentOwnerId),
+          fetchOwnerReviews(currentOwnerId),
         ]);
         if (!isMounted) return;
         setProducts(productsResponse);
@@ -64,7 +64,7 @@ export const CustomerStorefrontScreen = () => {
     };
 
     if (ownerId) {
-      load();
+      load(ownerId);
     }
 
     return () => {
@@ -211,7 +211,7 @@ export const CustomerStorefrontScreen = () => {
           </View>
         </View>
 
-        <View className="px-5 pb-12 pt-4">
+        <View className="px-5 pb-28 pt-4">
           {activeTab === 'Products' ? (
             loading ? (
               <Text className="text-sm font-semibold text-text-muted dark:text-gray-400">
@@ -291,6 +291,65 @@ export const CustomerStorefrontScreen = () => {
           ) : null}
         </View>
       </ScrollView>
+
+      <SafeAreaView
+        edges={['bottom']}
+        className="absolute bottom-0 left-0 right-0 border-t border-border-light bg-background-light/90 px-6 pb-6 pt-3 dark:border-border-dark dark:bg-background-dark/90"
+      >
+        <View className="flex-row items-center justify-between">
+          <Pressable
+            onPress={() => navigation.navigate(ROUTES.CustomerStorefront as never)}
+            className="items-center"
+          >
+            <View className="h-10 w-12 items-center justify-center rounded-full bg-primary/10">
+              <MaterialCommunityIcons name="home" size={24} color="#f97316" />
+            </View>
+            <Text className="mt-1 text-[10px] font-bold text-primary">Home</Text>
+          </Pressable>
+
+          <Pressable className="items-center">
+            <View className="h-10 w-12 items-center justify-center rounded-full">
+              <MaterialCommunityIcons
+                name="magnify"
+                size={24}
+                color={isDark ? '#d4c59a' : '#9a864c'}
+              />
+            </View>
+            <Text className="mt-1 text-[10px] font-medium text-text-muted dark:text-gray-400">
+              Explore
+            </Text>
+          </Pressable>
+
+          <Pressable className="items-center">
+            <View className="h-10 w-12 items-center justify-center rounded-full">
+              <MaterialCommunityIcons
+                name="shopping"
+                size={24}
+                color={isDark ? '#d4c59a' : '#9a864c'}
+              />
+            </View>
+            <Text className="mt-1 text-[10px] font-medium text-text-muted dark:text-gray-400">
+              Orders
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => navigation.navigate(ROUTES.CustomerProfile)}
+            className="items-center"
+          >
+            <View className="h-10 w-12 items-center justify-center rounded-full">
+              <MaterialCommunityIcons
+                name="account"
+                size={24}
+                color={isDark ? '#d4c59a' : '#9a864c'}
+              />
+            </View>
+            <Text className="mt-1 text-[10px] font-medium text-text-muted dark:text-gray-400">
+              Profile
+            </Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
     </SafeAreaView>
   );
 };

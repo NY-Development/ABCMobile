@@ -14,6 +14,7 @@ export const ROUTES = {
   CustomerStorefront: 'CustomerStorefront',
   BakeryDetail: 'BakeryDetail',
   ProductDetail: 'ProductDetail',
+  CustomerProfile: 'CustomerProfile',
   PrivacyPolicy: 'PrivacyPolicy',
   TermsOfService: 'TermsOfService',
   Eula: 'Eula',

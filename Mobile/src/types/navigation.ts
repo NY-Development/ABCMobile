@@ -35,6 +35,7 @@ export type CustomerStackParamList = {
     location?: string;
     status?: string;
   };
+  CustomerProfile: undefined;
   ProductDetail: {
     productId: string;
     name: string;
