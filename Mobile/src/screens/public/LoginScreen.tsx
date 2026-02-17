@@ -30,7 +30,6 @@ export const LoginScreen = () => {
   const handleSubmit = async () => {
     try {
       await login({ email, password });
-      navigation.navigate(ROUTES.Home as never);
     } catch (err: any) {
       console.log(err);
     }

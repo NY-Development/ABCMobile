@@ -32,10 +32,7 @@ export const OAuthSuccessScreen = () => {
         setCountdown((prev) => (prev > 0 ? prev - 1 : 0));
       }, 1000);
       const timer = setTimeout(() => {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: ROUTES.Home as never }],
-        });
+        // RootNavigator switches to customer flow after auth is set.
       }, 3000);
 
       return () => {
@@ -55,8 +52,8 @@ export const OAuthSuccessScreen = () => {
       </Text>
       <View className="mt-6 w-full">
         <Button
-          title="Go to home now"
-          onPress={() => navigation.navigate(ROUTES.Home as never)}
+          title="Continue"
+          onPress={() => navigation.navigate(ROUTES.Landing as never)}
         />
       </View>
     </View>

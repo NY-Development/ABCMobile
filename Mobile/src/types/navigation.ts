@@ -16,17 +16,10 @@ export type AuthStackParamList = {
   Eula: undefined;
 };
 
-export type CustomerTabsParamList = {
-  Home: undefined;
-  About: undefined;
-  Settings: undefined;
-};
-
 export type CustomerStackParamList = {
-  CustomerTabs: undefined;
   CustomerStorefront: {
-    ownerId: string;
-    ownerName: string;
+    ownerId?: string;
+    ownerName?: string;
     ownerImage?: string;
     rating?: number;
     reviewsCount?: number;
@@ -34,8 +27,8 @@ export type CustomerStackParamList = {
     status?: string;
   };
   BakeryDetail: {
-    ownerId: string;
-    ownerName: string;
+    ownerId?: string;
+    ownerName?: string;
     ownerImage?: string;
     rating?: number;
     reviewsCount?: number;

@@ -7,7 +7,6 @@ export const ROUTES = {
   PasswordResetSuccess: 'PasswordResetSuccess',
   OTPVerification: 'OTPVerification',
   OAuthSuccess: 'OAuthSuccess',
-  Home: 'Home',
   About: 'About',
   Settings: 'Settings',
   Contact: 'Contact',
