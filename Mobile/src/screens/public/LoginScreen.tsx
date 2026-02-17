@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -13,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { ROUTES } from '../../constants/routes';
 import { useAuth } from '../../context/AuthProvider';
+import { useThemeStore } from '../../store/themeStore';
 
 export const LoginScreen = () => {
   const navigation = useNavigation();
@@ -20,6 +22,10 @@ export const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const { mode, toggle } = useThemeStore();
+  const isDark = mode === 'dark';
+  const toggleIconName = isDark ? 'white-balance-sunny' : 'weather-night';
+  const toggleIconColor = isDark ? '#f5d67d' : '#374151';
 
   const handleSubmit = async () => {
     try {
@@ -31,15 +37,15 @@ export const LoginScreen = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background-light-alt" edges={['top', 'bottom']}>
+    <SafeAreaView className="flex-1 bg-background-light-alt dark:bg-background-dark" edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         className="flex-1"
       >
         {/* Theme toggle - top right */}
         <View className="absolute top-0 right-0 z-10 w-full flex-row justify-end p-4">
-          <Pressable className="rounded-full p-2">
-            <MaterialCommunityIcons name="weather-night" size={24} color="#374151" />
+          <Pressable className="rounded-full p-2" onPress={toggle}>
+            <MaterialCommunityIcons name={toggleIconName} size={24} color={toggleIconColor} />
           </Pressable>
         </View>
 
@@ -67,7 +73,7 @@ export const LoginScreen = () => {
         >
           {/* Main card */}
           <View
-            className="w-full max-w-md rounded-3xl bg-surface-light p-8"
+            className="w-full max-w-md rounded-3xl bg-surface-light p-8 dark:bg-surface-dark"
             style={{
               shadowColor: '#ecb613',
               shadowOffset: { width: 0, height: 10 },
@@ -79,13 +85,13 @@ export const LoginScreen = () => {
             {/* Header */}
             <View className="items-center gap-4 pt-2">
               <View className="mb-2 h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-                <MaterialCommunityIcons name="bread-slice" size={32} color="#ecb613" />
+                <Image source={require('../../../assets/icon.png')} className="h-10 w-10 rounded-full" resizeMode="contain" />
               </View>
               <View className="gap-2">
-                <Text className="text-center text-3xl font-bold tracking-tight text-gray-900">
+                <Text className="text-center text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
                   Welcome Back
                 </Text>
-                <Text className="text-center text-base font-medium text-gray-500">
+                <Text className="text-center text-base font-medium text-gray-500 dark:text-gray-400">
                   Login to your ABC account
                 </Text>
               </View>
@@ -95,10 +101,10 @@ export const LoginScreen = () => {
             <View className="mt-6 gap-5">
               {/* Email */}
               <View className="gap-2">
-                <Text className="ml-1 text-sm font-semibold text-gray-700">
+                <Text className="ml-1 text-sm font-semibold text-gray-700 dark:text-gray-300">
                   Email Address
                 </Text>
-                <View className="flex-row items-center rounded-xl border border-gray-200 bg-neutral-light/30">
+                <View className="flex-row items-center rounded-xl border border-gray-200 bg-neutral-light/30 dark:border-neutral-dark dark:bg-neutral-dark/40">
                   <View className="absolute left-4 z-10">
                     <MaterialCommunityIcons name="email-outline" size={20} color="#9ca3af" />
                   </View>
@@ -106,19 +112,19 @@ export const LoginScreen = () => {
                     value={email}
                     onChangeText={setEmail}
                     placeholder="john@example.com"
-                    placeholderTextColor="#9ca3af"
+                    placeholderTextColor={isDark ? '#9aa0a6' : '#9ca3af'}
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoCorrect={false}
-                    className="flex-1 py-3.5 pl-11 pr-4 text-base font-medium text-gray-900"
+                    className="flex-1 py-3.5 pl-11 pr-4 text-base font-medium text-gray-900 dark:text-gray-100"
                   />
                 </View>
               </View>
 
               {/* Password */}
               <View className="gap-2">
-                <Text className="ml-1 text-sm font-semibold text-gray-700">Password</Text>
-                <View className="flex-row items-center rounded-xl border border-gray-200 bg-neutral-light/30">
+                <Text className="ml-1 text-sm font-semibold text-gray-700 dark:text-gray-300">Password</Text>
+                <View className="flex-row items-center rounded-xl border border-gray-200 bg-neutral-light/30 dark:border-neutral-dark dark:bg-neutral-dark/40">
                   <View className="absolute left-4 z-10">
                     <MaterialCommunityIcons name="lock-outline" size={20} color="#9ca3af" />
                   </View>
@@ -126,9 +132,9 @@ export const LoginScreen = () => {
                     value={password}
                     onChangeText={setPassword}
                     placeholder="••••••••"
-                    placeholderTextColor="#9ca3af"
+                    placeholderTextColor={isDark ? '#9aa0a6' : '#9ca3af'}
                     secureTextEntry={!showPassword}
-                    className="flex-1 py-3.5 pl-11 pr-12 text-base font-medium text-gray-900"
+                    className="flex-1 py-3.5 pl-11 pr-12 text-base font-medium text-gray-900 dark:text-gray-100"
                   />
                   <Pressable
                     onPress={() => setShowPassword((p) => !p)}
@@ -183,7 +189,7 @@ export const LoginScreen = () => {
 
             {/* Footer */}
             <View className="mt-6 items-center pb-2">
-              <Text className="text-center text-sm text-gray-500">
+              <Text className="text-center text-sm text-gray-500 dark:text-gray-400">
                 New to ABC Bakery?{' '}
                 <Text
                   className="font-bold text-primary"

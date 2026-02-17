@@ -36,9 +36,9 @@ export const ResetPasswordScreen = () => {
   };
 
   return (
-    <ScrollView className="flex-1 bg-white" contentContainerClassName="px-6 py-10">
-      <Text className="text-3xl font-extrabold text-gray-900">Reset password</Text>
-      <Text className="mt-2 text-base text-gray-600">
+    <ScrollView className="flex-1 bg-background-light dark:bg-background-dark" contentContainerClassName="px-6 py-10">
+      <Text className="text-3xl font-extrabold text-gray-900 dark:text-gray-100">Reset password</Text>
+      <Text className="mt-2 text-base text-gray-600 dark:text-gray-400">
         Enter the code from your email and a new password.
       </Text>
 

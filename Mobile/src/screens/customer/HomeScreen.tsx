@@ -52,7 +52,7 @@ export const HomeScreen = () => {
   }, [activeIndex]);
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
+    <ScrollView className="flex-1 bg-background-light dark:bg-background-dark">
       <FlatList
         ref={listRef}
         data={heroImages}
@@ -66,15 +66,15 @@ export const HomeScreen = () => {
       />
 
       <Container className="py-6">
-        <Text className="text-3xl font-extrabold text-gray-900">
+        <Text className="text-3xl font-extrabold text-gray-900 dark:text-gray-100">
           Fresh from ABC
         </Text>
-        <Text className="mt-2 text-base text-gray-600">
+        <Text className="mt-2 text-base text-gray-600 dark:text-gray-400">
           Discover our most loved cakes and bakery treats.
         </Text>
 
         <View className="mt-6">
-          <Text className="text-xl font-semibold text-gray-900">Popular cakes</Text>
+          <Text className="text-xl font-semibold text-gray-900 dark:text-gray-100">Popular cakes</Text>
           <ScrollView
             horizontal={true}
             showsHorizontalScrollIndicator={Boolean(false)}

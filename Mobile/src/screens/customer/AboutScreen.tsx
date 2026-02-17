@@ -31,11 +31,11 @@ const features = [
 
 export const AboutScreen = () => {
   return (
-    <ScrollView className="flex-1 bg-white">
+    <ScrollView className="flex-1 bg-background-light dark:bg-background-dark">
       <Image source={{ uri: heroImage }} className="h-64 w-full" />
       <Container className="py-6">
-        <Text className="text-3xl font-extrabold text-gray-900">About ABC</Text>
-        <Text className="mt-3 text-base text-gray-600">
+        <Text className="text-3xl font-extrabold text-gray-900 dark:text-gray-100">About ABC</Text>
+        <Text className="mt-3 text-base text-gray-600 dark:text-gray-400">
           Adama Bakery & Cake connects customers and local bakers with curated
           collections, custom orders, and a smooth pickup experience.
         </Text>
@@ -44,9 +44,9 @@ export const AboutScreen = () => {
           {features.map((feature) => (
             <View
               key={feature.title}
-              className="flex-row items-start rounded-2xl border border-gray-100 bg-gray-50 p-4"
+              className="flex-row items-start rounded-2xl border border-gray-100 bg-gray-50 p-4 dark:border-neutral-dark dark:bg-surface-dark"
             >
-              <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-orange-100">
+              <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-orange-100 dark:bg-neutral-dark">
                 <MaterialCommunityIcons
                   name={feature.icon as never}
                   size={22}
@@ -54,10 +54,10 @@ export const AboutScreen = () => {
                 />
               </View>
               <View className="flex-1">
-                <Text className="text-base font-semibold text-gray-900">
+                <Text className="text-base font-semibold text-gray-900 dark:text-gray-100">
                   {feature.title}
                 </Text>
-                <Text className="mt-1 text-sm text-gray-600">
+                <Text className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                   {feature.description}
                 </Text>
               </View>

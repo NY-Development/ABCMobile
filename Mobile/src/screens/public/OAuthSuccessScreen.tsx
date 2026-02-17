@@ -46,11 +46,11 @@ export const OAuthSuccessScreen = () => {
   }, [loading, navigation, user]);
 
   return (
-    <View className="flex-1 items-center justify-center bg-white px-6">
-      <Text className="text-2xl font-bold text-gray-900">
+    <View className="flex-1 items-center justify-center bg-background-light px-6 dark:bg-background-dark">
+      <Text className="text-2xl font-bold text-gray-900 dark:text-gray-100">
         {loading ? 'Authenticating...' : 'Login successful'}
       </Text>
-      <Text className="mt-3 text-base text-gray-600">
+      <Text className="mt-3 text-base text-gray-600 dark:text-gray-400">
         Redirecting in {countdown} seconds
       </Text>
       <View className="mt-6 w-full">

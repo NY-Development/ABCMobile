@@ -21,6 +21,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { ROUTES } from '../../constants/routes';
+import { useThemeStore } from '../../store/themeStore';
 
 const HERO_IMAGE =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuD7V2XK_6pa4KLDXAYevzQv-QQIItrUjP7yPsII0EW-ZXgD51b6NutK77eQH7WzraFiScqJ_Kh-YjfvDtHYOXPBQOFBOhnIMQz4-Kg0XRAWH1SFdcf3ZHlLbmHgBwdbgHeCsXGLDZSstdoDbCIZQuHeb6BqSWtDPigCvyoV9g7z6lun33Auo_Dk3IR20sMcJppjwtWbkmDwDVaCWlILwsxYOI0z4hWu0gcBFt8-WSPoV5mCF_1JZeERo1kckwPNDd9EO7re5lDsSYDz';
@@ -87,6 +88,10 @@ export const LandingScreen = () => {
   const insets = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
   const searchScale = useSharedValue(1);
+  const { mode, toggle } = useThemeStore();
+  const isDark = mode === 'dark';
+  const toggleIconName = isDark ? 'white-balance-sunny' : 'weather-night';
+  const toggleIconColor = isDark ? '#f5d67d' : '#374151';
 
   useEffect(() => {
     searchScale.value = withSpring(1, { damping: 15 });
@@ -97,11 +102,11 @@ export const LandingScreen = () => {
   }));
 
   return (
-    <SafeAreaView className="flex-1 bg-background-light" edges={['top', 'bottom']}>
+    <SafeAreaView className="flex-1 bg-background-light dark:bg-background-dark" edges={['top', 'bottom']}>
       {/* Sticky Header */}
       <Animated.View
         entering={FadeInDown.duration(400).springify()}
-        className="flex-row items-center justify-between bg-background-light/95 px-5 py-3"
+        className="flex-row items-center justify-between bg-background-light/95 px-5 py-3 dark:bg-background-dark/95"
         style={{
           shadowColor: '#000',
           shadowOffset: { width: 0, height: 2 },
@@ -111,13 +116,13 @@ export const LandingScreen = () => {
         }}
       >
         <View className="flex-row items-center gap-2">
-          <View className="h-8 w-8 items-center justify-center rounded-full bg-primary">
-            <MaterialCommunityIcons name="bread-slice" size={18} color="#221d10" />
+          <View className="h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-primary/20">
+            <Image source={require('../../../assets/icon.png')} className="h-6 w-6 rounded-full" resizeMode="contain" />
           </View>
-          <Text className="text-lg font-bold tracking-tight text-text-main">ABC</Text>
+          <Text className="text-lg font-bold tracking-tight text-text-main dark:text-gray-100">ABC</Text>
         </View>
         <Pressable
-          className="h-10 w-10 items-center justify-center rounded-full bg-surface-light"
+          className="h-10 w-10 items-center justify-center rounded-full bg-surface-light dark:bg-surface-dark"
           style={{
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 1 },
@@ -125,8 +130,9 @@ export const LandingScreen = () => {
             shadowRadius: 2,
             elevation: 2,
           }}
+          onPress={toggle}
         >
-          <MaterialCommunityIcons name="white-balance-sunny" size={22} color="#1b180d" />
+          <MaterialCommunityIcons name={toggleIconName} size={22} color={toggleIconColor} />
         </Pressable>
       </Animated.View>
 
@@ -198,36 +204,35 @@ export const LandingScreen = () => {
           {/* Floating Search Bar */}
           <Animated.View
             entering={FadeInUp.delay(340).duration(400).springify()}
-            style={[
-              {
-                position: 'absolute',
-                bottom: -28,
-                left: 16,
-                right: 16,
-                maxWidth: windowWidth - 32,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 8 },
-                shadowOpacity: 0.12,
-                shadowRadius: 24,
-                elevation: 12,
-              },
-              searchAnimatedStyle,
-            ]}
+            style={{
+              position: 'absolute',
+              bottom: -28,
+              left: 16,
+              right: 16,
+              maxWidth: windowWidth - 32,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.12,
+              shadowRadius: 24,
+              elevation: 12,
+            }}
           >
-            <View className="flex-row items-center gap-2 rounded-2xl bg-surface-light px-2 py-2">
-              <View className="h-10 w-10 items-center justify-center rounded-xl bg-gray-100">
-                <MaterialCommunityIcons name="magnify" size={22} color="#ecb613" />
+            <Animated.View style={searchAnimatedStyle}>
+              <View className="flex-row items-center gap-2 rounded-2xl bg-surface-light px-2 py-2 dark:bg-surface-dark">
+                <View className="h-10 w-10 items-center justify-center rounded-xl bg-gray-100 dark:bg-neutral-dark">
+                  <MaterialCommunityIcons name="magnify" size={22} color="#ecb613" />
+                </View>
+                <TextInput
+                  className="flex-1 py-2 text-sm font-medium text-text-main dark:text-gray-100"
+                  placeholder="Find sourdough, donuts..."
+                  placeholderTextColor={isDark ? '#9aa0a6' : '#9ca3af'}
+                  editable={false}
+                />
+                <Pressable className="rounded-xl bg-primary px-4 py-2.5">
+                  <Text className="text-sm font-bold text-background-dark">Go</Text>
+                </Pressable>
               </View>
-              <TextInput
-                className="flex-1 py-2 text-sm font-medium text-text-main"
-                placeholder="Find sourdough, donuts..."
-                placeholderTextColor="#9ca3af"
-                editable={false}
-              />
-              <Pressable className="rounded-xl bg-primary px-4 py-2.5">
-                <Text className="text-sm font-bold text-background-dark">Go</Text>
-              </Pressable>
-            </View>
+            </Animated.View>
           </Animated.View>
         </Animated.View>
 
@@ -237,7 +242,7 @@ export const LandingScreen = () => {
         {/* Featured Bakeries */}
         <Animated.View entering={FadeIn.delay(200).duration(400)} className="mt-2 py-4">
           <View className="flex-row items-center justify-between px-5">
-            <Text className="text-xl font-bold tracking-tight text-text-main">
+            <Text className="text-xl font-bold tracking-tight text-text-main dark:text-gray-100">
               Featured Bakeries
             </Text>
             <Pressable>
@@ -254,7 +259,7 @@ export const LandingScreen = () => {
               <Animated.View
                 key={bakery.id}
                 entering={FadeInDown.delay(280 + index * 80).duration(400).springify()}
-                className="w-[280px] overflow-hidden rounded-xl bg-surface-light"
+                className="w-[280px] overflow-hidden rounded-xl bg-surface-light dark:bg-surface-dark"
                 style={{
                   shadowColor: '#000',
                   shadowOffset: { width: 0, height: 2 },
@@ -269,18 +274,18 @@ export const LandingScreen = () => {
                     className="h-full w-full"
                     resizeMode="cover"
                   />
-                  <View className="absolute right-3 top-3 flex-row items-center gap-1 rounded-full bg-white/90 px-2 py-1">
+                  <View className="absolute right-3 top-3 flex-row items-center gap-1 rounded-full bg-white/90 px-2 py-1 dark:bg-neutral-dark/80">
                     <MaterialCommunityIcons name="star" size={14} color="#ecb613" />
-                    <Text className="text-xs font-bold text-text-main">{bakery.rating}</Text>
+                    <Text className="text-xs font-bold text-text-main dark:text-gray-100">{bakery.rating}</Text>
                   </View>
                 </View>
                 <View className="flex-col p-4">
-                  <Text className="text-lg font-bold text-text-main">{bakery.name}</Text>
-                  <Text className="text-sm text-text-muted">{bakery.tagline}</Text>
-                  <View className="mt-3 flex-row items-center justify-between border-t border-gray-100 pt-3">
+                  <Text className="text-lg font-bold text-text-main dark:text-gray-100">{bakery.name}</Text>
+                  <Text className="text-sm text-text-muted dark:text-gray-400">{bakery.tagline}</Text>
+                  <View className="mt-3 flex-row items-center justify-between border-t border-gray-100 pt-3 dark:border-neutral-dark">
                     <View className="flex-row items-center gap-1">
                       <MaterialCommunityIcons name="map-marker" size={16} color="#6b7280" />
-                      <Text className="text-xs font-medium text-gray-500">{bakery.distance}</Text>
+                      <Text className="text-xs font-medium text-gray-500 dark:text-gray-400">{bakery.distance}</Text>
                     </View>
                     <View className="flex-row items-center gap-1">
                       <MaterialCommunityIcons name="clock-outline" size={16} color={bakery.statusColor} />
@@ -298,7 +303,7 @@ export const LandingScreen = () => {
         {/* Popular Cakes */}
         <Animated.View entering={FadeIn.delay(300).duration(400)} className="py-2">
           <View className="flex-row items-center justify-between px-5">
-            <Text className="text-xl font-bold tracking-tight text-text-main">
+            <Text className="text-xl font-bold tracking-tight text-text-main dark:text-gray-100">
               Popular Cakes Today
             </Text>
           </View>
@@ -312,7 +317,7 @@ export const LandingScreen = () => {
               <Animated.View
                 key={cake.id}
                 entering={FadeInUp.delay(350 + index * 80).duration(400).springify()}
-                className="w-40 overflow-hidden rounded-xl bg-surface-light"
+                className="w-40 overflow-hidden rounded-xl bg-surface-light dark:bg-surface-dark"
                 style={{
                   shadowColor: '#000',
                   shadowOffset: { width: 0, height: 2 },
@@ -329,10 +334,10 @@ export const LandingScreen = () => {
                   />
                 </View>
                 <View className="flex-col p-3">
-                  <Text className="truncate text-base font-bold text-text-main" numberOfLines={1}>
+                  <Text className="truncate text-base font-bold text-text-main dark:text-gray-100" numberOfLines={1}>
                     {cake.name}
                   </Text>
-                  <Text className="truncate text-xs text-text-muted" numberOfLines={1}>
+                  <Text className="truncate text-xs text-text-muted dark:text-gray-400" numberOfLines={1}>
                     By {cake.by}
                   </Text>
                   <View className="mt-2 flex-row items-center justify-between">
@@ -353,7 +358,7 @@ export const LandingScreen = () => {
       {/* Sticky Bottom Bar */}
       <Animated.View
         entering={FadeInUp.delay(400).duration(400).springify()}
-        className="absolute left-0 right-0 border-t border-gray-200 bg-background-light/95 px-4 pt-4"
+        className="absolute left-0 right-0 border-t border-gray-200 bg-background-light/95 px-4 pt-4 dark:border-neutral-dark dark:bg-background-dark/95"
         style={{
           bottom: 0,
           paddingBottom: Math.max(insets.bottom, 16) + 8,

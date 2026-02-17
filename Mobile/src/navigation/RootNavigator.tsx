@@ -1,17 +1,19 @@
-import React from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import React, { useState } from 'react';
 import { AuthNavigator } from './AuthNavigator';
 import { CustomerNavigator } from './CustomerNavigator';
 import { useAuth } from '../context/AuthProvider';
+import { SplashScreen } from '../screens/public/SplashScreen';
 
 export const RootNavigator = () => {
   const { user, initialized } = useAuth();
+  const [splashHidden, setSplashHidden] = useState(false);
 
-  if (!Boolean(initialized)) {
+  if (!splashHidden) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator size="large" color="#EA580C" />
-      </View>
+      <SplashScreen
+        shouldExit={Boolean(initialized)}
+        onFinish={() => setSplashHidden(true)}
+      />
     );
   }
 

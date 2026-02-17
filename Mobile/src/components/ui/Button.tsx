@@ -23,10 +23,10 @@ export const Button = ({
   const isDisabled = Boolean(disabled) || Boolean(loading);
   const variantClassName =
     variant === 'primary'
-      ? 'bg-orange-600'
+      ? 'bg-orange-600 dark:bg-orange-500'
       : variant === 'secondary'
-      ? 'bg-gray-800'
-      : 'border border-orange-600';
+      ? 'bg-gray-800 dark:bg-gray-700'
+      : 'border border-orange-600 dark:border-orange-400';
   const textClassName =
     variant === 'outline' ? 'text-orange-600' : 'text-white';
 

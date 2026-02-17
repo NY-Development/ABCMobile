@@ -21,6 +21,7 @@ import type { AuthStackParamList } from '../../types/navigation';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../context/AuthProvider';
 import { ROUTES } from '../../constants/routes';
+import { useThemeStore } from '../../store/themeStore';
 
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Register'>;
 
@@ -31,6 +32,10 @@ export const RegisterScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const insets = useSafeAreaInsets();
   const { register, loading, error } = useAuth();
+  const { mode, toggle } = useThemeStore();
+  const isDark = mode === 'dark';
+  const toggleIconName = isDark ? 'white-balance-sunny' : 'weather-night';
+  const toggleIconColor = isDark ? '#f5d67d' : '#374151';
   const [step, setStep] = useState(1);
   const [role, setRole] = useState<'customer' | 'owner' | null>(null);
   const [name, setName] = useState('');
@@ -69,7 +74,7 @@ export const RegisterScreen = () => {
     Boolean(password.length >= 8 && password === confirmPassword);
 
   return (
-    <SafeAreaView className="flex-1 bg-background-light" edges={['top', 'bottom']}>
+    <SafeAreaView className="flex-1 bg-background-light dark:bg-background-dark" edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
@@ -79,16 +84,16 @@ export const RegisterScreen = () => {
           <Pressable onPress={goBack} className="h-10 w-10 items-center justify-center rounded-full">
             <MaterialCommunityIcons name="arrow-left" size={24} color="#1b180d" />
           </Pressable>
-          <Text className="text-base font-bold tracking-tight text-text-main">
+          <Text className="text-base font-bold tracking-tight text-text-main dark:text-gray-100">
             Step {step} of 3
           </Text>
-          <Pressable className="h-10 w-10 items-center justify-center rounded-full">
-            <MaterialCommunityIcons name="white-balance-sunny" size={24} color="#1b180d" />
+          <Pressable className="h-10 w-10 items-center justify-center rounded-full" onPress={toggle}>
+            <MaterialCommunityIcons name={toggleIconName} size={24} color={toggleIconColor} />
           </Pressable>
         </View>
 
         {/* Progress bar */}
-        <View className="mt-2 h-1.5 overflow-hidden rounded-full bg-neutral-light px-4">
+        <View className="mt-2 h-1.5 overflow-hidden rounded-full bg-neutral-light px-4 dark:bg-neutral-dark">
           <Animated.View
             layout={LinearTransition.springify()}
             className="h-full rounded-full bg-primary"
@@ -114,10 +119,10 @@ export const RegisterScreen = () => {
               className="max-w-md flex-1"
             >
               <View className="mb-8 gap-2">
-                <Text className="text-3xl font-extrabold leading-tight tracking-tight text-text-main">
+                <Text className="text-3xl font-extrabold leading-tight tracking-tight text-text-main dark:text-gray-100">
                   Welcome to Adama
                 </Text>
-                <Text className="text-base leading-relaxed text-text-main/60">
+                <Text className="text-base leading-relaxed text-text-main/60 dark:text-gray-400">
                   To give you the best experience, tell us how you'll use the app.
                 </Text>
               </View>
@@ -125,10 +130,14 @@ export const RegisterScreen = () => {
               <View className="gap-5">
                 <Pressable
                   onPress={() => setRole('customer')}
-                  className="overflow-hidden rounded-3xl border-2 bg-surface-light p-5"
+                  className="overflow-hidden rounded-3xl border-2 bg-surface-light p-5 dark:bg-surface-dark"
                   style={{
                     borderColor: role === 'customer' ? '#ecb613' : 'transparent',
-                    backgroundColor: role === 'customer' ? 'rgba(236,182,19,0.05)' : '#ffffff',
+                    backgroundColor: role === 'customer'
+                      ? 'rgba(236,182,19,0.08)'
+                      : isDark
+                      ? '#2d2616'
+                      : '#ffffff',
                     shadowColor: '#000',
                     shadowOffset: { width: 0, height: 2 },
                     shadowOpacity: 0.04,
@@ -137,12 +146,12 @@ export const RegisterScreen = () => {
                   }}
                 >
                   <View className="flex-row items-center">
-                    <View className="mr-5 h-16 w-16 items-center justify-center rounded-full bg-primary-light">
-                      <MaterialCommunityIcons name="bread-slice" size={32} color="#ecb613" />
+                    <View className="mr-5 h-16 w-16 items-center justify-center rounded-full bg-primary-light dark:bg-neutral-dark">
+                      <Image source={require('../../../assets/icon.png')} className="h-8 w-8 rounded-full" resizeMode="contain" />
                     </View>
                     <View className="flex-1">
-                      <Text className="text-lg font-bold text-text-main">I am a Customer</Text>
-                      <Text className="text-sm font-medium text-text-main/50">
+                      <Text className="text-lg font-bold text-text-main dark:text-gray-100">I am a Customer</Text>
+                      <Text className="text-sm font-medium text-text-main/50 dark:text-gray-400">
                         Find & Order local pastries
                       </Text>
                     </View>
@@ -156,10 +165,14 @@ export const RegisterScreen = () => {
 
                 <Pressable
                   onPress={() => setRole('owner')}
-                  className="overflow-hidden rounded-3xl border-2 bg-surface-light p-5"
+                  className="overflow-hidden rounded-3xl border-2 bg-surface-light p-5 dark:bg-surface-dark"
                   style={{
                     borderColor: role === 'owner' ? '#ecb613' : 'transparent',
-                    backgroundColor: role === 'owner' ? 'rgba(236,182,19,0.05)' : '#ffffff',
+                    backgroundColor: role === 'owner'
+                      ? 'rgba(236,182,19,0.08)'
+                      : isDark
+                      ? '#2d2616'
+                      : '#ffffff',
                     shadowColor: '#000',
                     shadowOffset: { width: 0, height: 2 },
                     shadowOpacity: 0.04,
@@ -168,12 +181,12 @@ export const RegisterScreen = () => {
                   }}
                 >
                   <View className="flex-row items-center">
-                    <View className="mr-5 h-16 w-16 items-center justify-center rounded-full bg-neutral-light">
+                    <View className="mr-5 h-16 w-16 items-center justify-center rounded-full bg-neutral-light dark:bg-neutral-dark">
                       <MaterialCommunityIcons name="storefront" size={32} color="#1b180d" />
                     </View>
                     <View className="flex-1">
-                      <Text className="text-lg font-bold text-text-main">I am a Bakery Owner</Text>
-                      <Text className="text-sm font-medium text-text-main/50">
+                      <Text className="text-lg font-bold text-text-main dark:text-gray-100">I am a Bakery Owner</Text>
+                      <Text className="text-sm font-medium text-text-main/50 dark:text-gray-400">
                         Sell & Grow your business
                       </Text>
                     </View>
@@ -192,8 +205,8 @@ export const RegisterScreen = () => {
                   className="h-full w-full"
                   resizeMode="cover"
                 />
-                <View className="absolute bottom-3 left-4 rounded bg-white/80 px-2 py-1">
-                  <Text className="text-xs font-bold uppercase tracking-widest text-text-main">
+                <View className="absolute bottom-3 left-4 rounded bg-white/80 px-2 py-1 dark:bg-neutral-dark/80">
+                  <Text className="text-xs font-bold uppercase tracking-widest text-text-main dark:text-gray-100">
                     Community
                   </Text>
                 </View>
@@ -209,64 +222,64 @@ export const RegisterScreen = () => {
               className="max-w-md flex-1"
             >
               <View className="mb-10 mt-2 gap-3">
-                <Text className="text-3xl font-bold tracking-tight text-text-charcoal">
+                <Text className="text-3xl font-bold tracking-tight text-text-charcoal dark:text-gray-100">
                   Tell us about{'\n'}
                   <Text className="text-primary">yourself</Text>
                 </Text>
-                <Text className="max-w-xs text-base font-medium leading-relaxed text-text-muted">
+                <Text className="max-w-xs text-base font-medium leading-relaxed text-text-muted dark:text-gray-400">
                   Please enter your details to create your secure account and start ordering.
                 </Text>
               </View>
 
               <View className="gap-6">
                 <View className="gap-2">
-                  <Text className="ml-4 text-sm font-semibold text-text-charcoal">
+                  <Text className="ml-4 text-sm font-semibold text-text-charcoal dark:text-gray-300">
                     Full Name
                   </Text>
-                  <View className="flex-row items-center rounded-2xl border border-input-border bg-surface-light px-4">
+                  <View className="flex-row items-center rounded-2xl border border-input-border bg-surface-light px-4 dark:border-neutral-dark dark:bg-surface-dark">
                     <TextInput
                       value={name}
                       onChangeText={setName}
                       placeholder="e.g. Sarah Baker"
-                      placeholderTextColor="#9ca3af"
-                      className="h-14 flex-1 text-text-charcoal"
+                      placeholderTextColor={isDark ? '#9aa0a6' : '#9ca3af'}
+                      className="h-14 flex-1 text-text-charcoal dark:text-gray-100"
                     />
                     <MaterialCommunityIcons name="account-outline" size={22} color="#6b6356" />
                   </View>
                 </View>
                 <View className="gap-2">
-                  <Text className="ml-4 text-sm font-semibold text-text-charcoal">
+                  <Text className="ml-4 text-sm font-semibold text-text-charcoal dark:text-gray-300">
                     Email Address
                   </Text>
-                  <View className="flex-row items-center rounded-2xl border border-input-border bg-surface-light px-4">
+                  <View className="flex-row items-center rounded-2xl border border-input-border bg-surface-light px-4 dark:border-neutral-dark dark:bg-surface-dark">
                     <TextInput
                       value={email}
                       onChangeText={setEmail}
                       placeholder="name@example.com"
-                      placeholderTextColor="#9ca3af"
+                      placeholderTextColor={isDark ? '#9aa0a6' : '#9ca3af'}
                       keyboardType="email-address"
                       autoCapitalize="none"
-                      className="h-14 flex-1 text-text-charcoal"
+                      className="h-14 flex-1 text-text-charcoal dark:text-gray-100"
                     />
                     <MaterialCommunityIcons name="email-outline" size={22} color="#6b6356" />
                   </View>
                 </View>
                 <View className="gap-2">
-                  <Text className="ml-4 text-sm font-semibold text-text-charcoal">
+                  <Text className="ml-4 text-sm font-semibold text-text-charcoal dark:text-gray-300">
                     Phone Number
                   </Text>
                   <View className="flex-row items-center gap-3">
-                    <View className="w-28 rounded-2xl border border-input-border bg-surface-light px-3 py-3">
-                      <Text className="text-sm font-medium text-text-charcoal">🇪🇹 +251</Text>
+                    <View className="w-28 rounded-2xl border border-input-border bg-surface-light px-3 py-3 dark:border-neutral-dark dark:bg-surface-dark">
+                      <Text className="text-sm font-medium text-text-charcoal dark:text-gray-100">🇪🇹 +251</Text>
                     </View>
-                    <View className="flex-1 flex-row items-center rounded-2xl border border-input-border bg-surface-light px-4">
+                    <View className="flex-1 flex-row items-center rounded-2xl border border-input-border bg-surface-light px-4 dark:border-neutral-dark dark:bg-surface-dark">
                       <TextInput
                         value={phone}
                         onChangeText={setPhone}
                         placeholder="911 234 567"
-                        placeholderTextColor="#9ca3af"
+                        placeholderTextColor={isDark ? '#9aa0a6' : '#9ca3af'}
                         keyboardType="phone-pad"
-                        className="h-14 flex-1 text-text-charcoal"
+                        className="h-14 flex-1 text-text-charcoal dark:text-gray-100"
                       />
                       <MaterialCommunityIcons name="phone-outline" size={22} color="#6b6356" />
                     </View>
@@ -284,18 +297,18 @@ export const RegisterScreen = () => {
               className="max-w-md flex-1"
             >
               <View className="mb-8 gap-2">
-                <Text className="text-3xl font-bold leading-tight text-text-main">
+                <Text className="text-3xl font-bold leading-tight text-text-main dark:text-gray-100">
                   Secure Account
                 </Text>
-                <Text className="text-base text-text-muted">
+                <Text className="text-base text-text-muted dark:text-gray-400">
                   Create a strong password to protect your bakery order history.
                 </Text>
               </View>
 
               <View className="gap-5">
                 <View className="gap-2">
-                  <Text className="ml-1 text-sm font-semibold text-text-main">Password</Text>
-                  <View className="flex-row items-center rounded-full border border-neutral-light bg-background-light px-4">
+                  <Text className="ml-1 text-sm font-semibold text-text-main dark:text-gray-300">Password</Text>
+                  <View className="flex-row items-center rounded-full border border-neutral-light bg-background-light px-4 dark:border-neutral-dark dark:bg-surface-dark">
                     <View className="absolute left-4">
                       <MaterialCommunityIcons name="lock-outline" size={20} color="#6b6248" />
                     </View>
@@ -303,9 +316,9 @@ export const RegisterScreen = () => {
                       value={password}
                       onChangeText={setPassword}
                       placeholder="Enter your password"
-                      placeholderTextColor="#9ca3af"
+                      placeholderTextColor={isDark ? '#9aa0a6' : '#9ca3af'}
                       secureTextEntry={Boolean(!showPassword)}
-                      className="flex-1 py-4 pl-12 pr-12 text-text-main"
+                      className="flex-1 py-4 pl-12 pr-12 text-text-main dark:text-gray-100"
                     />
                     <Pressable
                       onPress={() => setShowPassword((p) => !p)}
@@ -326,7 +339,7 @@ export const RegisterScreen = () => {
                         size={16}
                         color={password.length >= 8 ? '#22c55e' : '#d1d5db'}
                       />
-                      <Text className="text-xs text-text-muted">8+ characters</Text>
+                      <Text className="text-xs text-text-muted dark:text-gray-400">8+ characters</Text>
                     </View>
                     <View className="flex-row items-center gap-1.5">
                       <MaterialCommunityIcons
@@ -334,15 +347,15 @@ export const RegisterScreen = () => {
                         size={16}
                         color={/[!@#$%^&*(),.?":{}|<>]/.test(password) ? '#22c55e' : '#d1d5db'}
                       />
-                      <Text className="text-xs text-text-muted">1 Special char</Text>
+                      <Text className="text-xs text-text-muted dark:text-gray-400">1 Special char</Text>
                     </View>
                   </View>
                 </View>
                 <View className="gap-2">
-                  <Text className="ml-1 text-sm font-semibold text-text-main">
+                  <Text className="ml-1 text-sm font-semibold text-text-main dark:text-gray-300">
                     Confirm Password
                   </Text>
-                  <View className="flex-row items-center rounded-full border border-neutral-light bg-background-light px-4">
+                  <View className="flex-row items-center rounded-full border border-neutral-light bg-background-light px-4 dark:border-neutral-dark dark:bg-surface-dark">
                     <View className="absolute left-4">
                       <MaterialCommunityIcons name="lock-reset" size={20} color="#6b6248" />
                     </View>
@@ -350,9 +363,9 @@ export const RegisterScreen = () => {
                       value={confirmPassword}
                       onChangeText={setConfirmPassword}
                       placeholder="Re-enter your password"
-                      placeholderTextColor="#9ca3af"
+                      placeholderTextColor={isDark ? '#9aa0a6' : '#9ca3af'}
                       secureTextEntry={Boolean(!showConfirmPassword)}
-                      className="flex-1 py-4 pl-12 pr-12 text-text-main"
+                      className="flex-1 py-4 pl-12 pr-12 text-text-main dark:text-gray-100"
                     />
                     <Pressable
                       onPress={() => setShowConfirmPassword((p) => !p)}
@@ -378,7 +391,7 @@ export const RegisterScreen = () => {
 
         {/* Fixed bottom bar - REMOVED ABSOLUTE POSITIONING to prevent it from being "covered" */}
         <View
-          className="border-t border-gray-200 bg-background-light px-6 pt-4"
+          className="border-t border-gray-200 bg-background-light px-6 pt-4 dark:border-neutral-dark dark:bg-background-dark"
           style={{
             paddingBottom: Math.max(insets.bottom, 16),
             shadowColor: '#000',
@@ -430,7 +443,7 @@ export const RegisterScreen = () => {
                 )}
               </Pressable>
             )}
-            <Text className="mb-2 text-center text-sm font-medium text-text-main/60">
+            <Text className="mb-2 text-center text-sm font-medium text-text-main/60 dark:text-gray-400">
               {step < 3 ? (
                 <>
                   Already have an account?{' '}
