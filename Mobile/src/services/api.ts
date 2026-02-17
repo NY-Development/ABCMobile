@@ -3,7 +3,7 @@ import { tokenStorage } from '../utils/storage';
 
 const baseURL =
   process.env.EXPO_PUBLIC_API_BASE_URL ??
-  'http://localhost:5000/api';
+  'https://abc-mobile-indol.vercel.app/api';
 
 const API = axios.create({
   baseURL,
