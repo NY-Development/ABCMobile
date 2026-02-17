@@ -23,10 +23,10 @@ export const LoginScreen = () => {
 
   const handleSubmit = async () => {
     try {
-      await login({ email, password });
+      const res = await login({ email, password });
       navigation.navigate(ROUTES.Home as never);
-    } catch {
-      // Error shown via useAuth error state
+    } catch (err: any) {
+      console.log(err);
     }
   };
 
