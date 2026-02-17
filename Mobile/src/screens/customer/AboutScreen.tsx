@@ -1,8 +1,10 @@
 import React from 'react';
 import { ImageBackground, Pressable, ScrollView, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useThemeStore } from '../../store/themeStore';
+import { ROUTES } from '@/constants/routes';
 
 const HERO_IMAGE =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuBtG1Kf96HosOaM8d3jbiAORWsOzZts1VXb5iQe3IKIaqYhdBEONhJbl55mQPFSn86zOdCGi1c5-ObeJTXKDTNNbOk3_Pi-5yP0YYsCvPDbYaDBSE94AoZe6pt4xesOduE3uS8Zx8ZfQ175TRq_BOBHL84y-aZVrHUtv9_XRWeUJlt2pSD-WIbiy_uXqWBsGjGgq0rgp1yVC7JZsg9Yl9bwr2ovahFumQKvhlRdtF-bNU9HEVAtGLzMkiQNCLsSV4ge1NZwtuGvmodG';
@@ -33,7 +35,8 @@ export const AboutScreen = () => {
   const toggleIconColor = isDark ? '#f5d67d' : '#374151';
 
   return (
-    <ScrollView className="flex-1 bg-background-light dark:bg-background-dark">
+    <SafeAreaView className="flex-1 bg-background-light dark:bg-background-dark" edges={['top', 'bottom']}>
+      <ScrollView className="flex-1">
       <View className="z-30 flex-row items-center justify-between border-b border-gray-100 bg-background-light/90 px-5 py-3 dark:border-white/10 dark:bg-background-dark/90">
         <Pressable
           onPress={() => navigation.goBack()}
@@ -98,14 +101,14 @@ export const AboutScreen = () => {
         <View className="flex-row gap-4">
           <View className="flex-1 items-center justify-center rounded-2xl bg-surface-light p-6 shadow-sm dark:bg-surface-dark">
             <View className="mb-3 h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-              <MaterialCommunityIcons name="storefront" size={24} color="#ecb613" />
+              <MaterialCommunityIcons name="storefront" size={24} color="#f97316" />
             </View>
             <Text className="text-2xl font-bold text-text-main dark:text-gray-100">50+</Text>
             <Text className="text-sm text-text-muted">Local Partners</Text>
           </View>
           <View className="flex-1 items-center justify-center rounded-2xl bg-surface-light p-6 shadow-sm dark:bg-surface-dark">
             <View className="mb-3 h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-              <MaterialCommunityIcons name="account-group" size={24} color="#ecb613" />
+              <MaterialCommunityIcons name="account-group" size={24} color="#f97316" />
             </View>
             <Text className="text-2xl font-bold text-text-main dark:text-gray-100">10k+</Text>
             <Text className="text-sm text-text-muted">Happy Eaters</Text>
@@ -121,7 +124,7 @@ export const AboutScreen = () => {
           {VALUES.map((value) => (
             <View key={value.title} className="flex-row items-start gap-4">
               <View className="h-10 w-10 items-center justify-center rounded-full bg-surface-light shadow-sm dark:bg-surface-dark">
-                <MaterialCommunityIcons name={value.icon as never} size={20} color="#ecb613" />
+                <MaterialCommunityIcons name={value.icon as never} size={20} color="#f97316" />
               </View>
               <View className="flex-1">
                 <Text className="font-bold text-text-main dark:text-gray-100">{value.title}</Text>
@@ -141,7 +144,9 @@ export const AboutScreen = () => {
         <Text className="mt-2 text-sm text-gray-500 dark:text-gray-400">
           Are you a baker in Adama? Let's grow together.
         </Text>
-        <Pressable className="mt-6 rounded-xl bg-primary py-3">
+        <Pressable 
+        onPress={() => navigation.navigate(ROUTES.Register as never)}
+        className="mt-6 rounded-xl bg-primary py-3">
           <Text className="text-center text-base font-bold text-background-dark">
             Become a Partner
           </Text>
@@ -153,6 +158,7 @@ export const AboutScreen = () => {
           (c) 2024 ABC Bakery Marketplace. Made in Adama.
         </Text>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };

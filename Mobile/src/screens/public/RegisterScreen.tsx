@@ -132,7 +132,7 @@ export const RegisterScreen = () => {
                   onPress={() => setRole('customer')}
                   className="overflow-hidden rounded-3xl border-2 bg-surface-light p-5 dark:bg-surface-dark"
                   style={{
-                    borderColor: role === 'customer' ? '#ecb613' : 'transparent',
+                    borderColor: role === 'customer' ? '#f97316' : 'transparent',
                     backgroundColor: role === 'customer'
                       ? 'rgba(236,182,19,0.08)'
                       : isDark
@@ -167,7 +167,7 @@ export const RegisterScreen = () => {
                   onPress={() => setRole('owner')}
                   className="overflow-hidden rounded-3xl border-2 bg-surface-light p-5 dark:bg-surface-dark"
                   style={{
-                    borderColor: role === 'owner' ? '#ecb613' : 'transparent',
+                    borderColor: role === 'owner' ? '#f97316' : 'transparent',
                     backgroundColor: role === 'owner'
                       ? 'rgba(236,182,19,0.08)'
                       : isDark
@@ -408,7 +408,7 @@ export const RegisterScreen = () => {
                 disabled={Boolean((step === 2 && !canProceedStep2) || (step === 1 && !canProceedStep1))}
                 className="flex-row items-center justify-center gap-2 rounded-full bg-primary py-4"
                 style={{
-                  shadowColor: '#ecb613',
+                  shadowColor: '#f97316',
                   shadowOffset: { width: 0, height: 4 },
                   shadowOpacity: 0.4,
                   shadowRadius: 14,
@@ -427,7 +427,7 @@ export const RegisterScreen = () => {
                 disabled={Boolean(loading || !canProceedStep3)}
                 className="flex-row items-center justify-center gap-2 rounded-full bg-primary py-4"
                 style={{
-                  shadowColor: '#ecb613',
+                  shadowColor: '#f97316',
                   shadowOffset: { width: 0, height: 4 },
                   shadowOpacity: 0.2,
                   shadowRadius: 8,

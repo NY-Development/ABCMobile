@@ -1,5 +1,6 @@
 import React from 'react';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useThemeStore } from '../../store/themeStore';
@@ -61,8 +62,9 @@ export const SettingsScreen = () => {
   const toggleIconColor = isDark ? '#f5d67d' : '#374151';
 
   return (
-    <ScrollView className="flex-1 bg-background-light dark:bg-background-dark" contentContainerStyle={{ paddingBottom: 24 }}>
-      <View className="flex-row items-center justify-between bg-background-light/95 px-5 py-4 dark:bg-background-dark/95">
+    <SafeAreaView className="flex-1 bg-background-light dark:bg-background-dark" edges={['top', 'bottom']}>
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 24 }}>
+        <View className="flex-row items-center justify-between bg-background-light/95 px-5 py-4 dark:bg-background-dark/95">
         <Pressable
           onPress={() => navigation.goBack()}
           className="h-10 w-10 items-center justify-center rounded-full text-text-main dark:text-white"
@@ -81,7 +83,7 @@ export const SettingsScreen = () => {
       <View className="px-5 pt-2">
         <View className="mb-8 mt-2 flex-row items-center gap-4 rounded-xl bg-surface-light p-4 shadow-sm ring-1 ring-black/5 dark:bg-surface-dark dark:ring-white/5">
           <View className="h-14 w-14 items-center justify-center rounded-full bg-primary/20">
-            <MaterialCommunityIcons name="account" size={26} color="#ecb613" />
+            <MaterialCommunityIcons name="account" size={26} color="#f97316" />
           </View>
           <View>
             <Text className="text-lg font-bold text-text-main dark:text-white">Guest User</Text>
@@ -124,7 +126,8 @@ export const SettingsScreen = () => {
           <Text className="text-xs font-medium text-text-muted dark:text-gray-500">Version 1.0.2 (Build 240)</Text>
           <Text className="text-[10px] text-gray-400 dark:text-gray-600">(c) 2024 ABC Bakery Marketplace</Text>
         </View>
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };

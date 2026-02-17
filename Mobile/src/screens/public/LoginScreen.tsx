@@ -75,7 +75,7 @@ export const LoginScreen = () => {
           <View
             className="w-full max-w-md rounded-3xl bg-surface-light p-8 dark:bg-surface-dark"
             style={{
-              shadowColor: '#ecb613',
+              shadowColor: '#f97316',
               shadowOffset: { width: 0, height: 10 },
               shadowOpacity: 0.15,
               shadowRadius: 20,
@@ -167,7 +167,7 @@ export const LoginScreen = () => {
                 disabled={loading}
                 className="mt-2 flex-row items-center justify-center gap-2 rounded-xl bg-primary py-4"
                 style={{
-                  shadowColor: '#ecb613',
+                  shadowColor: '#f97316',
                   shadowOffset: { width: 0, height: 4 },
                   shadowOpacity: 0.2,
                   shadowRadius: 8,

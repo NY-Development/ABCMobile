@@ -83,6 +83,17 @@ const POPULAR_CAKES = [
   },
 ];
 
+const SPECIAL_ORDER_IMAGE =
+  'https://images.unsplash.com/photo-1486427944299-d1955d23e34d?q=80&w=1200&auto=format&fit=crop';
+
+const CUSTOMER_FEEDBACKS: Array<{
+  id: string;
+  name: string;
+  rating: number;
+  comment: string;
+  date: string;
+}> = [];
+
 export const LandingScreen = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
@@ -220,7 +231,7 @@ export const LandingScreen = () => {
             <Animated.View style={searchAnimatedStyle}>
               <View className="flex-row items-center gap-2 rounded-2xl bg-surface-light px-2 py-2 dark:bg-surface-dark">
                 <View className="h-10 w-10 items-center justify-center rounded-xl bg-gray-100 dark:bg-neutral-dark">
-                  <MaterialCommunityIcons name="magnify" size={22} color="#ecb613" />
+                  <MaterialCommunityIcons name="magnify" size={22} color="#f97316" />
                 </View>
                 <TextInput
                   className="flex-1 py-2 text-sm font-medium text-text-main dark:text-gray-100"
@@ -275,7 +286,7 @@ export const LandingScreen = () => {
                     resizeMode="cover"
                   />
                   <View className="absolute right-3 top-3 flex-row items-center gap-1 rounded-full bg-white/90 px-2 py-1 dark:bg-neutral-dark/80">
-                    <MaterialCommunityIcons name="star" size={14} color="#ecb613" />
+                    <MaterialCommunityIcons name="star" size={14} color="#f97316" />
                     <Text className="text-xs font-bold text-text-main dark:text-gray-100">{bakery.rating}</Text>
                   </View>
                 </View>
@@ -343,7 +354,7 @@ export const LandingScreen = () => {
                   <View className="mt-2 flex-row items-center justify-between">
                     <Text className="text-sm font-bold text-primary">{cake.price}</Text>
                     <Pressable className="h-6 w-6 items-center justify-center rounded-full bg-primary/10">
-                      <MaterialCommunityIcons name="plus" size={16} color="#ecb613" />
+                      <MaterialCommunityIcons name="plus" size={16} color="#f97316" />
                     </Pressable>
                   </View>
                 </View>
@@ -352,48 +363,142 @@ export const LandingScreen = () => {
           </ScrollView>
         </Animated.View>
 
+        {/* Special Orders */}
+        <Animated.View entering={FadeIn.delay(360).duration(400)} className="px-5 py-6">
+          <View className="overflow-hidden rounded-3xl bg-surface-light dark:bg-surface-dark">
+            <Image
+              source={{ uri: SPECIAL_ORDER_IMAGE }}
+              className="h-44 w-full"
+              resizeMode="cover"
+            />
+            <View className="gap-3 p-5">
+              <Text className="text-2xl font-extrabold text-text-main dark:text-gray-100">
+                Special Orders, Made Easy
+              </Text>
+              <Text className="text-sm font-medium text-text-muted dark:text-gray-400">
+                Create custom cakes for birthdays, weddings, or corporate events with local bakers.
+              </Text>
+              <Pressable
+                onPress={() => navigation.navigate(ROUTES.CustomRequest as never)}
+                className="self-start rounded-full bg-primary px-5 py-2.5"
+              >
+                <Text className="text-sm font-bold text-background-dark">Start Custom Order</Text>
+              </Pressable>
+            </View>
+          </View>
+        </Animated.View>
+
+        {/* Customer Feedback */}
+        <Animated.View entering={FadeIn.delay(420).duration(400)} className="py-2">
+          <View className="flex-row items-center justify-between px-5">
+            <Text className="text-xl font-bold tracking-tight text-text-main dark:text-gray-100">
+              Customer Feedback
+            </Text>
+          </View>
+          {CUSTOMER_FEEDBACKS.length === 0 ? (
+            <View className="mx-5 mt-4 rounded-2xl border border-dashed border-primary/30 bg-surface-light p-5 dark:bg-surface-dark">
+              <View className="flex-row items-center gap-3">
+                <View className="h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                  <MaterialCommunityIcons name="message-text-outline" size={20} color="#f97316" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-base font-bold text-text-main dark:text-gray-100">
+                    No feedback yet
+                  </Text>
+                  <Text className="text-sm text-text-muted dark:text-gray-400">
+                    Be the first to leave a review after your order.
+                  </Text>
+                </View>
+              </View>
+            </View>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 16, paddingHorizontal: 20, paddingVertical: 16 }}
+              className="mt-2"
+            >
+              {CUSTOMER_FEEDBACKS.map((review) => (
+                <View
+                  key={review.id}
+                  className="w-72 rounded-2xl bg-surface-light p-4 dark:bg-surface-dark"
+                  style={{
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.08,
+                    shadowRadius: 8,
+                    elevation: 4,
+                  }}
+                >
+                  <View className="flex-row items-center justify-between">
+                    <Text className="text-base font-bold text-text-main dark:text-gray-100">
+                      {review.name}
+                    </Text>
+                    <View className="flex-row items-center gap-1">
+                      <MaterialCommunityIcons name="star" size={14} color="#f97316" />
+                      <Text className="text-xs font-bold text-text-main dark:text-gray-100">
+                        {review.rating.toFixed(1)}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text className="mt-2 text-sm text-text-muted dark:text-gray-400">
+                    {review.comment}
+                  </Text>
+                  <Text className="mt-3 text-xs font-medium text-gray-500 dark:text-gray-500">
+                    {review.date}
+                  </Text>
+                </View>
+              ))}
+            </ScrollView>
+          )}
+        </Animated.View>
+
         <View className="h-8" />
       </ScrollView>
 
       {/* Sticky Bottom Bar */}
       <Animated.View
         entering={FadeInUp.delay(400).duration(400).springify()}
-        className="absolute left-0 right-0 border-t border-gray-200 bg-background-light/95 px-4 pt-4 dark:border-neutral-dark dark:bg-background-dark/95"
+        className="absolute left-0 right-0"
         style={{
           bottom: 0,
           paddingBottom: Math.max(insets.bottom, 16) + 8,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.08,
-          shadowRadius: 12,
-          elevation: 8,
         }}
       >
-        <View className="mx-auto max-w-md flex-row gap-3">
+        <View
+          className="mx-auto w-[92%] max-w-md flex-row items-center gap-3 rounded-[32px] border border-primary/20 bg-background-light/70 p-2 dark:bg-background-dark/70"
+          style={{
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 12 },
+            shadowOpacity: 0.2,
+            shadowRadius: 20,
+            elevation: 10,
+          }}
+        >
           <Pressable
             onPress={() => navigation.navigate(ROUTES.Register as never)}
-            className="flex-1 items-center justify-center rounded-full border-2 border-primary/20 py-3 active:opacity-80"
+            className="h-14 flex-1 items-center justify-center rounded-full border border-primary/40 active:opacity-80"
           >
-            <Text className="text-base font-bold text-primary">Register</Text>
+            <Text className="text-sm font-bold tracking-wide text-primary">Register</Text>
           </Pressable>
           <Pressable
             onPress={() => navigation.navigate(ROUTES.Login as never)}
-            className="flex-1 items-center justify-center rounded-full bg-primary py-3 active:opacity-90"
+            className="h-14 flex-[1.4] items-center justify-center rounded-full bg-primary active:opacity-90"
             style={{
-              shadowColor: '#ecb613',
-              shadowOffset: { width: 0, height: 2 },
+              shadowColor: '#f97316',
+              shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.3,
-              shadowRadius: 6,
-              elevation: 4,
+              shadowRadius: 10,
+              elevation: 6,
             }}
           >
-            <Text className="text-base font-bold text-background-dark">Login</Text>
+            <Text className="text-sm font-bold tracking-wide text-background-dark">Login</Text>
           </Pressable>
           <Pressable
             onPress={() => navigation.navigate(ROUTES.Settings as never)}
-            className="h-12 w-12 items-center justify-center rounded-2xl border-2 border-primary/20 bg-surface-light/60 text-primary dark:bg-surface-dark/60"
+            className="h-14 w-14 items-center justify-center rounded-full border border-primary/20 bg-surface-light/50 active:opacity-80 dark:bg-surface-dark/50"
           >
-            <MaterialCommunityIcons name="cog" size={20} color="#ecb613" />
+            <MaterialCommunityIcons name="cog" size={20} color="#f97316" />
           </Pressable>
         </View>
       </Animated.View>
