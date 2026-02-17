@@ -25,6 +25,9 @@ export const AuthNavigator = () => {
     <Stack.Navigator
       screenOptions={{
         headerShown: Boolean(false),
+        animation: 'fade',
+        animationDuration: 260,
+        gestureEnabled: true,
         contentStyle: { flex: 1, backgroundColor: '#ffffff' },
       }}
     >

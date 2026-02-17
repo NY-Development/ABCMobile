@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Image,
   ImageBackground,
@@ -16,9 +16,12 @@ import Animated, {
   FadeIn,
   FadeInDown,
   FadeInUp,
+  runOnJS,
+  useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
+  withTiming,
 } from 'react-native-reanimated';
 import { ROUTES } from '../../constants/routes';
 import { useThemeStore } from '../../store/themeStore';
@@ -99,6 +102,10 @@ export const LandingScreen = () => {
   const insets = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
   const searchScale = useSharedValue(1);
+  const lastScrollY = useSharedValue(0);
+  const barVisibility = useSharedValue(1);
+  const barState = useSharedValue(1);
+  const [barShown, setBarShown] = useState(true);
   const { mode, toggle } = useThemeStore();
   const isDark = mode === 'dark';
   const toggleIconName = isDark ? 'white-balance-sunny' : 'weather-night';
@@ -111,6 +118,30 @@ export const LandingScreen = () => {
   const searchAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: searchScale.value }],
   }));
+
+  const bottomBarAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: barVisibility.value,
+    transform: [{ translateY: (1 - barVisibility.value) * 24 }],
+  }));
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      const currentY = event.contentOffset.y;
+      const delta = currentY - lastScrollY.value;
+
+      if (delta < -6 && barState.value !== 0) {
+        barState.value = 0;
+        barVisibility.value = withTiming(0, { duration: 220 });
+        runOnJS(setBarShown)(false);
+      } else if (delta > 6 && barState.value !== 1) {
+        barState.value = 1;
+        barVisibility.value = withTiming(1, { duration: 220 });
+        runOnJS(setBarShown)(true);
+      }
+
+      lastScrollY.value = currentY;
+    },
+  });
 
   return (
     <SafeAreaView className="flex-1 bg-background-light dark:bg-background-dark" edges={['top', 'bottom']}>
@@ -147,10 +178,12 @@ export const LandingScreen = () => {
         </Pressable>
       </Animated.View>
 
-      <ScrollView
+      <Animated.ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 140 + insets.bottom }}
         showsVerticalScrollIndicator={false}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
       >
         {/* Hero Section */}
         <Animated.View
@@ -454,16 +487,20 @@ export const LandingScreen = () => {
         </Animated.View>
 
         <View className="h-8" />
-      </ScrollView>
+      </Animated.ScrollView>
 
       {/* Sticky Bottom Bar */}
       <Animated.View
         entering={FadeInUp.delay(400).duration(400).springify()}
         className="absolute left-0 right-0"
-        style={{
-          bottom: 0,
-          paddingBottom: Math.max(insets.bottom, 16) + 8,
-        }}
+        style={[
+          {
+            bottom: 0,
+            paddingBottom: Math.max(insets.bottom, 16) + 8,
+          },
+          bottomBarAnimatedStyle,
+        ]}
+        pointerEvents={barShown ? 'auto' : 'none'}
       >
         <View
           className="mx-auto w-[92%] max-w-md flex-row items-center gap-3 rounded-[32px] border border-primary/20 bg-background-light/70 p-2 dark:bg-background-dark/70"
