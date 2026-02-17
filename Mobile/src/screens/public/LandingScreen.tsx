@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Image,
   ImageBackground,
@@ -106,6 +106,7 @@ export const LandingScreen = () => {
   const barVisibility = useSharedValue(1);
   const barState = useSharedValue(1);
   const [barShown, setBarShown] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const { mode, toggle } = useThemeStore();
   const isDark = mode === 'dark';
   const toggleIconName = isDark ? 'white-balance-sunny' : 'weather-night';
@@ -118,6 +119,28 @@ export const LandingScreen = () => {
   const searchAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: searchScale.value }],
   }));
+
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+
+  const filteredBakeries = useMemo(() => {
+    if (!normalizedQuery) {
+      return FEATURED_BAKERIES;
+    }
+    return FEATURED_BAKERIES.filter((bakery) => {
+      const searchable = `${bakery.name} ${bakery.tagline}`.toLowerCase();
+      return searchable.includes(normalizedQuery);
+    });
+  }, [normalizedQuery]);
+
+  const filteredCakes = useMemo(() => {
+    if (!normalizedQuery) {
+      return POPULAR_CAKES;
+    }
+    return POPULAR_CAKES.filter((cake) => {
+      const searchable = `${cake.name} ${cake.by}`.toLowerCase();
+      return searchable.includes(normalizedQuery);
+    });
+  }, [normalizedQuery]);
 
   const bottomBarAnimatedStyle = useAnimatedStyle(() => ({
     opacity: barVisibility.value,
@@ -270,9 +293,15 @@ export const LandingScreen = () => {
                   className="flex-1 py-2 text-sm font-medium text-text-main dark:text-gray-100"
                   placeholder="Find sourdough, donuts..."
                   placeholderTextColor={isDark ? '#9aa0a6' : '#9ca3af'}
-                  editable={false}
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  autoCorrect={false}
+                  autoCapitalize="none"
                 />
-                <Pressable className="rounded-xl bg-primary px-4 py-2.5">
+                <Pressable
+                  className="rounded-xl bg-primary px-4 py-2.5"
+                  onPress={() => setSearchQuery('')}
+                >
                   <Text className="text-sm font-bold text-background-dark">Go</Text>
                 </Pressable>
               </View>
@@ -293,55 +322,66 @@ export const LandingScreen = () => {
               <Text className="text-sm font-semibold text-primary">See all</Text>
             </Pressable>
           </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ gap: 16, paddingHorizontal: 20, paddingVertical: 16 }}
-            className="mt-2"
-          >
-            {FEATURED_BAKERIES.map((bakery, index) => (
-              <Animated.View
-                key={bakery.id}
-                entering={FadeInDown.delay(280 + index * 80).duration(400).springify()}
-                className="w-[280px] overflow-hidden rounded-xl bg-surface-light dark:bg-surface-dark"
-                style={{
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.08,
-                  shadowRadius: 8,
-                  elevation: 4,
-                }}
-              >
-                <View className="relative h-36 w-full">
-                  <Image
-                    source={{ uri: bakery.image }}
-                    className="h-full w-full"
-                    resizeMode="cover"
-                  />
-                  <View className="absolute right-3 top-3 flex-row items-center gap-1 rounded-full bg-white/90 px-2 py-1 dark:bg-neutral-dark/80">
-                    <MaterialCommunityIcons name="star" size={14} color="#f97316" />
-                    <Text className="text-xs font-bold text-text-main dark:text-gray-100">{bakery.rating}</Text>
-                  </View>
-                </View>
-                <View className="flex-col p-4">
-                  <Text className="text-lg font-bold text-text-main dark:text-gray-100">{bakery.name}</Text>
-                  <Text className="text-sm text-text-muted dark:text-gray-400">{bakery.tagline}</Text>
-                  <View className="mt-3 flex-row items-center justify-between border-t border-gray-100 pt-3 dark:border-neutral-dark">
-                    <View className="flex-row items-center gap-1">
-                      <MaterialCommunityIcons name="map-marker" size={16} color="#6b7280" />
-                      <Text className="text-xs font-medium text-gray-500 dark:text-gray-400">{bakery.distance}</Text>
-                    </View>
-                    <View className="flex-row items-center gap-1">
-                      <MaterialCommunityIcons name="clock-outline" size={16} color={bakery.statusColor} />
-                      <Text className="text-xs font-medium" style={{ color: bakery.statusColor }}>
-                        {bakery.status}
-                      </Text>
+          {filteredBakeries.length === 0 ? (
+            <View className="mx-5 mt-4 rounded-2xl border border-dashed border-primary/30 bg-surface-light p-5 dark:bg-surface-dark">
+              <Text className="text-sm font-semibold text-text-main dark:text-gray-100">
+                No bakeries match your search yet.
+              </Text>
+              <Text className="mt-1 text-xs text-text-muted dark:text-gray-400">
+                Try another keyword like “chocolate” or “sourdough”.
+              </Text>
+            </View>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 16, paddingHorizontal: 20, paddingVertical: 16 }}
+              className="mt-2"
+            >
+              {filteredBakeries.map((bakery, index) => (
+                <Animated.View
+                  key={bakery.id}
+                  entering={FadeInDown.delay(280 + index * 80).duration(400).springify()}
+                  className="w-[280px] overflow-hidden rounded-xl bg-surface-light dark:bg-surface-dark"
+                  style={{
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.08,
+                    shadowRadius: 8,
+                    elevation: 4,
+                  }}
+                >
+                  <View className="relative h-36 w-full">
+                    <Image
+                      source={{ uri: bakery.image }}
+                      className="h-full w-full"
+                      resizeMode="cover"
+                    />
+                    <View className="absolute right-3 top-3 flex-row items-center gap-1 rounded-full bg-white/90 px-2 py-1 dark:bg-neutral-dark/80">
+                      <MaterialCommunityIcons name="star" size={14} color="#f97316" />
+                      <Text className="text-xs font-bold text-text-main dark:text-gray-100">{bakery.rating}</Text>
                     </View>
                   </View>
-                </View>
-              </Animated.View>
-            ))}
-          </ScrollView>
+                  <View className="flex-col p-4">
+                    <Text className="text-lg font-bold text-text-main dark:text-gray-100">{bakery.name}</Text>
+                    <Text className="text-sm text-text-muted dark:text-gray-400">{bakery.tagline}</Text>
+                    <View className="mt-3 flex-row items-center justify-between border-t border-gray-100 pt-3 dark:border-neutral-dark">
+                      <View className="flex-row items-center gap-1">
+                        <MaterialCommunityIcons name="map-marker" size={16} color="#6b7280" />
+                        <Text className="text-xs font-medium text-gray-500 dark:text-gray-400">{bakery.distance}</Text>
+                      </View>
+                      <View className="flex-row items-center gap-1">
+                        <MaterialCommunityIcons name="clock-outline" size={16} color={bakery.statusColor} />
+                        <Text className="text-xs font-medium" style={{ color: bakery.statusColor }}>
+                          {bakery.status}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                </Animated.View>
+              ))}
+            </ScrollView>
+          )}
         </Animated.View>
 
         {/* Popular Cakes */}
@@ -351,49 +391,60 @@ export const LandingScreen = () => {
               Popular Cakes Today
             </Text>
           </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ gap: 16, paddingHorizontal: 20, paddingVertical: 16 }}
-            className="mt-2"
-          >
-            {POPULAR_CAKES.map((cake, index) => (
-              <Animated.View
-                key={cake.id}
-                entering={FadeInUp.delay(350 + index * 80).duration(400).springify()}
-                className="w-40 overflow-hidden rounded-xl bg-surface-light dark:bg-surface-dark"
-                style={{
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.08,
-                  shadowRadius: 8,
-                  elevation: 4,
-                }}
-              >
-                <View className="aspect-square w-full">
-                  <Image
-                    source={{ uri: cake.image }}
-                    className="h-full w-full"
-                    resizeMode="cover"
-                  />
-                </View>
-                <View className="flex-col p-3">
-                  <Text className="truncate text-base font-bold text-text-main dark:text-gray-100" numberOfLines={1}>
-                    {cake.name}
-                  </Text>
-                  <Text className="truncate text-xs text-text-muted dark:text-gray-400" numberOfLines={1}>
-                    By {cake.by}
-                  </Text>
-                  <View className="mt-2 flex-row items-center justify-between">
-                    <Text className="text-sm font-bold text-primary">{cake.price}</Text>
-                    <Pressable className="h-6 w-6 items-center justify-center rounded-full bg-primary/10">
-                      <MaterialCommunityIcons name="plus" size={16} color="#f97316" />
-                    </Pressable>
+          {filteredCakes.length === 0 ? (
+            <View className="mx-5 mt-4 rounded-2xl border border-dashed border-primary/30 bg-surface-light p-5 dark:bg-surface-dark">
+              <Text className="text-sm font-semibold text-text-main dark:text-gray-100">
+                No cakes match your search yet.
+              </Text>
+              <Text className="mt-1 text-xs text-text-muted dark:text-gray-400">
+                Try another keyword like “berry” or “vanilla”.
+              </Text>
+            </View>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 16, paddingHorizontal: 20, paddingVertical: 16 }}
+              className="mt-2"
+            >
+              {filteredCakes.map((cake, index) => (
+                <Animated.View
+                  key={cake.id}
+                  entering={FadeInUp.delay(350 + index * 80).duration(400).springify()}
+                  className="w-40 overflow-hidden rounded-xl bg-surface-light dark:bg-surface-dark"
+                  style={{
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.08,
+                    shadowRadius: 8,
+                    elevation: 4,
+                  }}
+                >
+                  <View className="aspect-square w-full">
+                    <Image
+                      source={{ uri: cake.image }}
+                      className="h-full w-full"
+                      resizeMode="cover"
+                    />
                   </View>
-                </View>
-              </Animated.View>
-            ))}
-          </ScrollView>
+                  <View className="flex-col p-3">
+                    <Text className="truncate text-base font-bold text-text-main dark:text-gray-100" numberOfLines={1}>
+                      {cake.name}
+                    </Text>
+                    <Text className="truncate text-xs text-text-muted dark:text-gray-400" numberOfLines={1}>
+                      By {cake.by}
+                    </Text>
+                    <View className="mt-2 flex-row items-center justify-between">
+                      <Text className="text-sm font-bold text-primary">{cake.price}</Text>
+                      <Pressable className="h-6 w-6 items-center justify-center rounded-full bg-primary/10">
+                        <MaterialCommunityIcons name="plus" size={16} color="#f97316" />
+                      </Pressable>
+                    </View>
+                  </View>
+                </Animated.View>
+              ))}
+            </ScrollView>
+          )}
         </Animated.View>
 
         {/* Special Orders */}
