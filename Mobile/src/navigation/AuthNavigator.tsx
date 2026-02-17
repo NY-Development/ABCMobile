@@ -9,6 +9,12 @@ import { ForgotPasswordScreen } from '../screens/public/ForgotPasswordScreen';
 import { ResetPasswordScreen } from '../screens/public/ResetPasswordScreen';
 import { OTPVerificationScreen } from '../screens/public/OTPVerificationScreen';
 import { OAuthSuccessScreen } from '../screens/public/OAuthSuccessScreen';
+import { SettingsScreen } from '../screens/public/SettingsScreen';
+import { ContactScreen } from '../screens/public/ContactScreen';
+import { PrivacyPolicyScreen } from '../screens/public/PrivacyPolicyScreen';
+import { TermsOfServiceScreen } from '../screens/public/TermsOfServiceScreen';
+import { EulaScreen } from '../screens/public/EulaScreen';
+import { AboutScreen } from '../screens/customer/AboutScreen';
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
 
@@ -27,6 +33,12 @@ export const AuthNavigator = () => {
       <Stack.Screen name={ROUTES.ResetPassword} component={ResetPasswordScreen} />
       <Stack.Screen name={ROUTES.OTPVerification} component={OTPVerificationScreen} />
       <Stack.Screen name={ROUTES.OAuthSuccess} component={OAuthSuccessScreen} />
+      <Stack.Screen name={ROUTES.Settings} component={SettingsScreen} />
+      <Stack.Screen name={ROUTES.About} component={AboutScreen} />
+      <Stack.Screen name={ROUTES.Contact} component={ContactScreen} />
+      <Stack.Screen name={ROUTES.PrivacyPolicy} component={PrivacyPolicyScreen} />
+      <Stack.Screen name={ROUTES.TermsOfService} component={TermsOfServiceScreen} />
+      <Stack.Screen name={ROUTES.Eula} component={EulaScreen} />
     </Stack.Navigator>
   );
 };

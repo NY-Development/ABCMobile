@@ -119,7 +119,7 @@ export const LandingScreen = () => {
           <View className="h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-primary/20">
             <Image source={require('../../../assets/icon.png')} className="h-6 w-6 rounded-full" resizeMode="contain" />
           </View>
-          <Text className="text-lg font-bold tracking-tight text-text-main dark:text-gray-100">ABC</Text>
+          <Text className="text-lg font-bold tracking-tight text-text-main dark:text-gray-100">ABC Bakery</Text>
         </View>
         <Pressable
           className="h-10 w-10 items-center justify-center rounded-full bg-surface-light dark:bg-surface-dark"
@@ -388,6 +388,12 @@ export const LandingScreen = () => {
             }}
           >
             <Text className="text-base font-bold text-background-dark">Login</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => navigation.navigate(ROUTES.Settings as never)}
+            className="h-12 w-12 items-center justify-center rounded-2xl border-2 border-primary/20 bg-surface-light/60 text-primary dark:bg-surface-dark/60"
+          >
+            <MaterialCommunityIcons name="cog" size={20} color="#ecb613" />
           </Pressable>
         </View>
       </Animated.View>

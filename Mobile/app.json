@@ -31,6 +31,11 @@
         "backgroundColor": "#f8f8f6"
       },
       "package": "com.anonymous.ABCMobile"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "7bb90a7c-c171-477f-a9b2-7a568e3c433d"
+      }
     }
   }
 }

@@ -8,6 +8,11 @@ export const ROUTES = {
   OAuthSuccess: 'OAuthSuccess',
   Home: 'Home',
   About: 'About',
+  Settings: 'Settings',
+  Contact: 'Contact',
+  PrivacyPolicy: 'PrivacyPolicy',
+  TermsOfService: 'TermsOfService',
+  Eula: 'Eula',
 } as const;
 
 export type RouteName = (typeof ROUTES)[keyof typeof ROUTES];

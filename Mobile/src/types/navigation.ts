@@ -6,9 +6,16 @@ export type AuthStackParamList = {
   ResetPassword: { email?: string } | undefined;
   OTPVerification: { email?: string } | undefined;
   OAuthSuccess: { token?: string } | undefined;
+  Settings: undefined;
+  About: undefined;
+  Contact: undefined;
+  PrivacyPolicy: undefined;
+  TermsOfService: undefined;
+  Eula: undefined;
 };
 
 export type CustomerTabsParamList = {
   Home: undefined;
   About: undefined;
+  Settings: undefined;
 };
