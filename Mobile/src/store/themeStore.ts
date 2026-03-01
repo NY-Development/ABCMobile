@@ -20,7 +20,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   hydrated: false,
 
   initialize: async () => {
-    const stored = themeStorage.getSync();
+    const stored = await themeStorage.get();
     if (isThemeMode(stored)) {
       set({ mode: stored });
     }
@@ -29,12 +29,12 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
 
   setMode: async (mode) => {
     set({ mode });
-    themeStorage.setSync(mode);
+    await themeStorage.set(mode);
   },
 
   toggle: async () => {
     const next = get().mode === 'light' ? 'dark' : 'light';
     set({ mode: next });
-    themeStorage.setSync(next);
+    await themeStorage.set(next);
   },
 }));

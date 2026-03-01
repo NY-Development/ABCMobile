@@ -69,6 +69,8 @@ export const LoginScreen = () => {
           }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          keyboardDismissMode="on-drag"
+          automaticallyAdjustKeyboardInsets
         >
           {/* Main card */}
           <View

@@ -70,6 +70,8 @@ export const ResetPasswordScreen = () => {
           className="flex-1"
           contentContainerStyle={{ paddingBottom: 24 }}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          automaticallyAdjustKeyboardInsets
         >
         <View className="flex-row items-center justify-between px-4 pb-2 pt-6">
           <Pressable

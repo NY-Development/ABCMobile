@@ -214,6 +214,8 @@ export const LandingScreen = () => {
           onScroll={scrollHandler}
           scrollEventThrottle={16}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          automaticallyAdjustKeyboardInsets
         >
         {/* Hero Section */}
         <Animated.View

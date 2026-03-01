@@ -110,7 +110,9 @@ export const RegisterScreen = () => {
           }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
-        >
+          keyboardDismissMode="on-drag"
+          automaticallyAdjustKeyboardInsets
+          >
           {/* Step 1: Role selection */}
           {step === 1 && (
             <Animated.View

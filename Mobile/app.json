@@ -3,17 +3,10 @@
     "name": "ABC Mobile",
     "slug": "ABC-Mobile",
     "version": "1.0.0",
-    "web": {
-      "favicon": "./assets/favicon.png",
-      "bundler": "metro"
-    },
-    "experiments": {
-      "tsconfigPaths": true
-    },
-    "plugins": [],
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icon-square.png",
     "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -23,14 +16,26 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.ABCMobile"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/icon-square.png",
         "backgroundColor": "#f8f8f6"
       },
-      "package": "com.anonymous.ABCMobile"
+      "softwareKeyboardLayoutMode": "resize",
+      "package": "com.anonymous.ABCMobile",
+      "permissions": [
+        "RECEIVE_BOOT_COMPLETED"
+      ]
+    },
+    "plugins": [
+      "expo-font",
+      "expo-notifications"
+    ],
+    "experiments": {
+      "tsconfigPaths": true
     },
     "extra": {
       "eas": {

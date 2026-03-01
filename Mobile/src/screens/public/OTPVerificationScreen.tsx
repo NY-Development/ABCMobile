@@ -48,6 +48,8 @@ export const OTPVerificationScreen = () => {
           className="flex-1"
           contentContainerClassName="px-6 py-10"
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          automaticallyAdjustKeyboardInsets
         >
           <Text className="text-3xl font-extrabold text-gray-900 dark:text-gray-100">Verify OTP</Text>
           <Text className="mt-2 text-base text-gray-600 dark:text-gray-400">

@@ -137,6 +137,8 @@ export const CustomRequest = () => {
           contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 140 + insets.bottom }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          automaticallyAdjustKeyboardInsets
         >
         <View className="gap-2 pt-2">
           <Text className="text-xs font-semibold uppercase tracking-wider text-primary">Bespoke Creations</Text>

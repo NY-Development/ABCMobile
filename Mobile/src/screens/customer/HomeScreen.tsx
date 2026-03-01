@@ -106,6 +106,8 @@ export const HomeScreen = () => {
           className="flex-1"
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          automaticallyAdjustKeyboardInsets
         >
         <View className="bg-background-light/95 px-4 pb-2 pt-2 dark:bg-background-dark/95">
           <View className="flex-row items-center justify-between">

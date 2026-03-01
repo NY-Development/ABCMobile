@@ -44,6 +44,8 @@ export const ForgotPasswordScreen = () => {
           contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingBottom: 24 }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          automaticallyAdjustKeyboardInsets
         >
         <View className="flex-row items-center justify-between pb-3 pt-6">
           <Pressable

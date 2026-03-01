@@ -74,10 +74,10 @@ export const registerForPushNotificationsAsync = async (): Promise<string | null
   );
 
   const expoPushToken = tokenResult.data;
-  const cachedToken = pushTokenStorage.getSync();
+  const cachedToken = await pushTokenStorage.get();
 
   if (expoPushToken && expoPushToken !== cachedToken) {
-    pushTokenStorage.setSync(expoPushToken);
+    await pushTokenStorage.set(expoPushToken);
     await syncPushTokenToBackend(expoPushToken);
   }
 

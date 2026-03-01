@@ -42,6 +42,8 @@ export const ContactScreen = () => {
           className="flex-1"
           contentContainerStyle={{ paddingBottom: 32 }}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          automaticallyAdjustKeyboardInsets
         >
         <View className="flex-row items-center justify-between bg-background-light/90 px-5 py-4 dark:bg-background-dark/90">
           <Pressable
