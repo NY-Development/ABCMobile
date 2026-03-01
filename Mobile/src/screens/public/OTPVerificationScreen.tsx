@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useAuth } from '../../context/AuthProvider';
@@ -38,36 +39,47 @@ export const OTPVerificationScreen = () => {
   };
 
   return (
-    <ScrollView className="flex-1 bg-background-light dark:bg-background-dark" contentContainerClassName="px-6 py-10">
-      <Text className="text-3xl font-extrabold text-gray-900 dark:text-gray-100">Verify OTP</Text>
-      <Text className="mt-2 text-base text-gray-600 dark:text-gray-400">
-        Enter the one-time code sent to your email.
-      </Text>
+    <SafeAreaView className="flex-1 bg-background-light dark:bg-background-dark" edges={['top', 'bottom']}>
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView
+          className="flex-1"
+          contentContainerClassName="px-6 py-10"
+          keyboardShouldPersistTaps="handled"
+        >
+          <Text className="text-3xl font-extrabold text-gray-900 dark:text-gray-100">Verify OTP</Text>
+          <Text className="mt-2 text-base text-gray-600 dark:text-gray-400">
+            Enter the one-time code sent to your email.
+          </Text>
 
-      <View className="mt-8 space-y-5">
-        <Input
-          label="Email"
-          value={email}
-          onChangeText={setEmail}
-          placeholder="you@example.com"
-          keyboardType="email-address"
-        />
-        <Input
-          label="OTP code"
-          value={otp}
-          onChangeText={setOtp}
-          placeholder="123456"
-          keyboardType="numeric"
-        />
-      </View>
+          <View className="mt-8 space-y-5">
+            <Input
+              label="Email"
+              value={email}
+              onChangeText={setEmail}
+              placeholder="you@example.com"
+              keyboardType="email-address"
+            />
+            <Input
+              label="OTP code"
+              value={otp}
+              onChangeText={setOtp}
+              placeholder="123456"
+              keyboardType="numeric"
+            />
+          </View>
 
-      {error ? <Text className="mt-4 text-sm text-red-500">{error}</Text> : null}
-      {message ? <Text className="mt-2 text-sm text-green-600">{message}</Text> : null}
+          {error ? <Text className="mt-4 text-sm text-red-500">{error}</Text> : null}
+          {message ? <Text className="mt-2 text-sm text-green-600">{message}</Text> : null}
 
-      <View className="mt-6 space-y-4">
-        <Button title="Verify OTP" onPress={handleVerify} loading={loading} />
-        <Button title="Resend OTP" variant="outline" onPress={handleResend} />
-      </View>
-    </ScrollView>
+          <View className="mt-6 space-y-4">
+            <Button title="Verify OTP" onPress={handleVerify} loading={Boolean(loading)} />
+            <Button title="Resend OTP" variant="outline" onPress={handleResend} />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };

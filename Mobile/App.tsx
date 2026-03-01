@@ -4,6 +4,7 @@ import { StatusBar } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
+import { QueryClientProvider } from '@tanstack/react-query';
 import * as Font from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -12,6 +13,8 @@ import { useColorScheme } from 'nativewind';
 import { RootNavigator } from './src/navigation';
 import { AuthProvider } from './src/context/AuthProvider';
 import { useThemeStore } from './src/store/themeStore';
+import { queryClient } from './src/services/queryClient';
+import { AppRuntimeProvider } from './src/providers/AppRuntimeProvider';
 
 // Prevent the splash screen from hiding until fonts are loaded
 SplashScreen.preventAutoHideAsync();
@@ -61,12 +64,16 @@ export default function App() {
   return (
     <SafeAreaProvider onLayout={onLayoutRootView}>
       <PaperProvider theme={paperTheme}>
-        <AuthProvider>
-          <NavigationContainer>
-            <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'} />
-            <RootNavigator />
-          </NavigationContainer>
-        </AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <AppRuntimeProvider>
+              <NavigationContainer>
+                <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'} />
+                <RootNavigator />
+              </NavigationContainer>
+            </AppRuntimeProvider>
+          </AuthProvider>
+        </QueryClientProvider>
       </PaperProvider>
     </SafeAreaProvider>
   );

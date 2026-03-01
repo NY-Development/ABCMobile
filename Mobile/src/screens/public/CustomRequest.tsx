@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { Alert, Animated, Image, Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Alert, Animated, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -128,11 +128,16 @@ export const CustomRequest = () => {
         </View>
       </View>
 
-      <ScrollView
+      <KeyboardAvoidingView
         className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 140 + insets.bottom }}
-        showsVerticalScrollIndicator={false}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 140 + insets.bottom }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
         <View className="gap-2 pt-2">
           <Text className="text-xs font-semibold uppercase tracking-wider text-primary">Bespoke Creations</Text>
           <Text className="text-3xl font-bold text-text-main dark:text-gray-100">Design your dream cake.</Text>
@@ -306,7 +311,8 @@ export const CustomRequest = () => {
             </View>
           </View>
         </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       <View
         className="absolute left-0 right-0 px-6"

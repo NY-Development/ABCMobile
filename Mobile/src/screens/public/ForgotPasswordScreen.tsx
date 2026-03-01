@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -35,11 +35,16 @@ export const ForgotPasswordScreen = () => {
       <View className="absolute -right-20 top-0 h-56 w-56 rounded-full bg-primary/5" />
       <View className="absolute -left-16 bottom-0 h-44 w-44 rounded-full bg-primary/5" />
 
-      <ScrollView
+      <KeyboardAvoidingView
         className="flex-1"
-        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingBottom: 24 }}
-        showsVerticalScrollIndicator={false}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingBottom: 24 }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
         <View className="flex-row items-center justify-between pb-3 pt-6">
           <Pressable
             onPress={() => navigation.goBack()}
@@ -92,7 +97,7 @@ export const ForgotPasswordScreen = () => {
 
           <Pressable
             onPress={handleSubmit}
-            disabled={loading}
+            disabled={Boolean(loading)}
             className="mt-2 w-full flex-row items-center justify-center gap-2 rounded-full bg-primary py-4"
             style={{
               shadowColor: '#f97316',
@@ -114,7 +119,8 @@ export const ForgotPasswordScreen = () => {
           <MaterialCommunityIcons name="chevron-left" size={18} color={isDark ? '#b0a690' : '#7e7052'} />
           <Text className="text-sm font-semibold text-text-muted dark:text-gray-400">Back to Login</Text>
         </Pressable>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };

@@ -1,21 +1,48 @@
 import React from 'react';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useThemeStore } from '../../store/themeStore';
+import { useAuth } from '../../context/AuthProvider';
 
 export const ContactScreen = () => {
   const navigation = useNavigation();
+  const { user } = useAuth();
   const { mode, toggle } = useThemeStore();
   const isDark = mode === 'dark';
   const toggleIconName = isDark ? 'white-balance-sunny' : 'weather-night';
   const toggleIconColor = isDark ? '#f5d67d' : '#374151';
   const placeholderColor = isDark ? '#9aa0a6' : '#9ca3af';
+  const profileName = user?.name ?? 'ABC customer';
+  const profileEmail = typeof user?.email === 'string' ? user.email : '';
+
+  const openSupportSms = async () => {
+    const body = encodeURIComponent(
+      `Hi ABC Support, this is ${profileName}${profileEmail ? ` (${profileEmail})` : ''}. I need help with:`
+    );
+    await Linking.openURL(`sms:+251911123456?body=${body}`);
+  };
+
+  const openSupportEmail = async () => {
+    const subject = encodeURIComponent('ABC Mobile Support Request');
+    const body = encodeURIComponent(
+      `Hello ABC Support,%0D%0A%0D%0AName: ${profileName}%0D%0AEmail: ${profileEmail || 'N/A'}%0D%0A%0D%0ADetails:`
+    );
+    await Linking.openURL(`mailto:help@abcbakery.com?subject=${subject}&body=${body}`);
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-background-light dark:bg-background-dark" edges={['top', 'bottom']}>
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 32 }}>
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ paddingBottom: 32 }}
+          keyboardShouldPersistTaps="handled"
+        >
         <View className="flex-row items-center justify-between bg-background-light/90 px-5 py-4 dark:bg-background-dark/90">
           <Pressable
             onPress={() => navigation.goBack()}
@@ -40,7 +67,10 @@ export const ContactScreen = () => {
           </View>
 
           <View className="mb-10 gap-4">
-            <Pressable className="flex-row items-center gap-4 rounded-xl bg-surface-light p-4 shadow-sm ring-1 ring-black/5 dark:bg-surface-dark dark:ring-white/5">
+            <Pressable
+              onPress={openSupportSms}
+              className="flex-row items-center gap-4 rounded-xl bg-surface-light p-4 shadow-sm ring-1 ring-black/5 dark:bg-surface-dark dark:ring-white/5"
+            >
               <View className="h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                 <MaterialCommunityIcons name="phone" size={20} color="#f97316" />
               </View>
@@ -49,7 +79,10 @@ export const ContactScreen = () => {
                 <Text className="text-xs text-text-muted dark:text-gray-400">+251 911 123 456</Text>
               </View>
             </Pressable>
-            <Pressable className="flex-row items-center gap-4 rounded-xl bg-surface-light p-4 shadow-sm ring-1 ring-black/5 dark:bg-surface-dark dark:ring-white/5">
+            <Pressable
+              onPress={openSupportEmail}
+              className="flex-row items-center gap-4 rounded-xl bg-surface-light p-4 shadow-sm ring-1 ring-black/5 dark:bg-surface-dark dark:ring-white/5"
+            >
               <View className="h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                 <MaterialCommunityIcons name="email" size={20} color="#f97316" />
               </View>
@@ -126,7 +159,8 @@ export const ContactScreen = () => {
             </View>
           </View>
         </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };

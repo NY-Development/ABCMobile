@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Image,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -96,7 +98,15 @@ export const HomeScreen = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-background-light dark:bg-background-dark" edges={['top']}>
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView
+          className="flex-1"
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
         <View className="bg-background-light/95 px-4 pb-2 pt-2 dark:bg-background-dark/95">
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center gap-3">
@@ -329,7 +339,8 @@ export const HomeScreen = () => {
             </View>
           </ScrollView>
         </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };

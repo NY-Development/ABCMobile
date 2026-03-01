@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -62,7 +62,15 @@ export const ResetPasswordScreen = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-background-light dark:bg-background-dark">
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 24 }}>
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ paddingBottom: 24 }}
+          keyboardShouldPersistTaps="handled"
+        >
         <View className="flex-row items-center justify-between px-4 pb-2 pt-6">
           <Pressable
             onPress={() => navigation.goBack()}
@@ -197,7 +205,7 @@ export const ResetPasswordScreen = () => {
 
           <Pressable
             onPress={handleSubmit}
-            disabled={loading}
+            disabled={Boolean(loading)}
             className="mt-8 h-14 w-full items-center justify-center rounded-xl bg-primary"
             style={{
               shadowColor: '#f97316',
@@ -210,7 +218,8 @@ export const ResetPasswordScreen = () => {
             <Text className="text-base font-bold text-primary-content">Reset Password</Text>
           </Pressable>
         </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };

@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   Image,
   ImageBackground,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -201,13 +203,18 @@ export const LandingScreen = () => {
         </Pressable>
       </Animated.View>
 
-      <Animated.ScrollView
+      <KeyboardAvoidingView
         className="flex-1"
-        contentContainerStyle={{ paddingBottom: 140 + insets.bottom }}
-        showsVerticalScrollIndicator={false}
-        onScroll={scrollHandler}
-        scrollEventThrottle={16}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
+        <Animated.ScrollView
+          className="flex-1"
+          contentContainerStyle={{ paddingBottom: 140 + insets.bottom }}
+          showsVerticalScrollIndicator={false}
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
+          keyboardShouldPersistTaps="handled"
+        >
         {/* Hero Section */}
         <Animated.View
           entering={FadeIn.duration(300)}
@@ -538,7 +545,8 @@ export const LandingScreen = () => {
         </Animated.View>
 
         <View className="h-8" />
-      </Animated.ScrollView>
+        </Animated.ScrollView>
+      </KeyboardAvoidingView>
 
       {/* Sticky Bottom Bar */}
       <Animated.View
