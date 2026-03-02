@@ -10,6 +10,7 @@ import { ExploreScreen } from '../screens/customer/ExploreScreen';
 import { OrdersScreen } from '../screens/customer/OrdersScreen';
 import { CartScreen } from '../screens/customer/CartScreen';
 import { CheckoutScreen } from '../screens/customer/CheckoutScreen';
+import { DetailedUpdateScreen } from '../screens/public/DetailedUpdateScreen';
 import { NotificationScreen } from '../screens/public/NotificationScreen';
 import { CustomerStorefrontScreen } from '../screens/customer/CustomerStorefrontScreen';
 import { ProductDetailScreen } from '../screens/customer/ProductDetailScreen';
@@ -89,6 +90,7 @@ export const CustomerNavigator = () => {
       <Stack.Screen name={ROUTES.ProductDetail} component={ProductDetailScreen} />
       <Stack.Screen name={ROUTES.Cart} component={CartScreen} />
       <Stack.Screen name={ROUTES.Checkout} component={CheckoutScreen} />
+      <Stack.Screen name={ROUTES.Update} component={DetailedUpdateScreen} />
       <Stack.Screen name={ROUTES.Notification} component={NotificationScreen} />
     </Stack.Navigator>
   );

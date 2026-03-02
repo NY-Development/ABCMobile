@@ -231,31 +231,6 @@ export const OrdersScreen = () => {
                   </Pressable>
                 </View>
 
-                <View className="flex-row items-center gap-4 py-2">
-                  <Text className="text-xs font-bold uppercase tracking-widest text-text-muted dark:text-gray-400">Recent Past Orders</Text>
-                  <View className="h-px flex-1 bg-border-light dark:bg-border-dark" />
-                </View>
-
-                <View className="flex-row items-center justify-between rounded-2xl bg-surface-light p-4 opacity-90 ring-1 ring-border-light dark:bg-surface-dark dark:ring-border-dark">
-                  <View className="flex-row gap-3">
-                    <View className="h-12 w-12 overflow-hidden rounded-xl bg-border-light dark:bg-border-dark">
-                      <Image
-                        source={{
-                          uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBQSNcO8miyLWldgur1XYUhn9GhauV_tYMJAq4DyvsTKEu6nJMa7-WADYIrZY3lZjOfaFnxENFP2ofuAe7CYNCL1gb4aOeKfXeKVPfOzKLg0ybxNGPSzetXd1wtjehMNjUAszZKqAP4LsOCdCTlW7i9F4mDNgGPeeOHzxdZhOM8rCwTsdZbSZwtAPhPrZpASkRyIMqHNi6lGwS7ijOc5QLUrXDroQ3zp4gaY9SExLiDIBYs2dVaXSUHPfag0HWIShepUCZIp2hliINW',
-                        }}
-                        className="h-full w-full"
-                        resizeMode="cover"
-                      />
-                    </View>
-                    <View>
-                      <Text className="text-sm font-bold text-text-main dark:text-gray-100">The Bake Shop</Text>
-                      <Text className="text-[11px] text-text-muted dark:text-gray-400">Oct 24 • 850 ETB</Text>
-                    </View>
-                  </View>
-                  <Pressable className="rounded-full bg-surface-light px-4 py-2 ring-1 ring-border-light dark:bg-surface-dark dark:ring-border-dark">
-                    <Text className="text-xs font-bold text-primary">Reorder</Text>
-                  </Pressable>
-                </View>
               </>
             ) : (
               <>

@@ -15,6 +15,7 @@ export const ROUTES = {
   Explore: 'Explore',
   Cart: 'Cart',
   Checkout: 'Checkout',
+  Update: 'Update',
   Notification: 'Notification',
   Orders: 'Orders',
   CustomerTabs: 'CustomerTabs',

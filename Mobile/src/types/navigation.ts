@@ -21,6 +21,7 @@ export type CustomerStackParamList = {
   Explore: undefined;
   Cart: undefined;
   Checkout: undefined;
+  Update: undefined;
   Notification: undefined;
   Orders: undefined;
   CustomerTabs: undefined;
@@ -72,6 +73,7 @@ export type OwnerStackParamList = {
   OwnerProducts: undefined;
   OwnerOrders: undefined;
   OwnerProfile: undefined;
+  Update: undefined;
   Notification: undefined;
   OwnerOrderDetail: {
     orderId: string;

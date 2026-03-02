@@ -10,6 +10,7 @@ import { ProductsScreen } from '../screens/owner/ProductsScreen';
 import { OrdersScreen } from '../screens/owner/OrdersScreen';
 import { ProfileScreen } from '../screens/owner/ProfileScreen';
 import { OrderDetailScreen } from '../screens/owner/OrderDetailScreen';
+import { DetailedUpdateScreen } from '../screens/public/DetailedUpdateScreen';
 import { NotificationScreen } from '../screens/public/NotificationScreen';
 import { useThemeStore } from '../store/themeStore';
 
@@ -75,6 +76,7 @@ export const OwnerNavigator = () => {
     >
       <Stack.Screen name={ROUTES.OwnerTabs} component={OwnerTabNavigator} />
       <Stack.Screen name={ROUTES.OwnerOrderDetail} component={OrderDetailScreen} />
+      <Stack.Screen name={ROUTES.Update} component={DetailedUpdateScreen} />
       <Stack.Screen name={ROUTES.Notification} component={NotificationScreen} />
     </Stack.Navigator>
   );

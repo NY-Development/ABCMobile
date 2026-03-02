@@ -25,7 +25,7 @@ import {
 } from '../../services/customerService';
 import type { CustomerStackParamList } from '../../types/navigation';
 
-const CATEGORY_FILTERS = ['All', 'Cakes', 'Bread', 'Birthday', 'Wedding'];
+const CATEGORY_FILTERS = ['All', 'Cakes', 'Bread', 'Cookies', 'Cupcake', 'Dessert', 'Snacks', 'Beverages', 'Other'];
 
 export const HomeScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<CustomerStackParamList>>();
