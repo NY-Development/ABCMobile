@@ -48,21 +48,21 @@ export const CustomerProfileScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         <View className="flex-row items-center justify-between px-6 py-5">
-          <Text className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+          <Text className="text-2xl font-bold tracking-tight text-slate-900 dark:text-gray-50">
             Profile
           </Text>
           <Pressable
             onPress={toggle}
-            className="h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm dark:bg-slate-800"
+            className="h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm dark:border dark:border-white/10 dark:bg-charcoal-medium"
           >
-            <MaterialCommunityIcons name={toggleIconName} size={20} color={isDark ? '#ffffff' : '#0f172a'} />
+            <MaterialCommunityIcons name={toggleIconName} size={20} color={isDark ? '#ecb613' : '#0f172a'} />
           </Pressable>
         </View>
 
         <View className="px-6 pb-6">
-          <View className="items-center rounded-xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-700/50 dark:bg-slate-800">
+          <View className="items-center rounded-3xl border border-slate-100 bg-white p-7 shadow-sm dark:border-gold-accent/20 dark:bg-charcoal-medium">
             <View className="relative mb-4">
-              <View className="h-24 w-24 overflow-hidden rounded-full bg-slate-200 shadow-md ring-4 ring-background-light dark:bg-slate-700 dark:ring-background-dark">
+              <View className="h-28 w-28 overflow-hidden rounded-full bg-slate-200 shadow-md ring-4 ring-background-light dark:bg-charcoal-dark dark:ring-gold-accent/30">
                 <Image
                   source={{
                     uri: displayImage,
@@ -71,12 +71,12 @@ export const CustomerProfileScreen = () => {
                   resizeMode="cover"
                 />
               </View>
-              <Pressable className="absolute bottom-0 right-0 h-8 w-8 items-center justify-center rounded-full bg-primary shadow-lg">
-                <MaterialCommunityIcons name="pencil" size={14} color="#ffffff" />
+              <Pressable className="absolute bottom-0 right-0 h-9 w-9 items-center justify-center rounded-full border-4 border-white bg-primary shadow-lg dark:border-charcoal-medium">
+                <MaterialCommunityIcons name="pencil" size={14} color="#121212" />
               </Pressable>
             </View>
-            <Text className="mb-1 text-xl font-bold text-slate-900 dark:text-white">{displayName}</Text>
-            <Text className="text-sm font-medium text-slate-500 dark:text-slate-400">
+            <Text className="mb-1 text-2xl font-bold text-slate-900 dark:text-gray-50">{displayName}</Text>
+            <Text className="text-sm font-medium text-slate-500 dark:text-white/50">
               {displayEmail}
             </Text>
           </View>
@@ -86,24 +86,24 @@ export const CustomerProfileScreen = () => {
           {MENU_GROUPS.map((group, index) => (
             <View
               key={`group-${index}`}
-              className="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm dark:border-slate-700/50 dark:bg-slate-800"
+              className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm dark:border-white/5 dark:bg-charcoal-medium"
             >
               {group.map((item, itemIndex) => (
                 <Pressable
                   key={item.label}
                   className={`flex-row items-center gap-4 p-4 ${
                     itemIndex < group.length - 1
-                      ? 'border-b border-slate-100 dark:border-slate-700/50'
+                      ? 'border-b border-slate-100 dark:border-white/5'
                       : ''
                   }`}
                 >
-                  <View className="h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                    <MaterialCommunityIcons name={item.icon} size={18} color="#f97316" />
+                  <View className="h-11 w-11 items-center justify-center rounded-full bg-primary/10">
+                    <MaterialCommunityIcons name={item.icon} size={18} color="#ecb613" />
                   </View>
-                  <Text className="flex-1 text-sm font-semibold text-slate-900 dark:text-white">
+                  <Text className="flex-1 text-base font-semibold text-slate-900 dark:text-gray-50">
                     {item.label}
                   </Text>
-                  <MaterialCommunityIcons name="chevron-right" size={20} color={isDark ? '#94a3b8' : '#9ca3af'} />
+                  <MaterialCommunityIcons name="chevron-right" size={20} color={isDark ? '#ffffff33' : '#9ca3af'} />
                 </Pressable>
               ))}
             </View>
@@ -112,15 +112,15 @@ export const CustomerProfileScreen = () => {
           <Pressable
             onPress={handleLogout}
             disabled={Boolean(loading)}
-            className="mt-4 flex-row items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-900/30 dark:bg-red-900/10"
+            className="mt-2 flex-row items-center justify-center gap-2 rounded-2xl border border-primary/40 bg-transparent p-4"
           >
-            <MaterialCommunityIcons name="logout" size={18} color={isDark ? '#fca5a5' : '#dc2626'} />
-            <Text className="text-sm font-bold text-red-600 dark:text-red-400">
+            <MaterialCommunityIcons name="logout" size={18} color={isDark ? '#ecb613' : '#dc2626'} />
+            <Text className="text-sm font-bold text-red-600 dark:text-gold-accent">
               {loading ? 'Logging out...' : 'Log Out'}
             </Text>
           </Pressable>
 
-          <Text className="pb-6 pt-2 text-center text-xs text-slate-400 dark:text-slate-600">App Version 2.4.0</Text>
+          <Text className="pb-6 pt-2 text-center text-xs tracking-widest text-slate-400 dark:text-white/20">App Version 2.4.0 • Adama Premium</Text>
         </View>
       </ScrollView>
     </SafeAreaView>

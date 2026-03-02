@@ -11,6 +11,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
 
 import { RootNavigator } from './src/navigation';
+import { navigationRef } from './src/navigation/navigationRef';
 import { AuthProvider } from './src/context/AuthProvider';
 import { useThemeStore } from './src/store/themeStore';
 import { queryClient } from './src/services/queryClient';
@@ -67,7 +68,7 @@ export default function App() {
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <AppRuntimeProvider>
-              <NavigationContainer>
+              <NavigationContainer ref={navigationRef}>
                 <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'} />
                 <RootNavigator />
               </NavigationContainer>

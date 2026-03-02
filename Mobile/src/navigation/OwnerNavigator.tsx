@@ -10,6 +10,7 @@ import { ProductsScreen } from '../screens/owner/ProductsScreen';
 import { OrdersScreen } from '../screens/owner/OrdersScreen';
 import { ProfileScreen } from '../screens/owner/ProfileScreen';
 import { OrderDetailScreen } from '../screens/owner/OrderDetailScreen';
+import { NotificationScreen } from '../screens/public/NotificationScreen';
 import { useThemeStore } from '../store/themeStore';
 
 const Tab = createBottomTabNavigator<OwnerTabParamList>();
@@ -74,6 +75,7 @@ export const OwnerNavigator = () => {
     >
       <Stack.Screen name={ROUTES.OwnerTabs} component={OwnerTabNavigator} />
       <Stack.Screen name={ROUTES.OwnerOrderDetail} component={OrderDetailScreen} />
+      <Stack.Screen name={ROUTES.Notification} component={NotificationScreen} />
     </Stack.Navigator>
   );
 };

@@ -19,6 +19,9 @@ export type AuthStackParamList = {
 export type CustomerStackParamList = {
   CustomerHome: undefined;
   Explore: undefined;
+  Cart: undefined;
+  Checkout: undefined;
+  Notification: undefined;
   Orders: undefined;
   CustomerTabs: undefined;
   CustomerStorefront: {
@@ -69,6 +72,7 @@ export type OwnerStackParamList = {
   OwnerProducts: undefined;
   OwnerOrders: undefined;
   OwnerProfile: undefined;
+  Notification: undefined;
   OwnerOrderDetail: {
     orderId: string;
     placedAt: string;

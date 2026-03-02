@@ -493,7 +493,10 @@ export const CustomerStorefrontScreen = () => {
         </View>
 
         <View className="absolute left-0 right-0 z-40 px-5" style={{ bottom: Math.max(insets.bottom + 8, 16) }}>
-          <Pressable className="h-14 flex-row items-center justify-between rounded-xl bg-primary px-5 shadow-xl shadow-primary/30">
+          <Pressable
+            onPress={() => navigation.navigate(ROUTES.Cart)}
+            className="h-14 flex-row items-center justify-between rounded-xl bg-primary px-5 shadow-xl shadow-primary/30"
+          >
             <View className="flex-row items-center gap-3">
               <View className="h-8 w-8 items-center justify-center rounded-full bg-white/20">
                 <Text className="text-sm font-bold text-neutral-text-dark">2</Text>

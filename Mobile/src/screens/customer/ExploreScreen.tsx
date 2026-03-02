@@ -5,11 +5,14 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { ROUTES } from '../../constants/routes';
+import { useThemeStore } from '../../store/themeStore';
 import type { CustomerStackParamList } from '../../types/navigation';
 
 export const ExploreScreen = () => {
   const navigation = useNavigation<StackNavigationProp<CustomerStackParamList, 'Explore'>>();
   const insets = useSafeAreaInsets();
+  const { mode, toggle } = useThemeStore();
+  const isDark = mode === 'dark';
 
   const categories = [
     {
@@ -87,6 +90,28 @@ export const ExploreScreen = () => {
     <SafeAreaView className="flex-1 bg-background-light dark:bg-background-dark" edges={['top', 'bottom']}>
       <View className="flex-1">
         <View className="bg-background-light/85 px-5 pb-4 pt-2 dark:bg-background-dark/85">
+          <View className="mb-5 flex-row items-center justify-between">
+            <Text className="text-3xl font-extrabold tracking-tight text-text-main dark:text-gray-100">Explore</Text>
+            <View className="flex-row items-center gap-3">
+              <Pressable
+                onPress={toggle}
+                className="h-10 w-10 items-center justify-center rounded-full bg-surface-light shadow-sm ring-1 ring-black/5 dark:bg-surface-dark"
+              >
+                <MaterialCommunityIcons
+                  name={isDark ? 'white-balance-sunny' : 'weather-night'}
+                  size={20}
+                  color={isDark ? '#ecb613' : '#1b180d'}
+                />
+              </Pressable>
+              <Pressable
+                onPress={() => navigation.navigate(ROUTES.Cart)}
+                className="h-10 w-10 items-center justify-center rounded-full bg-surface-light shadow-sm ring-1 ring-black/5 dark:bg-surface-dark"
+              >
+                <MaterialCommunityIcons name="cart-outline" size={20} color={isDark ? '#f3f0e7' : '#1b180d'} />
+              </Pressable>
+            </View>
+          </View>
+
           <View className="flex-row items-center gap-3">
             <View className="relative flex-1">
               <View className="pointer-events-none absolute inset-y-0 left-0 items-center justify-center pl-4">

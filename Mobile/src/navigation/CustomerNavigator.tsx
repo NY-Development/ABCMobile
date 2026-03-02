@@ -8,6 +8,9 @@ import { ROUTES } from '../constants/routes';
 import { HomeScreen } from '../screens/customer/HomeScreen';
 import { ExploreScreen } from '../screens/customer/ExploreScreen';
 import { OrdersScreen } from '../screens/customer/OrdersScreen';
+import { CartScreen } from '../screens/customer/CartScreen';
+import { CheckoutScreen } from '../screens/customer/CheckoutScreen';
+import { NotificationScreen } from '../screens/public/NotificationScreen';
 import { CustomerStorefrontScreen } from '../screens/customer/CustomerStorefrontScreen';
 import { ProductDetailScreen } from '../screens/customer/ProductDetailScreen';
 import { CustomerProfileScreen } from '../screens/customer/CustomerProfileScreen';
@@ -84,6 +87,9 @@ export const CustomerNavigator = () => {
       <Stack.Screen name={ROUTES.CustomerStorefront} component={CustomerStorefrontScreen} />
       <Stack.Screen name={ROUTES.BakeryDetail} component={CustomerStorefrontScreen} />
       <Stack.Screen name={ROUTES.ProductDetail} component={ProductDetailScreen} />
+      <Stack.Screen name={ROUTES.Cart} component={CartScreen} />
+      <Stack.Screen name={ROUTES.Checkout} component={CheckoutScreen} />
+      <Stack.Screen name={ROUTES.Notification} component={NotificationScreen} />
     </Stack.Navigator>
   );
 };

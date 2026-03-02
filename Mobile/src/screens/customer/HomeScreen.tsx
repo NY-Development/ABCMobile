@@ -15,6 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ROUTES } from '../../constants/routes';
 import { useAuth } from '../../context/AuthProvider';
+import { useInAppNotifications } from '../../providers/AppRuntimeProvider';
 import { useThemeStore } from '../../store/themeStore';
 import {
   fetchAllProducts,
@@ -39,6 +40,7 @@ export const HomeScreen = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
+  const { showDropdown } = useInAppNotifications();
 
   useEffect(() => {
     let isMounted = true;
@@ -139,7 +141,10 @@ export const HomeScreen = () => {
               >
                 <MaterialCommunityIcons name={toggleIconName} size={20} color={toggleIconColor} />
               </Pressable>
-              <Pressable className="h-10 w-10 items-center justify-center rounded-full bg-surface-light shadow-sm ring-1 ring-border-light dark:bg-surface-dark dark:ring-border-dark">
+              <Pressable
+                onPress={showDropdown}
+                className="h-10 w-10 items-center justify-center rounded-full bg-surface-light shadow-sm ring-1 ring-border-light dark:bg-surface-dark dark:ring-border-dark"
+              >
                 <View className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" />
                 <MaterialCommunityIcons name="bell-outline" size={20} color={toggleIconColor} />
               </Pressable>
