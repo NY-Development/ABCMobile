@@ -62,6 +62,8 @@ const CustomerTabNavigator = () => {
 };
 
 export const CustomerNavigator = () => {
+  const { mode } = useThemeStore();
+  const isDark = mode === 'dark';
   return (
     <Stack.Navigator
       initialRouteName={ROUTES.CustomerTabs}
@@ -69,6 +71,13 @@ export const CustomerNavigator = () => {
         headerShown: Boolean(false),
         animation: 'fade',
         animationDuration: 260,
+        contentStyle: { 
+          flex: 1, 
+          backgroundColor: isDark ? '#2d2616' : '#ffffff',
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          overflow: 'hidden',
+         },
       }}
     >
       <Stack.Screen name={ROUTES.CustomerTabs} component={CustomerTabNavigator} />

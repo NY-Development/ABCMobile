@@ -80,7 +80,7 @@ Never auto-send messages silently.
 
 ---
 
-# 4. Storage Rules
+<!-- # 4. Storage Rules
 
 ## 4.1 MMKV (Mandatory)
 
@@ -109,7 +109,7 @@ Must use:
 
 Do not replicate MongoDB logic locally.
 
----
+--- -->
 
 # 5. AppState & NetInfo (Mandatory Global Setup)
 

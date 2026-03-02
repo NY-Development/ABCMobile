@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -16,6 +16,7 @@ export const OrderDetailScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<OwnerStackParamList>>();
   const route = useRoute<RouteProp<OwnerStackParamList, 'OwnerOrderDetail'>>();
   const { mode, toggle } = useThemeStore();
+  const insets = useSafeAreaInsets();
   const isDark = mode === 'dark';
 
   const {
@@ -39,7 +40,7 @@ export const OrderDetailScreen = () => {
   }, [currentStatus]);
 
   return (
-    <SafeAreaView className="flex-1 bg-background-light dark:bg-background-dark" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-background-light dark:bg-background-dark" edges={['top', 'bottom']}>
       <View className="flex-1">
         <View className="flex-row items-center justify-between bg-background-light/80 px-4 pb-3 pt-2 dark:bg-background-dark/80">
           <Pressable
@@ -198,7 +199,7 @@ export const OrderDetailScreen = () => {
           </View>
         </ScrollView>
 
-        <View className="absolute bottom-0 left-0 w-full items-center bg-gradient-to-t from-background-light via-background-light p-4 dark:from-background-dark dark:via-background-dark">
+        <View className="absolute left-0 w-full items-center bg-gradient-to-t from-background-light via-background-light p-4 dark:from-background-dark dark:via-background-dark" style={{ bottom: Math.max(insets.bottom, 0) }}>
           <Pressable className="h-14 w-full max-w-sm flex-row items-center justify-center gap-2 rounded-full bg-primary shadow-lg shadow-primary/30">
             <MaterialCommunityIcons name="printer-outline" size={20} color="#1b180d" />
             <Text className="font-bold text-text-main">Print Order Details</Text>

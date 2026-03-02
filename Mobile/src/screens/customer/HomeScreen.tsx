@@ -231,6 +231,8 @@ export const HomeScreen = () => {
                       reviewsCount: 120,
                       location: owner.ownerInfo?.location ?? 'Adama',
                       status: 'Open Now',
+                      ownerPhone: owner.phone,
+                      ownerEmail: owner.email,
                     })
                   }
                   className="overflow-hidden rounded-2xl bg-surface-light shadow-lg shadow-primary/5 ring-1 ring-black/5 dark:bg-surface-dark dark:ring-white/5"

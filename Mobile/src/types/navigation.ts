@@ -29,6 +29,8 @@ export type CustomerStackParamList = {
     reviewsCount?: number;
     location?: string;
     status?: string;
+    ownerPhone?: string;
+    ownerEmail?: string;
   };
   BakeryDetail: {
     ownerId?: string;
@@ -38,6 +40,8 @@ export type CustomerStackParamList = {
     reviewsCount?: number;
     location?: string;
     status?: string;
+    ownerPhone?: string;
+    ownerEmail?: string;
   };
   CustomerProfile: undefined;
   ProductDetail: {
