@@ -14,6 +14,7 @@ export type UserProfile = {
   name: string;
   email: string;
   image?: string;
+  role?: 'customer' | 'owner' | 'admin';
   // Add other fields as needed
 };
 

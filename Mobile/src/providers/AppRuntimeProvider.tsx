@@ -40,7 +40,7 @@ export const AppRuntimeProvider = ({ children }: Props) => {
   }, []);
 
   useEffect(() => {
-    void registerForPushNotificationsAsync();
+    void registerForPushNotificationsAsync().catch(() => null);
 
     const receivedSubscription = Notifications.addNotificationReceivedListener((notification) => {
       const content = notification.request.content;

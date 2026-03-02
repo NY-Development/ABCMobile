@@ -2,12 +2,8 @@ import React from 'react';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { ROUTES } from '../../constants/routes';
 import { useAuth } from '../../context/AuthProvider';
 import { useThemeStore } from '../../store/themeStore';
-import type { CustomerStackParamList } from '../../types/navigation';
 
 import type { ComponentProps } from 'react';
 import type { MaterialCommunityIcons as MCI } from '@expo/vector-icons';
@@ -30,8 +26,6 @@ const MENU_GROUPS: {
 ];
 
 export const CustomerProfileScreen = () => {
-  const navigation =
-    useNavigation<StackNavigationProp<CustomerStackParamList, 'CustomerProfile'>>();
   const { logout, loading } = useAuth();
   const { mode, toggle } = useThemeStore();
   const isDark = mode === 'dark';
@@ -108,7 +102,7 @@ export const CustomerProfileScreen = () => {
 
           <Pressable
             onPress={handleLogout}
-            disabled={loading}
+            disabled={Boolean(loading)}
             className="flex-row items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50 p-4 opacity-100 dark:border-red-900/40 dark:bg-red-900/10"
           >
             <MaterialCommunityIcons name="logout" size={18} color={isDark ? '#fca5a5' : '#dc2626'} />
@@ -120,62 +114,6 @@ export const CustomerProfileScreen = () => {
           <Text className="text-center text-xs text-text-muted dark:text-gray-500">App Version 2.4.0</Text>
         </View>
       </ScrollView>
-
-      <SafeAreaView
-        edges={['bottom']}
-        className="absolute bottom-0 left-0 right-0 border-t border-border-light bg-background-light/90 px-6 pb-6 pt-3 dark:border-border-dark dark:bg-background-dark/90"
-      >
-        <View className="flex-row items-center justify-between">
-          <Pressable
-            onPress={() => navigation.navigate(ROUTES.CustomerStorefront as never)}
-            className="items-center"
-          >
-            <View className="h-10 w-12 items-center justify-center rounded-full">
-              <MaterialCommunityIcons
-                name="home"
-                size={24}
-                color={isDark ? '#d4c59a' : '#9a864c'}
-              />
-            </View>
-            <Text className="mt-1 text-[10px] font-medium text-text-muted dark:text-gray-400">
-              Home
-            </Text>
-          </Pressable>
-
-          <Pressable className="items-center">
-            <View className="h-10 w-12 items-center justify-center rounded-full">
-              <MaterialCommunityIcons
-                name="magnify"
-                size={24}
-                color={isDark ? '#d4c59a' : '#9a864c'}
-              />
-            </View>
-            <Text className="mt-1 text-[10px] font-medium text-text-muted dark:text-gray-400">
-              Explore
-            </Text>
-          </Pressable>
-
-          <Pressable className="items-center">
-            <View className="h-10 w-12 items-center justify-center rounded-full">
-              <MaterialCommunityIcons
-                name="shopping"
-                size={24}
-                color={isDark ? '#d4c59a' : '#9a864c'}
-              />
-            </View>
-            <Text className="mt-1 text-[10px] font-medium text-text-muted dark:text-gray-400">
-              Orders
-            </Text>
-          </Pressable>
-
-          <Pressable className="items-center">
-            <View className="h-10 w-12 items-center justify-center rounded-full bg-primary/10">
-              <MaterialCommunityIcons name="account" size={24} color="#f97316" />
-            </View>
-            <Text className="mt-1 text-[10px] font-bold text-primary">Profile</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
     </SafeAreaView>
   );
 };

@@ -48,6 +48,10 @@ const syncPushTokenToBackend = async (expoPushToken: string) => {
 };
 
 export const registerForPushNotificationsAsync = async (): Promise<string | null> => {
+  if (Constants.appOwnership === 'expo') {
+    return null;
+  }
+
   if (!Device.isDevice) {
     return null;
   }
@@ -69,9 +73,15 @@ export const registerForPushNotificationsAsync = async (): Promise<string | null
   }
 
   const projectId = getProjectId();
-  const tokenResult = await Notifications.getExpoPushTokenAsync(
-    projectId ? { projectId } : undefined
-  );
+  let tokenResult: Notifications.ExpoPushToken;
+
+  try {
+    tokenResult = await Notifications.getExpoPushTokenAsync(
+      projectId ? { projectId } : undefined
+    );
+  } catch {
+    return null;
+  }
 
   const expoPushToken = tokenResult.data;
   const cachedToken = await pushTokenStorage.get();

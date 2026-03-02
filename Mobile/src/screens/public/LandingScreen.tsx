@@ -554,13 +554,14 @@ export const LandingScreen = () => {
       <Animated.View
         entering={FadeInUp.delay(400).duration(400).springify()}
         className="absolute left-0 right-0"
-        style={[
-          {
-            bottom: 0,
-            paddingBottom: Math.max(insets.bottom, 16) + 8,
-          },
-          bottomBarAnimatedStyle,
-        ]}
+        style={{
+          bottom: 0,
+          paddingBottom: Math.max(insets.bottom, 16) + 8,
+        }}
+      >
+      <Animated.View
+        className="left-0 right-0"
+        style={bottomBarAnimatedStyle}
         pointerEvents={barShown ? 'auto' : 'none'}
       >
         <View
@@ -599,6 +600,7 @@ export const LandingScreen = () => {
             <MaterialCommunityIcons name="cog" size={20} color="#f97316" />
           </Pressable>
         </View>
+      </Animated.View>
       </Animated.View>
     </SafeAreaView>
   );

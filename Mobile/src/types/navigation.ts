@@ -17,6 +17,10 @@ export type AuthStackParamList = {
 };
 
 export type CustomerStackParamList = {
+  CustomerHome: undefined;
+  Explore: undefined;
+  Orders: undefined;
+  CustomerTabs: undefined;
   CustomerStorefront: {
     ownerId?: string;
     ownerName?: string;
@@ -46,4 +50,44 @@ export type CustomerStackParamList = {
     rating?: number;
     reviewsCount?: number;
   };
+};
+
+export type CustomerTabParamList = {
+  CustomerHome: undefined;
+  Explore: undefined;
+  Orders: undefined;
+  CustomerProfile: undefined;
+};
+
+export type OwnerStackParamList = {
+  OwnerTabs: undefined;
+  OwnerHome: undefined;
+  OwnerProducts: undefined;
+  OwnerOrders: undefined;
+  OwnerProfile: undefined;
+  OwnerOrderDetail: {
+    orderId: string;
+    placedAt: string;
+    customerName: string;
+    customerAddress: string;
+    customerRating: string;
+    status: 'Confirmed' | 'Baking' | 'Ready' | 'Delivered';
+    items: Array<{
+      name: string;
+      description: string;
+      price: string;
+      qty: number;
+      image: string;
+    }>;
+    subtotal: string;
+    taxesFees: string;
+    totalRevenue: string;
+  };
+};
+
+export type OwnerTabParamList = {
+  OwnerHome: undefined;
+  OwnerProducts: undefined;
+  OwnerOrders: undefined;
+  OwnerProfile: undefined;
 };

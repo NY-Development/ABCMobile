@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { AuthNavigator } from './AuthNavigator';
 import { CustomerNavigator } from './CustomerNavigator';
+import { OwnerNavigator } from './OwnerNavigator';
 import { useAuth } from '../context/AuthProvider';
 import { SplashScreen } from '../screens/public/SplashScreen';
 
@@ -17,5 +18,13 @@ export const RootNavigator = () => {
     );
   }
 
-  return Boolean(user) ? <CustomerNavigator /> : <AuthNavigator />;
+  if (!user) {
+    return <AuthNavigator />;
+  }
+
+  if (user.role === 'owner') {
+    return <OwnerNavigator />;
+  }
+
+  return <CustomerNavigator />;
 };
