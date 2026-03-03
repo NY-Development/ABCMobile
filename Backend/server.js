@@ -24,7 +24,8 @@ app.use(passport.initialize());
 const allowedOrigins = [
   "http://localhost:5173", // local dev
   "http://localhost:8081", // local mobile dev
-  "https://adama-bakery.vercel.app" //deployed url
+  "https://adama-bakery.vercel.app", //deployed url
+  "https://abc-mobile-front.vercel.app" // 2nd deployed url
 ];
 
 app.use(
