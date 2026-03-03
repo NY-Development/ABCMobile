@@ -27,6 +27,7 @@ export const ROUTES = {
   OwnerProducts: 'OwnerProducts',
   OwnerOrders: 'OwnerOrders',
   OwnerProfile: 'OwnerProfile',
+  OwnerAdditionalInfo: 'OwnerAdditionalInfo',
   OwnerTabs: 'OwnerTabs',
   OwnerOrderDetail: 'OwnerOrderDetail',
   PrivacyPolicy: 'PrivacyPolicy',

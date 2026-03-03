@@ -2,6 +2,7 @@ export type UserRole = 'customer' | 'owner' | 'admin';
 
 export type OwnerInfo = {
   firstLogin?: boolean;
+  companyVerified?: boolean;
 };
 
 export type User = {

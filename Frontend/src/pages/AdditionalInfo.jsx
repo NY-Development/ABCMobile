@@ -25,7 +25,14 @@ const LocationStatus = ({ location }) => {
         return (
             <div className="flex items-center space-x-2 text-sm text-red-600 p-3 bg-red-50 rounded-lg">
                 <AlertTriangle size={16} />
-                <span>{location.error}</span>
+                <div>
+                    <span>{location.error}</span>
+                    {location.blocked && (
+                        <p className="text-xs font-semibold mt-1">
+                            Automatic detection is disabled. Turn off VPN/proxy and retry.
+                        </p>
+                    )}
+                </div>
             </div>
         );
 
@@ -79,6 +86,10 @@ const AdditionalInfo = () => {
     const { submitAdditionalInfo } = useOwner();
     const {user} = useAuth();
 
+    useEffect(() => {
+        console.log(user);
+    })
+
     const [info, setInfo] = useState({
         branches: "",
         location: "", // Used for City/Primary Location
@@ -123,7 +134,14 @@ const AdditionalInfo = () => {
                     const formatted_address = `${city || ""}, ${regionName || ""}, ${country || ""}`.trim();
                     const googleLink = `https://www.google.com/maps?q=${lat},${lon}`;
 
-                    if(country !== "Ethiopia") return;
+                    if(country !== "Ethiopia") {
+                        setUseAutoLink(false);
+                        setAutoLocation({
+                            error: "Detected country is not Ethiopia. Please turn off VPN/proxy and retry automatic location detection.",
+                            blocked: true,
+                        });
+                        return;
+                    }
                     const detected = {
                         ip,
                         city: city || "Unknown City",
@@ -336,6 +354,7 @@ const AdditionalInfo = () => {
                             <button
                                 type="button"
                                 onClick={() => setUseAutoLink(true)}
+                                disabled={autoLocation?.blocked}
                                 className={`px-3 py-1 rounded-lg font-semibold transition-all ${
                                     useAutoLink
                                         ? "bg-green-500 text-white cursor-not-allowed"
@@ -347,6 +366,7 @@ const AdditionalInfo = () => {
                             <button
                                 type="button"
                                 onClick={() => setUseAutoLink(false)}
+                                disabled={autoLocation?.blocked}
                                 className={`px-3 py-1 rounded-lg font-semibold transition-all ${
                                     !useAutoLink
                                         ? "bg-red-500 text-white cursor-not-allowed"

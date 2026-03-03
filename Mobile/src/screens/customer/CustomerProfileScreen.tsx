@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthProvider';
 import { useThemeStore } from '../../store/themeStore';
+import { LogoutConfirmationModal } from '../../components/ui/LogoutConfirmationModal';
 
 import type { ComponentProps } from 'react';
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -26,6 +27,7 @@ const MENU_GROUPS: {
 export const CustomerProfileScreen = () => {
   const { user, logout, loading } = useAuth();
   const { mode, toggle } = useThemeStore();
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
   const insets = useSafeAreaInsets();
   const isDark = mode === 'dark';
   const toggleIconName = isDark ? 'white-balance-sunny' : 'weather-night';
@@ -37,7 +39,12 @@ export const CustomerProfileScreen = () => {
     'https://lh3.googleusercontent.com/aida-public/AB6AXuAgBX6BSkwandRKnCRZma0_lArpinySXEZ_PlTOJwftO89ZPxcCjRxbfpQt5lC2MiZ_mkAtU2TjI-n5jA9kXu3eKRjLFLtyBAAol--Vt9J-GLTCz6rF7onxux_MXUtoqmPc8uYvXU-QFIJA-AjNwydMkFP4jOeEGEO4zH94PzEmXwSSawPmzo4sCElQnl-fn2cgF5hALXDr5LKiheaI27GVzapRc3YEFgZN0AVP9dzS2A4qvqfVWT55_OywvaRKF-Hhdcfumktqdv9v';
 
   const handleLogout = async () => {
+    setLogoutModalVisible(true);
+  };
+
+  const confirmLogout = async () => {
     await logout();
+    setLogoutModalVisible(false);
   };
 
   return (
@@ -123,6 +130,12 @@ export const CustomerProfileScreen = () => {
           <Text className="pb-6 pt-2 text-center text-xs tracking-widest text-slate-400 dark:text-white/20">App Version 2.4.0 • Adama Premium</Text>
         </View>
       </ScrollView>
+      <LogoutConfirmationModal
+        visible={logoutModalVisible}
+        onCancel={() => setLogoutModalVisible(false)}
+        onConfirm={confirmLogout}
+        loading={Boolean(loading)}
+      />
     </SafeAreaView>
   );
 };

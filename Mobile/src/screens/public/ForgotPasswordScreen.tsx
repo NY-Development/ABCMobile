@@ -3,6 +3,9 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput,
 import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Controller, useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '../../context/AuthProvider';
 import { useThemeStore } from '../../store/themeStore';
 import type { AuthStackParamList } from '../../types/navigation';
@@ -10,21 +13,34 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList, 'ForgotPassword'>;
 
+const forgotSchema = z.object({
+  email: z.string().trim().email('Please enter a valid email'),
+});
+
+type ForgotFormValues = z.infer<typeof forgotSchema>;
+
 export const ForgotPasswordScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const { requestPasswordReset, loading, error } = useAuth();
-  const [email, setEmail] = useState('');
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ForgotFormValues>({
+    resolver: zodResolver(forgotSchema),
+    defaultValues: { email: '' },
+  });
   const [message, setMessage] = useState('');
   const { mode, toggle } = useThemeStore();
   const isDark = mode === 'dark';
   const toggleIconName = isDark ? 'white-balance-sunny' : 'weather-night';
   const toggleIconColor = isDark ? '#f97316' : '#374151';
 
-  const handleSubmit = async () => {
+  const onSubmit = async (values: ForgotFormValues) => {
     try {
-      const result = await requestPasswordReset({ email });
+      const result = await requestPasswordReset({ email: values.email });
       setMessage(result.message ?? 'Reset link sent.');
-      navigation.navigate('ResetPassword', { email });
+      navigation.navigate('ResetPassword', { email: values.email });
     } catch (err) {
       console.log(err);
     }
@@ -82,23 +98,31 @@ export const ForgotPasswordScreen = () => {
             <Text className="ml-2 text-sm font-semibold text-text-main dark:text-gray-100">Email Address</Text>
             <View className="flex-row items-center rounded-xl border border-neutral-light bg-surface-light px-4 dark:border-neutral-dark dark:bg-surface-dark">
               <MaterialCommunityIcons name="email-outline" size={20} color={isDark ? '#b0a690' : '#7e7052'} />
-              <TextInput
-                value={email}
-                onChangeText={setEmail}
-                placeholder="example@email.com"
-                placeholderTextColor={isDark ? '#b0a690' : '#7e7052'}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                className="flex-1 px-3 py-4 text-base font-medium text-text-main dark:text-gray-100"
+              <Controller
+                control={control}
+                name="email"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    value={value}
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    placeholder="example@email.com"
+                    placeholderTextColor={isDark ? '#b0a690' : '#7e7052'}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    className="flex-1 px-3 py-4 text-base font-medium text-text-main dark:text-gray-100"
+                  />
+                )}
               />
             </View>
+            {errors.email?.message ? <Text className="text-xs text-red-500">{errors.email.message}</Text> : null}
           </View>
 
           {error ? <Text className="text-sm text-red-500">{error}</Text> : null}
           {message ? <Text className="text-sm text-green-600">{message}</Text> : null}
 
           <Pressable
-            onPress={handleSubmit}
+            onPress={handleSubmit(onSubmit)}
             disabled={Boolean(loading)}
             className="mt-2 w-full flex-row items-center justify-center gap-2 rounded-full bg-primary py-4"
             style={{

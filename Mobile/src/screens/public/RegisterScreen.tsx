@@ -19,6 +19,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import type { AuthStackParamList } from '../../types/navigation';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Controller, useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '../../context/AuthProvider';
 import { ROUTES } from '../../constants/routes';
 import { useThemeStore } from '../../store/themeStore';
@@ -27,6 +30,29 @@ type NavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Register'>;
 
 const STEP_1_IMAGE =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuBiz80cvNvnGy0vpofYtfqrhh8UxNCF_s_mUCy0FNZrsxN9Y5y3t8xwHUIGHrS2mMNvzdJ74qm2UsVNX-arC7z5IkwqiepCI9J_h3NlPaQj2__k0dcgy6EpDusw54tGOn-o1c-1glv3dNrkZoJdtZmtnyD3m0QayCRlQyp8ey3rp2ZvLaDENTN0z-QL0a0GHqO8zvKpfqha8AwXN-CKyKe-QXgbCRJTyxQdsKWdG66hYoV5FbT0qQwMvxxo8eeVosyL3V21gS45RszS';
+
+const registerSchema = z
+  .object({
+    role: z.enum(['customer', 'owner'], { message: 'Please select an account type' }),
+    name: z.string().trim().min(2, 'Full name is required'),
+    email: z.string().trim().email('Please enter a valid email'),
+    phone: z
+      .string()
+      .trim()
+      .min(9, 'Phone number is required')
+      .regex(/^[0-9\s]+$/, 'Phone must contain only numbers'),
+    password: z
+      .string()
+      .min(8, 'Password must be at least 8 characters')
+      .regex(/[!@#$%^&*(),.?":{}|<>]/, 'Password must include one special character'),
+    confirmPassword: z.string().min(1, 'Please confirm password'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    path: ['confirmPassword'],
+    message: 'Passwords do not match',
+  });
+
+type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export const RegisterScreen = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -37,18 +63,47 @@ export const RegisterScreen = () => {
   const toggleIconName = isDark ? 'white-balance-sunny' : 'weather-night';
   const toggleIconColor = isDark ? '#f5d67d' : '#374151';
   const [step, setStep] = useState(1);
-  const [role, setRole] = useState<'customer' | 'owner' | null>(null);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [direction, setDirection] = useState<'forward' | 'back'>( 'forward');
 
-  const goNext = () => {
+  const {
+    control,
+    handleSubmit,
+    watch,
+    setValue,
+    trigger,
+    formState: { errors },
+  } = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      role: 'customer',
+      name: '',
+      email: '',
+      phone: '',
+      password: '',
+      confirmPassword: '',
+    },
+    mode: 'onChange',
+  });
+
+  const watchedRole = watch('role');
+  const watchedName = watch('name');
+  const watchedEmail = watch('email');
+  const watchedPhone = watch('phone');
+  const watchedPassword = watch('password');
+  const watchedConfirmPassword = watch('confirmPassword');
+
+  const goNext = async () => {
     setDirection('forward');
+    if (step === 1) {
+      const valid = await trigger('role');
+      if (!valid) return;
+    }
+    if (step === 2) {
+      const valid = await trigger(['name', 'email', 'phone']);
+      if (!valid) return;
+    }
     if (step < 3) setStep((s) => s + 1);
   };
   const goBack = () => {
@@ -57,21 +112,26 @@ export const RegisterScreen = () => {
     else navigation.goBack();
   };
 
-  const handleSubmit = async () => {
-    if (password !== confirmPassword) return;
+  const onSubmit = async (values: RegisterFormValues) => {
     try {
-      await register({ name, email, password, phone, role: role || 'customer' });
-      navigation.navigate('OTPVerification', { email });
-    } catch {
-      // error from useAuth
+      await register({
+        name: values.name,
+        email: values.email,
+        password: values.password,
+        phone: values.phone,
+        role: values.role,
+      });
+      navigation.navigate('OTPVerification', { email: values.email });
+    } catch(err) {
+      console.log("Error during registration: ", err);
     }
   };
 
   const progress = step / 3;
-  const canProceedStep1 = role !== null;
-  const canProceedStep2 = Boolean(name.trim() && email.trim() && phone.trim());
+  const canProceedStep1 = Boolean(watchedRole);
+  const canProceedStep2 = Boolean(watchedName.trim() && watchedEmail.trim() && watchedPhone.trim());
   const canProceedStep3 =
-    Boolean(password.length >= 8 && password === confirmPassword);
+    Boolean(watchedPassword.length >= 8 && watchedPassword === watchedConfirmPassword);
 
   return (
     <SafeAreaView className="flex-1 bg-background-light dark:bg-background-dark" edges={['top', 'bottom']}>
@@ -131,11 +191,11 @@ export const RegisterScreen = () => {
 
               <View className="gap-5">
                 <Pressable
-                  onPress={() => setRole('customer')}
+                  onPress={() => setValue('role', 'customer', { shouldValidate: true })}
                   className="overflow-hidden rounded-3xl border-2 bg-surface-light p-5 dark:bg-surface-dark"
                   style={{
-                    borderColor: role === 'customer' ? '#f97316' : 'transparent',
-                    backgroundColor: role === 'customer'
+                    borderColor: watchedRole === 'customer' ? '#f97316' : 'transparent',
+                    backgroundColor: watchedRole === 'customer'
                       ? 'rgba(236,182,19,0.08)'
                       : isDark
                       ? '#2d2616'
@@ -157,7 +217,7 @@ export const RegisterScreen = () => {
                         Find & Order local pastries
                       </Text>
                     </View>
-                    {role === 'customer' && (
+                    {watchedRole === 'customer' && (
                       <View className="absolute right-5 top-5 h-6 w-6 items-center justify-center rounded-full bg-primary">
                         <MaterialCommunityIcons name="check" size={16} color="#fff" />
                       </View>
@@ -166,11 +226,11 @@ export const RegisterScreen = () => {
                 </Pressable>
 
                 <Pressable
-                  onPress={() => setRole('owner')}
+                  onPress={() => setValue('role', 'owner', { shouldValidate: true })}
                   className="overflow-hidden rounded-3xl border-2 bg-surface-light p-5 dark:bg-surface-dark"
                   style={{
-                    borderColor: role === 'owner' ? '#f97316' : 'transparent',
-                    backgroundColor: role === 'owner'
+                    borderColor: watchedRole === 'owner' ? '#f97316' : 'transparent',
+                    backgroundColor: watchedRole === 'owner'
                       ? 'rgba(236,182,19,0.08)'
                       : isDark
                       ? '#2d2616'
@@ -192,7 +252,7 @@ export const RegisterScreen = () => {
                         Sell & Grow your business
                       </Text>
                     </View>
-                    {role === 'owner' && (
+                    {watchedRole === 'owner' && (
                       <View className="absolute right-5 top-5 h-6 w-6 items-center justify-center rounded-full bg-primary">
                         <MaterialCommunityIcons name="check" size={16} color="#fff" />
                       </View>
@@ -200,6 +260,7 @@ export const RegisterScreen = () => {
                   </View>
                 </Pressable>
               </View>
+              {errors.role?.message ? <Text className="mt-2 text-sm text-red-500">{errors.role.message}</Text> : null}
 
               <View className="mt-8 h-32 w-full overflow-hidden rounded-2xl">
                 <Image
@@ -239,32 +300,48 @@ export const RegisterScreen = () => {
                     Full Name
                   </Text>
                   <View className="flex-row items-center rounded-2xl border border-input-border bg-surface-light px-4 dark:border-neutral-dark dark:bg-surface-dark">
-                    <TextInput
-                      value={name}
-                      onChangeText={setName}
-                      placeholder="e.g. Sarah Baker"
-                      placeholderTextColor={isDark ? '#9aa0a6' : '#9ca3af'}
-                      className="h-14 flex-1 text-text-charcoal dark:text-gray-100"
+                    <Controller
+                      control={control}
+                      name="name"
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <TextInput
+                          value={value}
+                          onBlur={onBlur}
+                          onChangeText={onChange}
+                          placeholder="e.g. Sarah Baker"
+                          placeholderTextColor={isDark ? '#9aa0a6' : '#9ca3af'}
+                          className="h-14 flex-1 text-text-charcoal dark:text-gray-100"
+                        />
+                      )}
                     />
                     <MaterialCommunityIcons name="account-outline" size={22} color="#6b6356" />
                   </View>
+                  {errors.name?.message ? <Text className="ml-2 text-xs text-red-500">{errors.name.message}</Text> : null}
                 </View>
                 <View className="gap-2">
                   <Text className="ml-4 text-sm font-semibold text-text-charcoal dark:text-gray-300">
                     Email Address
                   </Text>
                   <View className="flex-row items-center rounded-2xl border border-input-border bg-surface-light px-4 dark:border-neutral-dark dark:bg-surface-dark">
-                    <TextInput
-                      value={email}
-                      onChangeText={setEmail}
-                      placeholder="name@example.com"
-                      placeholderTextColor={isDark ? '#9aa0a6' : '#9ca3af'}
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      className="h-14 flex-1 text-text-charcoal dark:text-gray-100"
+                    <Controller
+                      control={control}
+                      name="email"
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <TextInput
+                          value={value}
+                          onBlur={onBlur}
+                          onChangeText={onChange}
+                          placeholder="name@example.com"
+                          placeholderTextColor={isDark ? '#9aa0a6' : '#9ca3af'}
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                          className="h-14 flex-1 text-text-charcoal dark:text-gray-100"
+                        />
+                      )}
                     />
                     <MaterialCommunityIcons name="email-outline" size={22} color="#6b6356" />
                   </View>
+                  {errors.email?.message ? <Text className="ml-2 text-xs text-red-500">{errors.email.message}</Text> : null}
                 </View>
                 <View className="gap-2">
                   <Text className="ml-4 text-sm font-semibold text-text-charcoal dark:text-gray-300">
@@ -275,17 +352,25 @@ export const RegisterScreen = () => {
                       <Text className="text-sm font-medium text-text-charcoal dark:text-gray-100">🇪🇹 +251</Text>
                     </View>
                     <View className="flex-1 flex-row items-center rounded-2xl border border-input-border bg-surface-light px-4 dark:border-neutral-dark dark:bg-surface-dark">
-                      <TextInput
-                        value={phone}
-                        onChangeText={setPhone}
-                        placeholder="911 234 567"
-                        placeholderTextColor={isDark ? '#9aa0a6' : '#9ca3af'}
-                        keyboardType="phone-pad"
-                        className="h-14 flex-1 text-text-charcoal dark:text-gray-100"
+                      <Controller
+                        control={control}
+                        name="phone"
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <TextInput
+                            value={value}
+                            onBlur={onBlur}
+                            onChangeText={onChange}
+                            placeholder="911 234 567"
+                            placeholderTextColor={isDark ? '#9aa0a6' : '#9ca3af'}
+                            keyboardType="phone-pad"
+                            className="h-14 flex-1 text-text-charcoal dark:text-gray-100"
+                          />
+                        )}
                       />
                       <MaterialCommunityIcons name="phone-outline" size={22} color="#6b6356" />
                     </View>
                   </View>
+                  {errors.phone?.message ? <Text className="ml-2 text-xs text-red-500">{errors.phone.message}</Text> : null}
                 </View>
               </View>
             </Animated.View>
@@ -315,8 +400,8 @@ export const RegisterScreen = () => {
                       <MaterialCommunityIcons name="lock-outline" size={20} color="#6b6248" />
                     </View>
                     <TextInput
-                      value={password}
-                      onChangeText={setPassword}
+                      value={watchedPassword}
+                      onChangeText={(text) => setValue('password', text, { shouldValidate: true })}
                       placeholder="Enter your password"
                       placeholderTextColor={isDark ? '#9aa0a6' : '#9ca3af'}
                       secureTextEntry={Boolean(!showPassword)}
@@ -337,21 +422,22 @@ export const RegisterScreen = () => {
                   <View className="flex-row flex-wrap gap-x-4 gap-y-1 pl-2 pt-1">
                     <View className="flex-row items-center gap-1.5">
                       <MaterialCommunityIcons
-                        name={password.length >= 8 ? 'check-circle' : 'checkbox-blank-circle-outline'}
+                        name={watchedPassword.length >= 8 ? 'check-circle' : 'checkbox-blank-circle-outline'}
                         size={16}
-                        color={password.length >= 8 ? '#22c55e' : '#d1d5db'}
+                        color={watchedPassword.length >= 8 ? '#22c55e' : '#d1d5db'}
                       />
                       <Text className="text-xs text-text-muted dark:text-gray-400">8+ characters</Text>
                     </View>
                     <View className="flex-row items-center gap-1.5">
                       <MaterialCommunityIcons
-                        name={/[!@#$%^&*(),.?":{}|<>]/.test(password) ? 'check-circle' : 'checkbox-blank-circle-outline'}
+                        name={/[!@#$%^&*(),.?":{}|<>]/.test(watchedPassword) ? 'check-circle' : 'checkbox-blank-circle-outline'}
                         size={16}
-                        color={/[!@#$%^&*(),.?":{}|<>]/.test(password) ? '#22c55e' : '#d1d5db'}
+                        color={/[!@#$%^&*(),.?":{}|<>]/.test(watchedPassword) ? '#22c55e' : '#d1d5db'}
                       />
                       <Text className="text-xs text-text-muted dark:text-gray-400">1 Special char</Text>
                     </View>
                   </View>
+                  {errors.password?.message ? <Text className="ml-2 text-xs text-red-500">{errors.password.message}</Text> : null}
                 </View>
                 <View className="gap-2">
                   <Text className="ml-1 text-sm font-semibold text-text-main dark:text-gray-300">
@@ -362,8 +448,8 @@ export const RegisterScreen = () => {
                       <MaterialCommunityIcons name="lock-reset" size={20} color="#6b6248" />
                     </View>
                     <TextInput
-                      value={confirmPassword}
-                      onChangeText={setConfirmPassword}
+                      value={watchedConfirmPassword}
+                      onChangeText={(text) => setValue('confirmPassword', text, { shouldValidate: true })}
                       placeholder="Re-enter your password"
                       placeholderTextColor={isDark ? '#9aa0a6' : '#9ca3af'}
                       secureTextEntry={Boolean(!showConfirmPassword)}
@@ -381,6 +467,7 @@ export const RegisterScreen = () => {
                       />
                     </Pressable>
                   </View>
+                  {errors.confirmPassword?.message ? <Text className="ml-2 text-xs text-red-500">{errors.confirmPassword.message}</Text> : null}
                 </View>
               </View>
 
@@ -425,7 +512,7 @@ export const RegisterScreen = () => {
               </Pressable>
             ) : (
               <Pressable
-                onPress={handleSubmit}
+                onPress={handleSubmit(onSubmit)}
                 disabled={Boolean(loading || !canProceedStep3)}
                 className="flex-row items-center justify-center gap-2 rounded-full bg-primary py-4"
                 style={{

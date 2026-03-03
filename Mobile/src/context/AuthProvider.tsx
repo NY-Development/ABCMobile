@@ -1,4 +1,3 @@
-// src/context/AuthProvider.tsx
 import React, { createContext, useContext, useEffect, useMemo } from 'react';
 import { useAuthStore, type User } from '../store/authStore';
 import type { AuthResponse, MessageResponse } from '../services/authService';
@@ -9,6 +8,7 @@ type AuthContextValue = {
   loading: boolean;
   error: string | null;
   initialized: boolean;
+  fetchProfile: () => Promise<void>;
   register: (data: { name: string; email: string; password: string; phone?: string; role?: 'customer' | 'owner' }) => Promise<AuthResponse>;
   login: (data: { email: string; password: string }) => Promise<AuthResponse>;
   logout: () => Promise<void>;
@@ -29,6 +29,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     error,
     initialized,
     initialize,
+    fetchProfile,
     register,
     login,
     logout,
@@ -52,6 +53,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       loading,
       error,
       initialized,
+      fetchProfile,
       register,
       login,
       logout,
@@ -67,6 +69,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       loading,
       error,
       initialized,
+      fetchProfile,
       register,
       login,
       logout,

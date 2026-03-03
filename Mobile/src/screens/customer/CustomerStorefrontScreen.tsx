@@ -6,6 +6,7 @@ import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { ROUTES } from '../../constants/routes';
 import { useThemeStore } from '../../store/themeStore';
+import { useAppAlert } from '../../providers/AppRuntimeProvider';
 import {
   fetchOwnerProducts,
   fetchOwnerReviews,
@@ -29,6 +30,7 @@ export const CustomerStorefrontScreen = () => {
     useNavigation<StackNavigationProp<CustomerStackParamList, 'CustomerStorefront'>>();
   const route = useRoute<ScreenRoute>();
   const { mode, toggle } = useThemeStore();
+  const { showAlert } = useAppAlert();
   const insets = useSafeAreaInsets();
   const isDark = mode === 'dark';
   const toggleIconName = isDark ? 'white-balance-sunny' : 'weather-night';
@@ -135,7 +137,11 @@ export const CustomerStorefrontScreen = () => {
   const openExternal = async (url: string) => {
     const supported = await Linking.canOpenURL(url);
     if (!supported) {
-      Alert.alert('Unable to open app', 'No compatible app is available on this device.');
+      showAlert({
+        title: 'Unable to open app',
+        message: 'No compatible app is available on this device.',
+        variant: 'error',
+      });
       return;
     }
     await Linking.openURL(url);
@@ -143,7 +149,11 @@ export const CustomerStorefrontScreen = () => {
 
   const handleCallPress = () => {
     if (!ownerPhone) {
-      Alert.alert('Phone not available', 'This bakery has no phone number yet.');
+      showAlert({
+        title: 'Phone not available',
+        message: 'This bakery has no phone number yet.',
+        variant: 'info',
+      });
       return;
     }
 
@@ -161,7 +171,11 @@ export const CustomerStorefrontScreen = () => {
 
   const handleMessagePress = () => {
     if (!ownerPhone && !ownerEmail) {
-      Alert.alert('Contact not available', 'This bakery has no phone or email yet.');
+      showAlert({
+        title: 'Contact not available',
+        message: 'This bakery has no phone or email yet.',
+        variant: 'info',
+      });
       return;
     }
 

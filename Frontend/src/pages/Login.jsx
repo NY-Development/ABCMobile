@@ -43,7 +43,7 @@ const Login = () => {
       }
 
       const destination =
-        loggedInUser.role === "owner" && loggedInUser?.ownerInfo?.firstLogin === false
+        loggedInUser.role === "owner" && loggedInUser?.firstLogin === true
           ? "/additionalInfo"
           : loggedInUser.role === "owner"
           ? "/owner"

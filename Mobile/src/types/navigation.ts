@@ -68,6 +68,7 @@ export type CustomerTabParamList = {
 };
 
 export type OwnerStackParamList = {
+  OwnerAdditionalInfo: undefined;
   OwnerTabs: undefined;
   OwnerHome: undefined;
   OwnerProducts: undefined;

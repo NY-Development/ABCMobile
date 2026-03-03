@@ -7,8 +7,7 @@ import {
   View, 
   Animated, 
   LayoutAnimation, 
-  Platform, 
-  UIManager 
+  Platform
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -20,11 +19,6 @@ import * as Haptics from 'expo-haptics';
 import { ROUTES } from '../../constants/routes';
 import type { CustomerStackParamList } from '../../types/navigation';
 import { useThemeStore } from '../../store/themeStore';
-
-// Android LayoutAnimation setup
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 export const CartScreen = () => {
   const navigation = useNavigation<StackNavigationProp<CustomerStackParamList, 'Cart'>>();

@@ -1,16 +1,90 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import Animated, {
+  FadeInDown,
+  FadeInUp,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 import { useAuth } from '../../context/AuthProvider';
 import { useThemeStore } from '../../store/themeStore';
+import { LogoutConfirmationModal } from '../../components/ui/LogoutConfirmationModal';
 
 const CHART_POINTS = 'M0,70 C40,70 60,40 100,40 C140,40 180,80 220,80 C260,80 300,30 363,30';
 
 export const HomeScreen = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { mode, toggle } = useThemeStore();
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
   const isDark = mode === 'dark';
+  const pulseScale = useSharedValue(1);
+
+  useEffect(() => {
+    pulseScale.value = withRepeat(
+      withSequence(withTiming(1.06, { duration: 900 }), withTiming(1, { duration: 900 })),
+      -1,
+      false
+    );
+  }, [pulseScale]);
+
+  const badgeAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseScale.value }],
+  }));
+
+  const handleLogout = () => {
+    setLogoutModalVisible(true);
+  };
+
+  const confirmLogout = async () => {
+    setLogoutModalVisible(false);
+    await logout();
+  };
+
+  if (!user?.ownerInfo?.companyVerified) {
+    return (
+      <SafeAreaView className="flex-1 bg-background-light dark:bg-background-dark" edges={['top', 'bottom']}>
+        <View className="flex-1 items-center justify-center px-4">
+          <Animated.View entering={FadeInDown.duration(500)} className="w-full max-w-md rounded-3xl border border-gray-200 bg-white p-6 shadow-2xl dark:border-gray-700 dark:bg-surface-dark">
+            <View className="mb-4 items-center">
+              <Animated.View style={badgeAnimatedStyle} className="mb-3 h-16 w-16 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-500/15 animate-pulse">
+                <MaterialCommunityIcons name="progress-clock" size={34} color="#ea580c" />
+              </Animated.View>
+            </View>
+
+            <Text className="mb-3 text-center text-2xl font-bold text-orange-600">
+              Verification in Progress
+            </Text>
+
+            <Text className="text-center text-base leading-6 text-gray-700 dark:text-gray-300">
+              Your company's information is currently being reviewed by our admin team. Please wait for a
+              notification through your email and phone. Thank you for your patience!
+            </Text>
+
+            <Animated.View entering={FadeInUp.delay(120).duration(500)} className="mt-6">
+              <Pressable
+                onPress={handleLogout}
+                className="flex-row items-center justify-center gap-2 rounded-2xl bg-red-500 px-4 py-3"
+              >
+                <MaterialCommunityIcons name="logout" size={20} color="#ffffff" />
+                <Text className="text-base font-bold text-white">Logout</Text>
+              </Pressable>
+            </Animated.View>
+          </Animated.View>
+        </View>
+
+        <LogoutConfirmationModal
+          visible={logoutModalVisible}
+          onCancel={() => setLogoutModalVisible(false)}
+          onConfirm={confirmLogout}
+        />
+      </SafeAreaView>
+    );
+  }
 
   const ownerName = user?.name ?? 'Golden Crust Bakery';
 
@@ -178,6 +252,12 @@ export const HomeScreen = () => {
           </View>
         </ScrollView>
       </View>
+
+      <LogoutConfirmationModal
+        visible={logoutModalVisible}
+        onCancel={() => setLogoutModalVisible(false)}
+        onConfirm={confirmLogout}
+      />
     </SafeAreaView>
   );
 };

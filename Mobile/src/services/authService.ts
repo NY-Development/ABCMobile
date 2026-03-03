@@ -15,7 +15,11 @@ export type UserProfile = {
   email: string;
   image?: string;
   role?: 'customer' | 'owner' | 'admin';
-  // Add other fields as needed
+  firstLogin?: boolean;
+  ownerInfo?: {
+    firstLogin?: boolean;
+    companyVerified?: boolean;
+  };
 };
 
 // Register user

@@ -3,6 +3,7 @@ import imagekit from "../configs/imageKit.js";
 import Product from "../models/Product.js";
 import User from "../models/Users.js";
 import Order from "../models/Order.js";
+import { sendEmail } from "../utils/email.js";
 
 // Helper to upload file to ImageKit
 const uploadToImageKit = async (file) => {
@@ -18,6 +19,7 @@ const uploadToImageKit = async (file) => {
 export const updateOwnerAdditionalInfo = async (req, res) => {
   try {
     const userId = req.user._id; // protect middleware
+    const userEmail = req.user?.email || "N/A";
     const { branches, location, address, companyName ,accountNumber, mapLink} = req.body;
 
     // Find Owner document by user reference
@@ -47,9 +49,13 @@ export const updateOwnerAdditionalInfo = async (req, res) => {
     owner.firstLogin = false;
 
     await owner.save();
-    const user = await User.findByIdAndUpdate(userId);
-    user.firstLogin = false;
-    await user.save();
+    await User.findByIdAndUpdate(userId, { firstLogin: false });
+
+    await sendEmail(
+      process.env.SENDER_EMAIL,
+      "Owner additional info submitted",
+      `An owner submitted/updated additional information and requires verification.\n\nOwner User ID: ${userId}\nOwner Email: ${userEmail}\nCompany Name: ${owner.companyName || "N/A"}\nLocation: ${owner.location || "N/A"}\nAddress: ${owner.address || "N/A"}\nSubmitted At: ${new Date().toISOString()}`
+    );
 
     return res.status(200).json({
       success: true,

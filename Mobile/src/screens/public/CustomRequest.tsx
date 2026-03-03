@@ -1,14 +1,16 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { Alert, Animated, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Animated, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import { useThemeStore } from '../../store/themeStore';
+import { useAppAlert } from '../../providers/AppRuntimeProvider';
 
 export const CustomRequest = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  const { showAlert } = useAppAlert();
   const { mode, toggle } = useThemeStore();
   const isDark = mode === 'dark';
   const toggleIconName = isDark ? 'white-balance-sunny' : 'weather-night';
@@ -57,12 +59,16 @@ export const CustomRequest = () => {
   const handlePickImages = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert('Permission required', 'Please allow access to your photo library to upload images.');
+      showAlert({
+        title: 'Permission required',
+        message: 'Please allow access to your photo library to upload images.',
+        variant: 'warning',
+      });
       return;
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsMultipleSelection: true,
       selectionLimit: 5,
       quality: 0.8,

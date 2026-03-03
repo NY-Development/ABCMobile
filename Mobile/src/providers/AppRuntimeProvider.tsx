@@ -6,6 +6,7 @@ import { focusManager, onlineManager } from '@tanstack/react-query';
 import { registerForPushNotificationsAsync } from '../services/notificationService';
 import { TopBannerNotification } from '../components/ui/TopBannerNotification';
 import { NotificationDropdownModal, type NotificationItem } from '../components/ui/NotificationDropdownModal';
+import { AppAlertModal, type AppAlertVariant } from '../components/ui/AppAlertModal';
 import { ROUTES } from '../constants/routes';
 import { navigationRef } from '../navigation/navigationRef';
 
@@ -23,6 +24,21 @@ type InAppNotificationsContextValue = {
   showDropdown: () => void;
   hideDropdown: () => void;
   markAllAsRead: () => void;
+  showAlert: (params: {
+    title: string;
+    message: string;
+    variant?: AppAlertVariant;
+    buttonText?: string;
+  }) => void;
+  hideAlert: () => void;
+};
+
+type AlertState = {
+  visible: boolean;
+  title: string;
+  message: string;
+  variant: AppAlertVariant;
+  buttonText: string;
 };
 
 const InAppNotificationsContext = createContext<InAppNotificationsContextValue | null>(null);
@@ -81,6 +97,13 @@ export const AppRuntimeProvider = ({ children }: Props) => {
   const [bannerVisible, setBannerVisible] = useState(false);
   const [bannerMessage, setBannerMessage] = useState('');
   const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [alertState, setAlertState] = useState<AlertState>({
+    visible: false,
+    title: 'Notice',
+    message: '',
+    variant: 'info',
+    buttonText: 'OK',
+  });
 
   useEffect(() => {
     onlineManager.setEventListener((setOnline) => {
@@ -152,12 +175,33 @@ export const AppRuntimeProvider = ({ children }: Props) => {
     setNotifications((prev) => prev.map((item) => ({ ...item, unread: false })));
   };
 
+  const hideAlert = () => {
+    setAlertState((prev) => ({ ...prev, visible: false }));
+  };
+
+  const showAlert: InAppNotificationsContextValue['showAlert'] = ({
+    title,
+    message,
+    variant = 'info',
+    buttonText = 'OK',
+  }) => {
+    setAlertState({
+      visible: true,
+      title,
+      message,
+      variant,
+      buttonText,
+    });
+  };
+
   const contextValue = useMemo<InAppNotificationsContextValue>(
     () => ({
       notifications,
       showDropdown: () => setDropdownVisible(true),
       hideDropdown: () => setDropdownVisible(false),
       markAllAsRead,
+      showAlert,
+      hideAlert,
     }),
     [notifications],
   );
@@ -188,6 +232,15 @@ export const AppRuntimeProvider = ({ children }: Props) => {
           }
         }}
       />
+
+      <AppAlertModal
+        visible={alertState.visible}
+        title={alertState.title}
+        message={alertState.message}
+        variant={alertState.variant}
+        buttonText={alertState.buttonText}
+        onClose={hideAlert}
+      />
     </InAppNotificationsContext.Provider>
   );
 };
@@ -198,4 +251,9 @@ export const useInAppNotifications = () => {
     throw new Error('useInAppNotifications must be used within AppRuntimeProvider');
   }
   return context;
+};
+
+export const useAppAlert = () => {
+  const { showAlert, hideAlert } = useInAppNotifications();
+  return { showAlert, hideAlert };
 };

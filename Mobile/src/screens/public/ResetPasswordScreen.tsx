@@ -3,6 +3,9 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput,
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Controller, useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '../../context/AuthProvider';
 import { useThemeStore } from '../../store/themeStore';
 import { ROUTES } from '../../constants/routes';
@@ -12,14 +15,37 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList, 'ResetPassword'>;
 type ScreenRoute = RouteProp<AuthStackParamList, 'ResetPassword'>;
 
+const resetSchema = z
+  .object({
+    otp: z.string().trim().min(4, 'Reset code is required'),
+    newPassword: z.string().min(8, 'Password must be at least 8 characters'),
+    confirmPassword: z.string().min(1, 'Please confirm your password'),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    path: ['confirmPassword'],
+    message: 'Passwords do not match',
+  });
+
+type ResetFormValues = z.infer<typeof resetSchema>;
+
 export const ResetPasswordScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<ScreenRoute>();
   const { resetPassword, loading, error } = useAuth();
   const email = route.params?.email ?? '';
-  const [otp, setOtp] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const {
+    control,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<ResetFormValues>({
+    resolver: zodResolver(resetSchema),
+    defaultValues: {
+      otp: '',
+      newPassword: '',
+      confirmPassword: '',
+    },
+  });
   const [message, setMessage] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -28,8 +54,10 @@ export const ResetPasswordScreen = () => {
   const toggleIconName = isDark ? 'white-balance-sunny' : 'weather-night';
   const toggleIconColor = isDark ? '#f97316' : '#374151';
 
+  const watchedNewPassword = watch('newPassword');
+
   const strength = useMemo(() => {
-    const length = newPassword.length;
+    const length = watchedNewPassword.length;
     if (!length) {
       return { label: '', level: 0 };
     }
@@ -43,16 +71,11 @@ export const ResetPasswordScreen = () => {
       return { label: 'Weak', level: 2 };
     }
     return { label: 'Weak', level: 1 };
-  }, [newPassword]);
+  }, [watchedNewPassword]);
 
-  const handleSubmit = async () => {
-    if (newPassword !== confirmPassword) {
-      setMessage('Passwords do not match.');
-      return;
-    }
-
+  const onSubmit = async (values: ResetFormValues) => {
     try {
-      const result = await resetPassword({ email, code: otp, newPassword });
+      const result = await resetPassword({ email, code: values.otp, newPassword: values.newPassword });
       setMessage(result.message ?? 'Password reset successfully.');
       navigation.navigate(ROUTES.PasswordResetSuccess as never);
     } catch (err) {
@@ -116,15 +139,23 @@ export const ResetPasswordScreen = () => {
               </Text>
               <View className="flex-row items-center rounded-xl border border-neutral-light bg-surface-light px-4 dark:border-neutral-dark dark:bg-surface-dark">
                 <MaterialCommunityIcons name="key-outline" size={18} color={isDark ? '#d1c49e' : '#9a864c'} />
-                <TextInput
-                  value={otp}
-                  onChangeText={setOtp}
-                  placeholder="123456"
-                  placeholderTextColor={isDark ? '#d1c49e' : '#9a864c'}
-                  keyboardType="numeric"
-                  className="flex-1 px-3 py-4 text-base font-medium text-text-main dark:text-gray-100"
+                <Controller
+                  control={control}
+                  name="otp"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      value={value}
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      placeholder="123456"
+                      placeholderTextColor={isDark ? '#d1c49e' : '#9a864c'}
+                      keyboardType="numeric"
+                      className="flex-1 px-3 py-4 text-base font-medium text-text-main dark:text-gray-100"
+                    />
+                  )}
                 />
               </View>
+              {errors.otp?.message ? <Text className="text-xs text-red-500">{errors.otp.message}</Text> : null}
             </View>
 
             <View className="gap-2">
@@ -133,13 +164,20 @@ export const ResetPasswordScreen = () => {
               </Text>
               <View className="flex-row items-center rounded-xl border border-neutral-light bg-surface-light px-4 dark:border-neutral-dark dark:bg-surface-dark">
                 <MaterialCommunityIcons name="lock" size={18} color={isDark ? '#d1c49e' : '#9a864c'} />
-                <TextInput
-                  value={newPassword}
-                  onChangeText={setNewPassword}
-                  placeholder="••••••••"
-                  placeholderTextColor={isDark ? '#d1c49e' : '#9a864c'}
-                  secureTextEntry={!showNewPassword}
-                  className="flex-1 px-3 py-4 text-base font-medium text-text-main dark:text-gray-100"
+                <Controller
+                  control={control}
+                  name="newPassword"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      value={value}
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      placeholder="••••••••"
+                      placeholderTextColor={isDark ? '#d1c49e' : '#9a864c'}
+                      secureTextEntry={!showNewPassword}
+                      className="flex-1 px-3 py-4 text-base font-medium text-text-main dark:text-gray-100"
+                    />
+                  )}
                 />
                 <Pressable onPress={() => setShowNewPassword((prev) => !prev)}>
                   <MaterialCommunityIcons
@@ -175,6 +213,7 @@ export const ResetPasswordScreen = () => {
                   </Text>
                 </View>
               </View>
+              {errors.newPassword?.message ? <Text className="text-xs text-red-500">{errors.newPassword.message}</Text> : null}
             </View>
 
             <View className="gap-2">
@@ -183,13 +222,20 @@ export const ResetPasswordScreen = () => {
               </Text>
               <View className="flex-row items-center rounded-xl border border-neutral-light bg-surface-light px-4 dark:border-neutral-dark dark:bg-surface-dark">
                 <MaterialCommunityIcons name="lock-clock" size={18} color={isDark ? '#d1c49e' : '#9a864c'} />
-                <TextInput
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  placeholder="••••••••"
-                  placeholderTextColor={isDark ? '#d1c49e' : '#9a864c'}
-                  secureTextEntry={!showConfirmPassword}
-                  className="flex-1 px-3 py-4 text-base font-medium text-text-main dark:text-gray-100"
+                <Controller
+                  control={control}
+                  name="confirmPassword"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      value={value}
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      placeholder="••••••••"
+                      placeholderTextColor={isDark ? '#d1c49e' : '#9a864c'}
+                      secureTextEntry={!showConfirmPassword}
+                      className="flex-1 px-3 py-4 text-base font-medium text-text-main dark:text-gray-100"
+                    />
+                  )}
                 />
                 <Pressable onPress={() => setShowConfirmPassword((prev) => !prev)}>
                   <MaterialCommunityIcons
@@ -199,6 +245,7 @@ export const ResetPasswordScreen = () => {
                   />
                 </Pressable>
               </View>
+              {errors.confirmPassword?.message ? <Text className="text-xs text-red-500">{errors.confirmPassword.message}</Text> : null}
             </View>
           </View>
 
@@ -206,7 +253,7 @@ export const ResetPasswordScreen = () => {
           {message ? <Text className="mt-2 text-sm text-green-600">{message}</Text> : null}
 
           <Pressable
-            onPress={handleSubmit}
+            onPress={handleSubmit(onSubmit)}
             disabled={Boolean(loading)}
             className="mt-8 h-14 w-full items-center justify-center rounded-xl bg-primary"
             style={{

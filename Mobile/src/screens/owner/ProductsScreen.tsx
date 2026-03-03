@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import {
-  Alert,
   Image,
   KeyboardAvoidingView,
   Modal,
@@ -16,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useThemeStore } from '../../store/themeStore';
+import { useAppAlert } from '../../providers/AppRuntimeProvider';
 
 type ProductItem = {
   id: string;
@@ -153,6 +153,7 @@ const DEFAULT_IMAGE =
 
 export const ProductsScreen = () => {
   const { mode, toggle } = useThemeStore();
+  const { showAlert } = useAppAlert();
   const isDark = mode === 'dark';
 
   const [search, setSearch] = useState('');
@@ -206,12 +207,16 @@ export const ProductsScreen = () => {
   const pickProductImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert('Permission required', 'Please allow photo library access to upload a product image.');
+      showAlert({
+        title: 'Permission required',
+        message: 'Please allow photo library access to upload a product image.',
+        variant: 'warning',
+      });
       return;
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       quality: 0.8,
     });

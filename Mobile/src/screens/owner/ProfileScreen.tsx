@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthProvider';
 import { useThemeStore } from '../../store/themeStore';
+import { LogoutConfirmationModal } from '../../components/ui/LogoutConfirmationModal';
 
 type ProfileAction = {
   title: string;
@@ -24,6 +25,7 @@ export const ProfileScreen = () => {
   const navigation = useNavigation();
   const { user, logout } = useAuth();
   const { mode, toggle } = useThemeStore();
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
   const insets = useSafeAreaInsets();
   const isDark = mode === 'dark';
 
@@ -32,6 +34,15 @@ export const ProfileScreen = () => {
   const ownerImage =
     user?.image ||
     'https://lh3.googleusercontent.com/aida-public/AB6AXuBFIJw_c5hSAzrGcvfGUMxPEXKnWKD1Z9j1Y9cCTM618dVCGIGHG4ER7NuqwKrp0PqS7crZ_LOR95Csoqz4A0mmrwxkr-0yA-wR-NitbPVHMGETYSoK9aDyLWgzvDseXKjbJ2R8EwyKjwVDPsZdIGXMbDStAXTVJLYrhO-k-86PKCynNuDOyRKQbqrpr-PyfHDiI9v5dVSAOXox2qkb2JQFquuF60THvPOi-ETyNiMdmhO8Zx4L5OtpagpgzBk06RZza0uD-UKsSCa4';
+
+  const handleLogout = () => {
+    setLogoutModalVisible(true);
+  };
+
+  const confirmLogout = async () => {
+    setLogoutModalVisible(false);
+    await logout();
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-background-light dark:bg-background-dark" edges={['top']}>
@@ -150,12 +161,17 @@ export const ProfileScreen = () => {
               <Text className="text-center font-bold text-primary">Switch to Customer View</Text>
             </Pressable>
 
-            <Pressable onPress={logout} className="flex-row items-center gap-2">
+            <Pressable onPress={handleLogout} className="flex-row items-center gap-2">
               <MaterialCommunityIcons name="logout" size={18} color="#ef4444" />
               <Text className="text-sm font-semibold text-red-500">Log Out</Text>
             </Pressable>
           </View>
         </ScrollView>
+        <LogoutConfirmationModal
+          visible={logoutModalVisible}
+          onCancel={() => setLogoutModalVisible(false)}
+          onConfirm={confirmLogout}
+        />
         </View>
     </SafeAreaView>
   );

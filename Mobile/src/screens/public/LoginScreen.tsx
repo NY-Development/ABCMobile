@@ -12,24 +12,58 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Controller, useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { ROUTES } from '../../constants/routes';
 import { useAuth } from '../../context/AuthProvider';
 import { useThemeStore } from '../../store/themeStore';
 
+const loginSchema = z.object({
+  email: z.string().trim().email('Please enter a valid email'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
+
 export const LoginScreen = () => {
   const navigation = useNavigation();
   const { login, loading, error } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
   const { mode, toggle } = useThemeStore();
   const isDark = mode === 'dark';
   const toggleIconName = isDark ? 'white-balance-sunny' : 'weather-night';
   const toggleIconColor = isDark ? '#f5d67d' : '#374151';
 
-  const handleSubmit = async () => {
+  const onSubmit = async (values: LoginFormValues) => {
     try {
-      await login({ email, password });
+      const authResponse = await login({ email: values.email, password: values.password });
+      const loggedInUser = authResponse?.user as
+        | {
+            role?: 'customer' | 'owner' | 'admin';
+            firstLogin?: boolean;
+            ownerInfo?: { firstLogin?: boolean };
+          }
+        | undefined;
+
+      const ownerFirstLogin =
+        loggedInUser?.role === 'owner' &&
+        (loggedInUser?.firstLogin === true || loggedInUser?.ownerInfo?.firstLogin === true);
+
+      if (ownerFirstLogin) {
+        return;
+      }
     } catch (err: any) {
       console.log(err);
     }
@@ -109,17 +143,25 @@ export const LoginScreen = () => {
                   <View className="absolute left-4 z-10">
                     <MaterialCommunityIcons name="email-outline" size={20} color="#9ca3af" />
                   </View>
-                  <TextInput
-                    value={email}
-                    onChangeText={setEmail}
-                    placeholder="john@example.com"
-                    placeholderTextColor={isDark ? '#9aa0a6' : '#9ca3af'}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    className="flex-1 py-3.5 pl-11 pr-4 text-base font-medium text-gray-900 dark:text-gray-100"
+                  <Controller
+                    control={control}
+                    name="email"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <TextInput
+                        value={value}
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        placeholder="john@example.com"
+                        placeholderTextColor={isDark ? '#9aa0a6' : '#9ca3af'}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        className="flex-1 py-3.5 pl-11 pr-4 text-base font-medium text-gray-900 dark:text-gray-100"
+                      />
+                    )}
                   />
                 </View>
+                {errors.email?.message ? <Text className="text-xs text-red-500">{errors.email.message}</Text> : null}
               </View>
 
               {/* Password */}
@@ -129,13 +171,20 @@ export const LoginScreen = () => {
                   <View className="absolute left-4 z-10">
                     <MaterialCommunityIcons name="lock-outline" size={20} color="#9ca3af" />
                   </View>
-                  <TextInput
-                    value={password}
-                    onChangeText={setPassword}
-                    placeholder="••••••••"
-                    placeholderTextColor={isDark ? '#9aa0a6' : '#9ca3af'}
-                    secureTextEntry={!showPassword}
-                    className="flex-1 py-3.5 pl-11 pr-12 text-base font-medium text-gray-900 dark:text-gray-100"
+                  <Controller
+                    control={control}
+                    name="password"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <TextInput
+                        value={value}
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        placeholder="••••••••"
+                        placeholderTextColor={isDark ? '#9aa0a6' : '#9ca3af'}
+                        secureTextEntry={!showPassword}
+                        className="flex-1 py-3.5 pl-11 pr-12 text-base font-medium text-gray-900 dark:text-gray-100"
+                      />
+                    )}
                   />
                   <Pressable
                     onPress={() => setShowPassword((p) => !p)}
@@ -149,6 +198,7 @@ export const LoginScreen = () => {
                     />
                   </Pressable>
                 </View>
+                {errors.password?.message ? <Text className="text-xs text-red-500">{errors.password.message}</Text> : null}
               </View>
 
               {/* Forgot password */}
@@ -164,7 +214,7 @@ export const LoginScreen = () => {
 
               {/* Log In button */}
               <Pressable
-                onPress={handleSubmit}
+                onPress={handleSubmit(onSubmit)}
                 disabled={loading}
                 className="mt-2 flex-row items-center justify-center gap-2 rounded-xl bg-primary py-4"
                 style={{
