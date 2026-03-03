@@ -34,6 +34,7 @@ const userSchema = new mongoose.Schema(
       paidAt: { type: Date },
       paymentScreenshot: { type: String, default: "" },
     },
+    firstLogin: { type: Boolean, default: true },
     // Wishlist
      wishlist: [
       {

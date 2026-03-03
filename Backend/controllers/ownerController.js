@@ -44,9 +44,12 @@ export const updateOwnerAdditionalInfo = async (req, res) => {
     owner.accountNumber = accountNumber || owner.accountNumber;
     owner.mapLocation = mapLink|| owner.mapLocation;
     owner.completed = true;
-    owner.firstLogin = true;
+    owner.firstLogin = false;
 
     await owner.save();
+    const user = await User.findByIdAndUpdate(userId);
+    user.firstLogin = false;
+    await user.save();
 
     return res.status(200).json({
       success: true,
