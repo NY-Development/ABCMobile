@@ -73,8 +73,12 @@ export const register = async (req, res) => {
 
     res.status(201).json({ message: "User registered. Please check your email for OTP."  });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
+    console.error("Register error:", err);
+    const message =
+      err?.message?.includes("SMTP") || err?.message?.includes("Email")
+        ? "Registration created but OTP email could not be sent. Please try resend OTP."
+        : "Server error";
+    res.status(500).json({ message });
   }
 };
 
@@ -127,7 +131,12 @@ export const resendOtp = async (req, res) => {
 
     res.json({ message: "OTP resent successfully" });
   } catch (err) {
-    res.status(500).json({ message: "Server error" });
+    console.error("Resend OTP error:", err);
+    const message =
+      err?.message?.includes("SMTP") || err?.message?.includes("Email")
+        ? "Failed to send OTP email. Check SMTP configuration and try again."
+        : "Server error";
+    res.status(500).json({ message });
   }
 };
 
@@ -150,7 +159,12 @@ export const requestPasswordReset = async (req, res) => {
 
     res.json({ message: "Password reset OTP sent" });
   } catch (err) {
-    res.status(500).json({ message: "Server error" });
+    console.error("Request password reset error:", err);
+    const message =
+      err?.message?.includes("SMTP") || err?.message?.includes("Email")
+        ? "Failed to send password reset email. Check SMTP configuration and try again."
+        : "Server error";
+    res.status(500).json({ message });
   }
 };
 
