@@ -206,6 +206,7 @@ export const LandingScreen = () => {
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
       >
         <Animated.ScrollView
           className="flex-1"

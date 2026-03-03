@@ -277,6 +277,7 @@ export const ProductsScreen = () => {
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
       >
         <View className="flex-1">
           <View className="border-b border-gray-100 bg-background-light/90 px-5 pb-4 pt-3 dark:border-gray-800/50 dark:bg-background-dark/90">
@@ -411,7 +412,10 @@ export const ProductsScreen = () => {
           >
             <View className="flex-1 bg-black/60">
               <Pressable className="flex-1" onPress={() => setIsModalVisible(false)} />
-              <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+              <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+              >
                 <View className="h-[92%] rounded-t-3xl bg-background-light dark:bg-background-dark">
                   <View className="rounded-t-3xl bg-background-light/90 px-6 pb-2 pt-4 dark:bg-background-dark/90">
                     <View className="mb-4 items-center">

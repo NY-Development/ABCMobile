@@ -65,14 +65,15 @@ export const LoginScreen = () => {
         return;
       }
     } catch (err: any) {
-      console.log(err);
+      console.log("Error on Login : ", err);
     }
   };
 
   return (
     <SafeAreaView className="flex-1 bg-background-light-alt dark:bg-background-dark" edges={['top', 'bottom']}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
         className="flex-1"
       >
         {/* Theme toggle - top right */}

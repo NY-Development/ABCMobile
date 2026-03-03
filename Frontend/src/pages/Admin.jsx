@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { useLocation, Link } from "react-router-dom"; // Import Link for navigation
+import { useLocation, Link } from "react-router-dom";
 import {
   Users,
   Store,
@@ -10,11 +10,11 @@ import {
   Eye,
   CheckCircle,
   XCircle,
-  Menu, // New icon for mobile menu
-  X, // New icon for closing mobile menu
+  Menu,
+  X,
+  ShieldAlert,
 } from "lucide-react";
 
-// Assuming these service imports are correct
 import {
   getAllUsers,
   getAllOwners,
@@ -42,7 +42,6 @@ const Admin = () => {
   const location = useLocation();
   const currentTab = useMemo(() => {
     const pathParts = location.pathname.split("/");
-    // returns 'admin', 'users', 'owners', or 'payments'
     return pathParts[pathParts.length - 1] || "admin";
   }, [location.pathname]);
 
@@ -50,9 +49,9 @@ const Admin = () => {
   const [dashboard, setDashboard] = useState(null);
   const [users, setUsers] = useState([]);
   const [owners, setOwners] = useState([]);
-  const [payments, setPayments] = useState(null); // Use null initially for object/array
+  const [payments, setPayments] = useState(null);
   const [error, setError] = useState("");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // For mobile sidebar
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Modal states
   const [modalData, setModalData] = useState(null);
@@ -165,15 +164,19 @@ const Admin = () => {
   // ========================================
 
   const LoadingState = () => (
-    <div className="flex justify-center items-center h-[70vh] col-span-full">
+    <div className="flex flex-col justify-center items-center h-[60vh] col-span-full gap-4">
       <Loader2 className="animate-spin text-orange-500 w-12 h-12" />
+      <p className="text-slate-500 dark:text-slate-400 font-medium animate-pulse">Loading data...</p>
     </div>
   );
 
   const ErrorState = () => (
-    <div className="text-center bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative col-span-full mx-6">
-      <strong className="font-bold">Error!</strong>
-      <span className="block sm:inline ml-2">{error}</span>
+    <div className="flex items-center gap-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-6 py-4 rounded-xl shadow-sm mx-auto max-w-2xl">
+      <ShieldAlert className="w-6 h-6 shrink-0" />
+      <div>
+        <strong className="block font-bold">Error Loading Data</strong>
+        <span className="text-sm mt-1 block">{error}</span>
+      </div>
     </div>
   );
 
@@ -181,43 +184,46 @@ const Admin = () => {
   // COMPONENTS: SECTIONS
   // ========================================
 
-  // DASHBOARD -----------------
   const DashboardSection = () => (
     <div className="grid lg:grid-cols-3 gap-6">
-      {/* Stat Card Component */}
       {[
         {
           title: "Total Users",
           value: dashboard?.stats?.totalUsers || 0,
           icon: Users,
-          color: "text-blue-500",
+          color: "text-blue-600 dark:text-blue-400",
+          bg: "bg-blue-100 dark:bg-blue-500/20",
         },
         {
           title: "Total Owners",
           value: dashboard?.stats?.totalOwners || 0,
           icon: Store,
-          color: "text-green-500",
+          color: "text-emerald-600 dark:text-emerald-400",
+          bg: "bg-emerald-100 dark:bg-emerald-500/20",
         },
         {
-          title: "Revenue",
+          title: "Total Revenue",
           value: `Br ${dashboard?.stats?.totalRevenue || 0}`,
           icon: DollarSign,
-          color: "text-orange-500",
+          color: "text-orange-600 dark:text-orange-400",
+          bg: "bg-orange-100 dark:bg-orange-500/20",
         },
       ].map((stat, index) => (
         <div
           key={index}
-          className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg transition duration-300 hover:shadow-xl"
+          className="p-6 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700/50 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1"
         >
-          <div className="flex items-center gap-4">
-            <stat.icon className={`${stat.color} w-10 h-10`} />
+          <div className="flex items-center gap-5">
+            <div className={`p-4 rounded-xl ${stat.bg}`}>
+              <stat.icon className={`${stat.color} w-8 h-8`} strokeWidth={2.5} />
+            </div>
             <div>
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+              <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                 {stat.title}
-              </h3>
-              <p className="text-3xl font-extrabold text-gray-900 dark:text-white">
-                {stat.value}
               </p>
+              <h3 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                {stat.value}
+              </h3>
             </div>
           </div>
         </div>
@@ -225,77 +231,80 @@ const Admin = () => {
     </div>
   );
 
-  // USERS -----------------
   const UsersSection = () => (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-        <h2 className="text-2xl font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-3">
-          <Users className="w-6 h-6 text-orange-500" /> Registered Users
+    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700/50 p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+        <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-3">
+          <div className="p-2 bg-orange-100 dark:bg-orange-500/20 rounded-lg">
+            <Users className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+          </div>
+          Registered Users
         </h2>
         <button
           onClick={handleDeleteAllUsers}
-          className="mt-3 sm:mt-0 bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 text-sm rounded-lg transition duration-150 shadow-md"
+          className="flex items-center gap-2 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20 font-semibold px-4 py-2 text-sm rounded-lg transition-colors duration-200 border border-red-200 dark:border-red-800"
         >
-          <Trash2 className="inline w-4 h-4 mr-1" /> Delete All Users
+          <Trash2 className="w-4 h-4" /> Delete All Users
         </button>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
         <table className="min-w-full text-sm text-left border-collapse">
           <thead>
-            <tr className="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 uppercase text-xs">
-              <th className="p-4 rounded-tl-lg">Name</th>
-              <th className="p-4">Email</th>
-              <th className="p-4">Role</th>
-              <th className="p-4">Verified</th>
-              <th className="p-4 rounded-tr-lg">Actions</th>
+            <tr className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 uppercase text-xs font-semibold tracking-wider">
+              <th className="px-6 py-4">Name</th>
+              <th className="px-6 py-4">Email</th>
+              <th className="px-6 py-4">Role</th>
+              <th className="px-6 py-4">Status</th>
+              <th className="px-6 py-4 text-right">Actions</th>
             </tr>
           </thead>
-
-          <tbody>
+          <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
             {users.length > 0 ? (
-              users.map((u, index) => (
+              users.map((u) => (
                 <tr
                   key={u._id}
-                  className={`border-b dark:border-gray-700 transition duration-150 ${
-                    index % 2 === 0
-                      ? "bg-white dark:bg-gray-800"
-                      : "bg-gray-50 dark:bg-gray-750"
-                  } hover:bg-orange-50 dark:hover:bg-gray-700`}
+                  className="bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors duration-150"
                 >
-                  <td className="p-4 font-medium">{u.name}</td>
-                  <td className="p-4 text-gray-600 dark:text-gray-400">
-                    {u.email}
-                  </td>
-                  <td className="p-4 capitalize">
-                    <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300">
+                  <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">{u.name}</td>
+                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{u.email}</td>
+                  <td className="px-6 py-4">
+                    <span className="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20 capitalize">
                       {u.role}
                     </span>
                   </td>
-                  <td className="p-4">
+                  <td className="px-6 py-4">
                     {u.isAccountVerified ? (
-                      <CheckCircle className="w-5 h-5 text-green-500" />
+                      <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 text-sm font-medium">
+                        <CheckCircle className="w-4 h-4" /> Verified
+                      </div>
                     ) : (
-                      <XCircle className="w-5 h-5 text-red-500" />
+                      <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500 text-sm font-medium">
+                        <XCircle className="w-4 h-4" /> Unverified
+                      </div>
                     )}
                   </td>
-                  <td className="p-4 flex gap-3 items-center">
-                    <Eye
-                      className="text-blue-500 cursor-pointer hover:text-blue-700 transition duration-150"
+                  <td className="px-6 py-4 flex gap-2 justify-end">
+                    <button
                       onClick={() => handleViewUser(u._id)}
+                      className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:text-blue-400 dark:hover:bg-blue-500/10 rounded-lg transition-colors"
                       title="View Details"
-                    />
-                    <Trash2
-                      className="text-red-500 cursor-pointer hover:text-red-700 transition duration-150"
+                    >
+                      <Eye className="w-5 h-5" />
+                    </button>
+                    <button
                       onClick={() => handleDeleteUser(u._id)}
+                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:text-red-400 dark:hover:bg-red-500/10 rounded-lg transition-colors"
                       title="Delete User"
-                    />
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="5" className="p-4 text-center text-gray-500">
+                <td colSpan="5" className="px-6 py-8 text-center text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-800/50">
                   No registered users found.
                 </td>
               </tr>
@@ -306,68 +315,72 @@ const Admin = () => {
     </div>
   );
 
-  // OWNERS -----------------
   const OwnersSection = () => (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-      <h2 className="text-2xl font-semibold mb-6 text-gray-700 dark:text-gray-200 flex items-center gap-3">
-        <Store className="w-6 h-6 text-orange-500" /> Bakery Owners
-      </h2>
+    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700/50 p-6">
+      <div className="mb-8">
+        <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-3">
+          <div className="p-2 bg-orange-100 dark:bg-orange-500/20 rounded-lg">
+            <Store className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+          </div>
+          Bakery Owners
+        </h2>
+      </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
         <table className="min-w-full text-sm text-left border-collapse">
           <thead>
-            <tr className="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 uppercase text-xs">
-              <th className="p-4 rounded-tl-lg">Company</th>
-              <th className="p-4">Owner</th>
-              <th className="p-4">Location</th>
-              <th className="p-4">Verified</th>
-              <th className="p-4 rounded-tr-lg">Actions</th>
+            <tr className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 uppercase text-xs font-semibold tracking-wider">
+              <th className="px-6 py-4">Company</th>
+              <th className="px-6 py-4">Owner</th>
+              <th className="px-6 py-4">Location</th>
+              <th className="px-6 py-4">Status</th>
+              <th className="px-6 py-4 text-right">Actions</th>
             </tr>
           </thead>
-
-          <tbody>
+          <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
             {owners.length > 0 ? (
-              owners.map((o, index) => (
+              owners.map((o) => (
                 <tr
                   key={o._id}
-                  className={`border-b dark:border-gray-700 transition duration-150 ${
-                    index % 2 === 0
-                      ? "bg-white dark:bg-gray-800"
-                      : "bg-gray-50 dark:bg-gray-750"
-                  } hover:bg-orange-50 dark:hover:bg-gray-700`}
+                  className="bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors duration-150"
                 >
-                  <td className="p-4 font-medium">{o.companyName}</td>
-                  <td className="p-4 text-gray-600 dark:text-gray-400">
-                    {o.user?.name || "N/A"}
-                  </td>
-                  <td className="p-4">{o.location || "N/A"}</td>
-                  <td className="p-4">
+                  <td className="px-6 py-4 font-bold text-slate-900 dark:text-white">{o.companyName}</td>
+                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{o.user?.name || "N/A"}</td>
+                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{o.location || "N/A"}</td>
+                  <td className="px-6 py-4">
                     {o.companyVerified ? (
-                      <CheckCircle className="w-5 h-5 text-green-500" />
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">
+                        <CheckCircle className="w-3.5 h-3.5" /> Verified
+                      </span>
                     ) : (
-                      <XCircle className="w-5 h-5 text-red-500" />
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
+                        <XCircle className="w-3.5 h-3.5" /> Pending
+                      </span>
                     )}
                   </td>
-                  <td className="p-4 flex gap-3 items-center">
-                    <Eye
-                      className="text-blue-500 cursor-pointer hover:text-blue-700 transition duration-150"
+                  <td className="px-6 py-4 flex gap-2 justify-end">
+                    <button
                       onClick={() => handleViewOwner(o._id)}
+                      className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:text-blue-400 dark:hover:bg-blue-500/10 rounded-lg transition-colors"
                       title="View Details"
-                    />
-
+                    >
+                      <Eye className="w-5 h-5" />
+                    </button>
                     {!o.companyVerified && (
-                      <CheckCircle
-                        className="text-green-500 cursor-pointer hover:text-green-700 transition duration-150"
+                      <button
                         onClick={() => handleVerifyCompany(o._id)}
+                        className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:text-emerald-400 dark:hover:bg-emerald-500/10 rounded-lg transition-colors"
                         title="Verify Company"
-                      />
+                      >
+                        <CheckCircle className="w-5 h-5" />
+                      </button>
                     )}
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="5" className="p-4 text-center text-gray-500">
+                <td colSpan="5" className="px-6 py-8 text-center text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-800/50">
                   No bakery owners found.
                 </td>
               </tr>
@@ -378,67 +391,71 @@ const Admin = () => {
     </div>
   );
 
-  // PAYMENTS -----------------
   const PaymentsSection = () => (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-        <h2 className="text-2xl font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-3">
-          <DollarSign className="w-6 h-6 text-orange-500" /> Payments Log
+    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700/50 p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+        <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-3">
+          <div className="p-2 bg-orange-100 dark:bg-orange-500/20 rounded-lg">
+            <DollarSign className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+          </div>
+          Payments Log
         </h2>
         {payments?.totalRevenue && (
-          <p className="mt-2 sm:mt-0 text-lg font-bold text-orange-500">
-            Total Revenue: Br {payments.totalRevenue}
-          </p>
+          <div className="bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20 px-4 py-2 rounded-xl">
+            <span className="text-sm text-orange-600/80 dark:text-orange-400/80 font-medium mr-2">Total Revenue</span>
+            <span className="text-lg font-extrabold text-orange-600 dark:text-orange-400">Br {payments.totalRevenue}</span>
+          </div>
         )}
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
         <table className="min-w-full text-sm text-left border-collapse">
           <thead>
-            <tr className="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 uppercase text-xs">
-              <th className="p-4 rounded-tl-lg">Customer</th>
-              <th className="p-4">Amount</th>
-              <th className="p-4">Status</th>
-              <th className="p-4 rounded-tr-lg">Paid At</th>
+            <tr className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 uppercase text-xs font-semibold tracking-wider">
+              <th className="px-6 py-4">Customer</th>
+              <th className="px-6 py-4">Amount</th>
+              <th className="px-6 py-4">Status</th>
+              <th className="px-6 py-4">Paid At</th>
             </tr>
           </thead>
-
-          <tbody>
+          <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
             {payments?.payments?.length > 0 ? (
-              payments.payments.map((p, index) => (
+              payments.payments.map((p) => (
                 <tr
                   key={p._id}
-                  className={`border-b dark:border-gray-700 transition duration-150 ${
-                    index % 2 === 0
-                      ? "bg-white dark:bg-gray-800"
-                      : "bg-gray-50 dark:bg-gray-750"
-                  } hover:bg-orange-50 dark:hover:bg-gray-700`}
+                  className="bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors duration-150"
                 >
-                  <td className="p-4 font-medium">
+                  <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">
                     {p.customer?.name || "Anonymous"}
                   </td>
-                  <td className="p-4 font-semibold">Br {p.amount}</td>
-                  <td className="p-4">
+                  <td className="px-6 py-4 font-bold text-slate-700 dark:text-slate-200">
+                    Br {p.amount}
+                  </td>
+                  <td className="px-6 py-4">
                     {p.payment?.isPaid ? (
-                      <span className="text-green-600 dark:text-green-400 font-semibold">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">
                         Paid
                       </span>
                     ) : (
-                      <span className="text-red-600 dark:text-red-400 font-semibold">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700">
                         Unpaid
                       </span>
                     )}
                   </td>
-                  <td className="p-4 text-gray-600 dark:text-gray-400">
+                  <td className="px-6 py-4 text-slate-500 dark:text-slate-400">
                     {p.payment?.paidAt
-                      ? new Date(p.payment.paidAt).toLocaleDateString()
+                      ? new Date(p.payment.paidAt).toLocaleDateString(undefined, {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })
                       : "—"}
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="4" className="p-4 text-center text-gray-500">
+                <td colSpan="4" className="px-6 py-8 text-center text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-800/50">
                   No payment records found.
                 </td>
               </tr>
@@ -454,31 +471,35 @@ const Admin = () => {
   // ========================================
   const DetailsModal = () =>
     modalOpen && (
-      <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50 p-4">
-        <div className="bg-white dark:bg-gray-900 p-6 rounded-xl w-full max-w-lg shadow-2xl transform transition-all duration-300 scale-100">
-          <div className="flex justify-between items-center mb-4 border-b pb-3 dark:border-gray-700">
-            <h2 className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+      <div className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 p-4 transition-opacity">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl w-full max-w-2xl shadow-2xl transform transition-all border border-slate-200 dark:border-slate-800">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Eye className="w-5 h-5 text-orange-500" />
               Record Details
             </h2>
             <button
               onClick={closeModal}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-              title="Close"
+              className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
             >
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5" />
             </button>
           </div>
 
-          <pre className="text-sm bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-auto max-h-[70vh] text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
-            {JSON.stringify(modalData, null, 2)}
-          </pre>
+          <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 overflow-x-auto max-h-[60vh] custom-scrollbar">
+            <pre className="text-xs font-mono text-slate-700 dark:text-slate-300 whitespace-pre-wrap break-words">
+              {JSON.stringify(modalData, null, 2)}
+            </pre>
+          </div>
 
-          <button
-            onClick={closeModal}
-            className="mt-6 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-4 py-2 rounded-lg w-full transition duration-150 shadow-md"
-          >
-            Close
-          </button>
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={closeModal}
+              className="bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 text-white dark:text-slate-900 font-semibold px-6 py-2.5 rounded-xl transition duration-200 shadow-sm"
+            >
+              Close Window
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -488,37 +509,38 @@ const Admin = () => {
   // ========================================
 
   const Sidebar = ({ mobile = false }) => (
-    <nav
-      className={`p-4 space-y-2 font-medium ${
-        mobile
-          ? "w-full"
-          : "hidden lg:block lg:min-w-[250px] bg-white dark:bg-gray-800 rounded-xl shadow-lg h-min"
-      }`}
-    >
-      <h2 className="text-xl font-bold text-orange-500 mb-4 px-2">
-        Admin Panel
-      </h2>
-      {TABS.map((tab) => {
-        const isActive =
-          currentTab === tab.href.split("/")[2] ||
-          (currentTab === "admin" && tab.href === "/admin");
-        return (
-          <Link
-            key={tab.name}
-            to={tab.href}
-            onClick={() => mobile && setIsSidebarOpen(false)}
-            className={`flex items-center gap-3 p-3 rounded-lg transition duration-150 ${
-              isActive
-                ? "bg-orange-100 text-orange-600 dark:bg-orange-900/50 dark:text-orange-300"
-                : "text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
-            }`}
-          >
-            <tab.icon className="w-5 h-5" />
-            {tab.name}
-          </Link>
-        );
-      })}
-    </nav>
+    <div className={`flex flex-col h-full ${mobile ? "" : "bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700/50 p-4 min-w-[260px]"}`}>
+      {!mobile && (
+        <div className="px-4 pb-6 pt-2 mb-2 border-b border-slate-100 dark:border-slate-700/50">
+          <h2 className="text-lg font-black tracking-tight text-slate-900 dark:text-white uppercase">
+            Admin <span className="text-orange-500">Panel</span>
+          </h2>
+        </div>
+      )}
+      
+      <nav className={`space-y-1.5 font-medium ${mobile ? "mt-4" : ""}`}>
+        {TABS.map((tab) => {
+          const isActive =
+            currentTab === tab.href.split("/")[2] ||
+            (currentTab === "admin" && tab.href === "/admin");
+          return (
+            <Link
+              key={tab.name}
+              to={tab.href}
+              onClick={() => mobile && setIsSidebarOpen(false)}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                isActive
+                  ? "bg-orange-500 text-white shadow-sm dark:bg-orange-500 dark:text-white"
+                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 hover:text-slate-900 dark:hover:bg-slate-700/50 dark:hover:text-slate-200"
+              }`}
+            >
+              <tab.icon className={`w-5 h-5 ${isActive ? "opacity-100" : "opacity-70"}`} />
+              {tab.name}
+            </Link>
+          );
+        })}
+      </nav>
+    </div>
   );
 
   // ========================================
@@ -535,21 +557,22 @@ const Admin = () => {
         return "Payment History";
       case "admin":
       default:
-        return "Admin Dashboard Overview";
+        return "Dashboard Overview";
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans selection:bg-orange-500/30">
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        {/* Mobile Header and Menu Button */}
-        <div className="lg:hidden flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
+        
+        {/* Mobile Header */}
+        <div className="lg:hidden flex justify-between items-center mb-6 bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700/50">
+          <h1 className="text-xl font-black text-slate-800 dark:text-white">
             {getPageTitle()}
           </h1>
           <button
             onClick={() => setIsSidebarOpen(true)}
-            className="p-2 text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 rounded-lg shadow"
+            className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors"
           >
             <Menu className="w-6 h-6" />
           </button>
@@ -557,14 +580,17 @@ const Admin = () => {
 
         {/* Mobile Sidebar Overlay */}
         {isSidebarOpen && (
-          <div className="fixed inset-0 bg-black/50 z-40 lg:hidden">
-            <div className="absolute left-0 top-0 w-64 h-full bg-white dark:bg-gray-800 p-4 shadow-xl">
-              <div className="flex justify-end">
+          <div className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm z-40 lg:hidden transition-opacity">
+            <div className="absolute left-0 top-0 w-72 h-full bg-white dark:bg-slate-800 p-6 shadow-2xl border-r border-slate-200 dark:border-slate-700">
+              <div className="flex justify-between items-center pb-6 border-b border-slate-100 dark:border-slate-700/50">
+                 <h2 className="text-lg font-black tracking-tight text-slate-900 dark:text-white uppercase">
+                  Admin <span className="text-orange-500">Panel</span>
+                </h2>
                 <button
                   onClick={() => setIsSidebarOpen(false)}
-                  className="p-1 text-gray-600 dark:text-gray-300"
+                  className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors"
                 >
-                  <X className="w-6 h-6" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
               <Sidebar mobile={true} />
@@ -573,14 +599,24 @@ const Admin = () => {
         )}
 
         {/* Desktop Layout */}
-        <div className="flex gap-8">
-          <Sidebar />
+        <div className="flex flex-col lg:flex-row gap-8">
+          
+          <div className="hidden lg:block">
+             <Sidebar />
+          </div>
 
-          <main className="flex-1 space-y-8">
+          <main className="flex-1 min-w-0 flex flex-col gap-6">
             {/* Desktop Page Title */}
-            <h1 className="hidden lg:block text-4xl font-extrabold text-gray-800 dark:text-white border-b border-orange-500/50 pb-2">
-              {getPageTitle()}
-            </h1>
+            <div className="hidden lg:flex justify-between items-end mb-2">
+              <div>
+                <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                  {getPageTitle()}
+                </h1>
+                <p className="text-slate-500 dark:text-slate-400 mt-1">
+                  Manage your platform's data, users, and transactions.
+                </p>
+              </div>
+            </div>
 
             {/* Loading/Error State */}
             {loading && <LoadingState />}
@@ -588,14 +624,14 @@ const Admin = () => {
 
             {/* Content Sections */}
             {!loading && !error && (
-              <>
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
                 {(currentTab === "admin" || currentTab === "dashboard") && (
                   <DashboardSection />
                 )}
                 {currentTab === "users" && <UsersSection />}
                 {currentTab === "owners" && <OwnersSection />}
                 {currentTab === "payments" && <PaymentsSection />}
-              </>
+              </div>
             )}
           </main>
         </div>
