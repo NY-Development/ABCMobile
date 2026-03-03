@@ -198,7 +198,11 @@ export const login = async (req, res) => {
 
     res.json({ token, user: { ...user.toObject(), ownerInfo } });
   } catch (err) {
-    res.status(500).json({ message: "Server error" });
+    console.error("LOGIN_ERROR:", err); // Look at your terminal/logs for this!
+    res.status(500).json({ 
+    message: "Server error", 
+    dev_details: err.message // ONLY do this in development!
+  });
   }
 };
 

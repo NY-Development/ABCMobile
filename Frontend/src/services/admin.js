@@ -6,7 +6,7 @@ export const getAllUsers = async() => {
 };
 
 export const getSingleUser = async(id) => {
-  const res = await API.get(`/${id}/admin/details`);
+  const res = await API.get(`/admin/${id}/details`);
   return res.data;
 };
 
@@ -31,7 +31,7 @@ export const deleteAllUsers = async() => {
 };
 
 export const verifyCompany = async(id) => {
-  const res = await API.get(`/admin/verify/${id}`);
+  const res = await API.put(`/admin/verify/${id}`);
   return res.data;
 };
 
