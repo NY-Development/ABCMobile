@@ -2,7 +2,7 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 
 const API = axios.create({
- baseURL: 'https://bakerybackend-nine.vercel.app/api',
+ baseURL: 'https://abc-mobile-indol.vercel.app/api',
   // baseURL: 'http://localhost:5000/api',
   withCredentials: true,
 });
