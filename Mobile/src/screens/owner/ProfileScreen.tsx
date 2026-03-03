@@ -32,7 +32,7 @@ export const ProfileScreen = () => {
   const ownerName = user?.name ?? 'Sweet Delights Bakery';
   const ownerEmail = user?.email ?? 'owner@example.com';
   const ownerImage =
-    user?.image ||
+    user?.ownerInfo?.companyImage ||
     'https://lh3.googleusercontent.com/aida-public/AB6AXuBFIJw_c5hSAzrGcvfGUMxPEXKnWKD1Z9j1Y9cCTM618dVCGIGHG4ER7NuqwKrp0PqS7crZ_LOR95Csoqz4A0mmrwxkr-0yA-wR-NitbPVHMGETYSoK9aDyLWgzvDseXKjbJ2R8EwyKjwVDPsZdIGXMbDStAXTVJLYrhO-k-86PKCynNuDOyRKQbqrpr-PyfHDiI9v5dVSAOXox2qkb2JQFquuF60THvPOi-ETyNiMdmhO8Zx4L5OtpagpgzBk06RZza0uD-UKsSCa4';
 
   const handleLogout = () => {
@@ -55,7 +55,7 @@ export const ProfileScreen = () => {
           <View className="relative h-64 w-full overflow-visible">
             <Image
               source={{
-                uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDLDlzkHSyty5xAwGcAOx56u8eHee9YJ3zq0eFkqO4locL88MBLo2YFaNj-M_E5I0Z1yvBzroLbH8vT2XYJfAiL3jrd9bH95VUaLN3nG-3qxOg01UEZFWK7NxB36CsZML_gQSyD7yJexp-b9u4pZG23zV-CSwb5ql7vF27npPeM7T8SbVZHOOmZx9Ah_lvU4MddQQ3Md6Qzkg-_6YmY82Q8IHep2O5wJu_ziGH9KTlj7ijhbmpPtoo6f7awUVEfso6OEpUPSFh5j-dE',
+                uri: ownerImage || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDLDlzkHSyty5xAwGcAOx56u8eHee9YJ3zq0eFkqO4locL88MBLo2YFaNj-M_E5I0Z1yvBzroLbH8vT2XYJfAiL3jrd9bH95VUaLN3nG-3qxOg01UEZFWK7NxB36CsZML_gQSyD7yJexp-b9u4pZG23zV-CSwb5ql7vF27npPeM7T8SbVZHOOmZx9Ah_lvU4MddQQ3Md6Qzkg-_6YmY82Q8IHep2O5wJu_ziGH9KTlj7ijhbmpPtoo6f7awUVEfso6OEpUPSFh5j-dE',
               }}
               className="h-full w-full"
               resizeMode="cover"
