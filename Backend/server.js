@@ -10,8 +10,9 @@ import paymentRoutes from "./routes/paymentRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
-import adminRoutes from './routes/adminRoutes.js'
+import adminRoutes from "./routes/adminRoutes.js";
 import advertRoutes from "./routes/advertRoutes.js";
+import deliveryRoutes from "./routes/deliveryRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -24,8 +25,11 @@ app.use(passport.initialize());
 const allowedOrigins = [
   "http://localhost:5173", // local dev
   "http://localhost:8081", // local mobile dev
+  "http://192.168.1.12:8081", // local mobile dev on physical device
+  "http://192.168.1.12:5000", // local mobile app on physical device
+  "http://192.168.1.12", // Allow from your machine IP
   "https://adama-bakery.vercel.app", //deployed url
-  "https://abc-mobile-front.vercel.app" // 2nd deployed url
+  "https://abc-mobile-front.vercel.app", // 2nd deployed url
 ];
 
 app.use(
@@ -38,7 +42,7 @@ app.use(
       }
     },
     credentials: true,
-  })
+  }),
 );
 
 // Routes
@@ -51,6 +55,7 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/advert", advertRoutes);
+app.use("/api/delivery", deliveryRoutes);
 
 app.get("/", (req, res) => {
   res.send("API is running...");

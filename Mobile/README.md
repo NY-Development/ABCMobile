@@ -1,51 +1,73 @@
-# ABC Mobile
+# Minimal Template
 
-React Native app for the ABC project.
+This is a [React Native](https://reactnative.dev/) project built with [Expo](https://expo.dev/) and [React Native Reusables](https://reactnativereusables.com).
 
-## Prerequisites
-- Node.js LTS
-- Yarn or npm
-- Android Studio (Android) and/or Xcode (iOS)
-- Expo Go (if using Expo)
+It was initialized using the following command:
 
-## Setup
 ```bash
-cd Mobile
-npm install
+npx @react-native-reusables/cli@latest init -t ABC
 ```
 
-## Run
+## Getting Started
+
+To run the development server:
+
 ```bash
-# Expo (if configured)
-npx expo start
-
-# React Native CLI (if configured)
-npx react-native start
-npx react-native run-android
-npx react-native run-ios
+    npm run dev
+    # or
+    yarn dev
+    # or
+    pnpm dev
+    # or
+    bun dev
 ```
 
-## Environment
-Create a `.env` file in `Mobile/` if required by the app (example keys):
-```
-API_BASE_URL=https://your.api
-```
+This will start the Expo Dev Server. Open the app in:
 
-## Scripts (typical)
+- **iOS**: press `i` to launch in the iOS simulator _(Mac only)_
+- **Android**: press `a` to launch in the Android emulator
+- **Web**: press `w` to run in a browser
+
+You can also scan the QR code using the [Expo Go](https://expo.dev/go) app on your device. This project fully supports running in Expo Go for quick testing on physical devices.
+
+## Adding components
+
+You can add more reusable components using the CLI:
+
 ```bash
-npm run lint
-npm run test
-npm run typecheck
+npx react-native-reusables/cli@latest add [...components]
 ```
 
-## Project Structure
-- `src/screens` — App screens
-- `src/components` — Reusable UI components
-- `src/context` — Context providers
-- `src/constants` — App constants
-- `src/types` — TypeScript types
+> e.g. `npx react-native-reusables/cli@latest add input textarea`
 
-## Notes for Contributors
-- Keep UI consistent with existing styles.
-- Prefer `Boolean()` for boolean props.
-- Add/Update tests for new logic where applicable.
+If you don't specify any component names, you'll be prompted to select which components to add interactively. Use the `--all` flag to install all available components at once.
+
+## Project Features
+
+- ⚛️ Built with [Expo Router](https://expo.dev/router)
+- 🎨 Styled with [Tailwind CSS](https://tailwindcss.com/) via [Nativewind](https://www.nativewind.dev/)
+- 📦 UI powered by [React Native Reusables](https://github.com/founded-labs/react-native-reusables)
+- 🚀 New Architecture enabled
+- 🔥 Edge to Edge enabled
+- 📱 Runs on iOS, Android, and Web
+
+## Learn More
+
+To dive deeper into the technologies used:
+
+- [React Native Docs](https://reactnative.dev/docs/getting-started)
+- [Expo Docs](https://docs.expo.dev/)
+- [Nativewind Docs](https://www.nativewind.dev/)
+- [React Native Reusables](https://reactnativereusables.com)
+
+## Deploy with EAS
+
+The easiest way to deploy your app is with [Expo Application Services (EAS)](https://expo.dev/eas).
+
+- [EAS Build](https://docs.expo.dev/build/introduction/)
+- [EAS Updates](https://docs.expo.dev/eas-update/introduction/)
+- [EAS Submit](https://docs.expo.dev/submit/introduction/)
+
+---
+
+If you enjoy using React Native Reusables, please consider giving it a ⭐ on [GitHub](https://github.com/founded-labs/react-native-reusables). Your support means a lot!

@@ -1,3 +1,153 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Web-specific interactivity fixes for React Native components */
+@media web {
+  /* Make Pressable components clickable on web */
+  [role='button'],
+  .rn-root > * > * > [onPress] {
+    cursor: pointer;
+  }
+
+  /* Ensure text inputs work properly on web */
+  input[type='text'],
+  input[type='email'],
+  input[type='password'],
+  input[type='search'],
+  textarea {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  /* Fix button touch feedback on web */
+  button,
+  [role='button'] {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
+  }
+
+  /* Ensure navigation links work */
+  a {
+    cursor: pointer;
+  }
+
+  /* Fix interactive elements pointer events */
+  input,
+  textarea,
+  select,
+  button {
+    pointer-events: auto;
+  }
+}
+
+@layer base {
+  :root {
+    --background: 20 33% 98%;
+    --foreground: 20 14% 4%;
+    --card: 0 0% 100%;
+    --card-foreground: 20 14% 4%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 14% 4%;
+    --primary: 24 95% 53%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 20 40% 96%;
+    --secondary-foreground: 24 95% 33%;
+    --muted: 20 20% 92%;
+    --muted-foreground: 20 10% 45%;
+    --accent: 20 40% 94%;
+    --accent-foreground: 24 95% 43%;
+    --destructive: 0 84.2% 60.2%;
+    --border: 20 20% 90%;
+    --input: 20 20% 90%;
+    --ring: 24 95% 53%;
+    --radius: 1rem;
+    --chart-1: 24 95% 53%;
+    --chart-2: 20 40% 80%;
+    --chart-3: 35 90% 45%;
+    --chart-4: 15 80% 60%;
+    --chart-5: 25 70% 65%;
+  }
+  .dark:root {
+    --background: 20 20% 4%;
+    --foreground: 20 10% 98%;
+    --card: 20 20% 8%;
+    --card-foreground: 20 10% 98%;
+    --popover: 20 20% 6%;
+    --popover-foreground: 20 10% 98%;
+    --primary: 24 95% 58%;
+    --primary-foreground: 20 10% 5%;
+    --secondary: 20 30% 15%;
+    --secondary-foreground: 24 95% 75%;
+    --muted: 20 30% 15%;
+    --muted-foreground: 20 10% 65%;
+    --accent: 20 30% 18%;
+    --accent-foreground: 24 95% 75%;
+    --destructive: 0 62.8% 30.6%;
+    --border: 20 30% 18%;
+    --input: 20 30% 18%;
+    --ring: 24 95% 58%;
+    --chart-1: 24 95% 58%;
+    --chart-2: 20 40% 40%;
+    --chart-3: 35 90% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+/* Web responsive and interactive fixes */
+@layer components {
+  /* Fix for web - ensure interactive divs are actually clickable */
+  div[class*='active:'],
+  div[class*='hover:'] {
+    cursor: pointer;
+  }
+
+  /* Pressable components on web */
+  @supports (display: flex) {
+    /* Make sure flex containers work on web */
+    .flex,
+    .flex-row,
+    .flex-col {
+      display: flex;
+    }
+
+    /* Fix scrolling on web */
+    .overflow-y-auto,
+    .overflow-x-auto {
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+
+  /* TextInput styling for web */
+  input {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  /* Better button feedback */
+  button:active,
+  [role='button']:active {
+    transform: scale(0.98);
+  }
+
+  button:hover,
+  [role='button']:hover {
+    opacity: 0.85;
+  }
+
+  /* Fix scrolling performance */
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Disable double tap zoom on buttons */
+  button,
+  a,
+  [role='button'] {
+    touch-action: manipulation;
+  }
+}

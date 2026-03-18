@@ -1,40 +1,31 @@
 import { create } from 'zustand';
-import { themeStorage } from '../utils/storage';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export type ThemeMode = 'light' | 'dark';
+interface ThemeState {
+  isDark: boolean;
+  toggleTheme: () => void;
+  setTheme: (isDark: boolean) => void;
+}
 
-type ThemeState = {
-  mode: ThemeMode;
-  hydrated: boolean;
-  initialize: () => Promise<void>;
-  setMode: (mode: ThemeMode) => Promise<void>;
-  toggle: () => Promise<void>;
-};
+const useThemeStore = create<ThemeState>()(
+  persist(
+    (set) => ({
+      isDark: false,
 
-const isThemeMode = (value: string | null): value is ThemeMode => {
-  return value === 'light' || value === 'dark';
-};
+      toggleTheme: () => {
+        set((state) => ({ isDark: !state.isDark }));
+      },
 
-export const useThemeStore = create<ThemeState>((set, get) => ({
-  mode: 'light',
-  hydrated: false,
-
-  initialize: async () => {
-    const stored = await themeStorage.get();
-    if (isThemeMode(stored)) {
-      set({ mode: stored });
+      setTheme: (isDark) => {
+        set({ isDark });
+      },
+    }),
+    {
+      name: 'theme-storage',
+      storage: createJSONStorage(() => AsyncStorage),
     }
-    set({ hydrated: true });
-  },
+  )
+);
 
-  setMode: async (mode) => {
-    set({ mode });
-    await themeStorage.set(mode);
-  },
-
-  toggle: async () => {
-    const next = get().mode === 'light' ? 'dark' : 'light';
-    set({ mode: next });
-    await themeStorage.set(next);
-  },
-}));
+export { useThemeStore };

@@ -19,6 +19,7 @@ const userSchema = new mongoose.Schema(
       default: "customer",
     },
     googleId: { type: String, unique: true, sparse: true },
+    firstLogin: { type: Boolean, default: true },
     image: { type: String },
     verifyOtp: { type: String, default: "" },
     verifyOtpExpireAt: { type: Number, default: 0 },
@@ -34,15 +35,25 @@ const userSchema = new mongoose.Schema(
       paidAt: { type: Date },
       paymentScreenshot: { type: String, default: "" },
     },
-    firstLogin: { type: Boolean, default: true },
+    deliveryProfile: {
+      vehicleType: { type: String, default: "" },
+      plateNumber: { type: String, default: "" },
+      region: { type: String, default: "" },
+      city: { type: String, default: "" },
+      isAvailable: { type: Boolean, default: true },
+      rating: { type: Number, default: 0, min: 0, max: 5 },
+      totalDeliveries: { type: Number, default: 0 },
+    },
     // Wishlist
-     wishlist: [
+    wishlist: [
       {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Product",
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Product",
       },
-     ],
-     }, { timestamps: true });
+    ],
+  },
+  { timestamps: true },
+);
 
 const User = mongoose.model("User", userSchema);
 export default User;

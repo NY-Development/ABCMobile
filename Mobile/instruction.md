@@ -1,217 +1,154 @@
-# 🍰 Adama Bakery & Cake (ABC Project)
-## Mobile Architecture & Implementation Standard
+You are an AI developer working inside a React Native project built with Expo and Expo Router.
 
-This document defines the mandatory architectural, technical, and UX standards for the ABC React Native (Expo) mobile application.
+Your task is to IMPLEMENT the UI designs located in the `Design/` folder into the actual application screens inside the `app/` directory.
 
-This file is the highest authority for all AI-generated and developer-written code.
-
----
-
-# 1. Core Stack
-
-- React Native (Expo Managed Workflow)
-- TypeScript (Strict Mode)
-- Expo Router
-- @tanstack/react-query
-- MongoDB backend (already implemented)
-
-Architecture:
-- Feature-based structure
-- Functional components only
-- Separation of app/ and src/
+You must NOT delete or restructure the existing project. Only implement the screens and update them according to the designs.
 
 ---
 
-# 2. Notification System (Critical Feature)
+PROJECT STACK
 
-## 2.1 Push Notifications (PRIMARY SYSTEM)
-
-Push notifications are the main communication layer.
-
-Use:
-- expo-notifications
-- Notifications.getExpoPushTokenAsync
-- Proper permission handling
-- Android notification channels
-
-Rules:
-- Must request permission properly
-- Must configure Android channel before token request
-- Must only request token on physical device
-- Must store push token in backend
-- Must cache token in MMKV if needed
-- Must implement:
-  - addNotificationReceivedListener
-  - addNotificationResponseReceivedListener
-- Foreground notifications must show a beautiful in-app modal
-
-Use Cases:
-- Bakery → Customer (Order updates)
-- Customer → Bakery (New orders)
-- System → All (Announcements)
-
-Push notifications have higher priority than local notifications.
+Framework: Expo React Native
+Routing: Expo Router (file-based routing)
+Styling: NativeWind (Tailwind for React Native)
+State Management: Zustand
+Forms: React Hook Form + Zod
+Language: TypeScript
 
 ---
 
-## 2.2 Local Notifications (Secondary)
+IMPORTANT RULES
 
-Used only for:
-- Baking timers
-- Reminder scheduling
-- Countdown alerts
+1. Use Expo Router file-based routing inside the `app/` folder.
+2. Do NOT remove existing folders or navigation logic.
+3. Translate HTML UI from the Design folder into React Native components.
+4. Use NativeWind classes for styling.
+5. Convert HTML elements as follows:
 
-Must:
-- Work offline
-- Be cancelable
-- Use scheduleNotificationAsync
+div → View
+span / p → Text
+img → Image (expo-image if used)
+button → Pressable or TouchableOpacity
+input → TextInput
 
----
+6. Follow the layout shown in `screen.png` if something in the HTML is unclear.
+7. Use reusable components from:
 
-# 3. SMS & Email (Linking-Based Only)
+src/components/
 
-Implementation must:
-- Use Linking.openURL
-- Prefill message
-- Encode URL properly
-- Retrieve recipient data from profile
+Example components already available:
 
-Never auto-send messages silently.
+FoodCard
+RestaurantCard
+OrderCard
+PrimaryButton
+InputField
 
----
-
-<!-- # 4. Storage Rules
-
-## 4.1 MMKV (Mandatory)
-
-Used for:
-- Auth tokens
-- Preferences
-- Push token caching
-- Small config data
-
-Rules:
-- Initialized globally
-- Synchronous usage only
-- Never store large datasets
-
-## 4.2 SQLite (Limited Use)
-
-Allowed only for:
-- Offline order caching
-- Draft storage
-- Heavy local relational data
-
-Must use:
-- expo-sqlite
-- Migration function
-- SQLiteProvider
-
-Do not replicate MongoDB logic locally.
-
---- -->
-
-# 5. AppState & NetInfo (Mandatory Global Setup)
-
-Must integrate:
-
-## AppState
-- Refetch queries when active
-- Use focusManager
-
-## NetInfo
-- Update onlineManager
-- Refetch on reconnect
-- Offline-first behavior required
-
-Must be configured globally.
+Reuse them instead of rewriting UI.
 
 ---
 
-# 6. Safe Area (Strict Rule)
+DESIGN IMPLEMENTATION SOURCE
 
-- Wrap entire app in SafeAreaProvider
-- Use safe area insets
-- Never allow content under notch or gesture bar
+The UI designs are stored in:
 
-Mandatory across entire app.
+Design/
 
----
+Each design folder contains:
 
-# 7. Keyboard Handling (Strict Rule)
+code.html → HTML UI layout
+screen.png → Visual reference of the screen
 
-All input screens MUST:
-
-- Use KeyboardAvoidingView
-- iOS: padding
-- Android: height
-- Ensure no hidden inputs
-
-No exceptions allowed.
+You must read the HTML and recreate it in React Native.
 
 ---
 
-# 8. Boolean Safety
+ROUTE IMPLEMENTATION MAP
 
-Always cast booleans:
+Implement the following mappings.
 
-disabled={Boolean(value)}
-visible={!!value}
+GLOBAL SCREENS
 
-Never pass undefined or non-boolean values to boolean props.
-
----
-
-# 9. Installation Rule
-
-For native libraries:
-
-npx expo install <package>
-
-Never use npm install for native modules.
-
----
-
-# 10. Error Handling Protocol
-
-When debugging:
-
-1. Run:
-   npx expo-doctor
-
-2. Clear cache:
-   npx expo start -c
-
-3. Verify:
-   - SDK compatibility
-   - Permissions
-   - Android channels
-   - Physical device usage
-   - Expo Project ID
-
-Always check file structure and imports.
+Design/Global/splash_screen → app/(global)/splash.tsx
+Design/Global/landing_page → app/(global)/landing.tsx
+Design/Global/login_screen → app/(global)/login.tsx
+Design/Global/register_screen → app/(global)/register.tsx
+Design/Global/forgot_password → app/(global)/forgot-password.tsx
+Design/Global/reset_password → app/(global)/reset-password.tsx
+Design/Global/verify_otp → app/(global)/verify-otp.tsx
+Design/Global/settings → app/(global)/settings.tsx
+Design/Global/about_abc → app/(global)/about.tsx
+Design/Global/privacy_policy → app/(global)/privacy-policy.tsx
+Design/Global/terms_eula → app/(global)/terms.tsx
 
 ---
 
-# 11. UI/UX Standard
+CUSTOMER SCREENS
 
-- Premium bakery-themed UI
-- Smooth animated modals
-- Clear error states
-- Graceful offline states
-- No silent failures
+Design/Customer/explore_bakeries → app/(customer)/home/index.tsx
+Design/Customer/all_bakeries → app/(customer)/restaurants/index.tsx
+Design/Customer/bakery_details → app/(customer)/restaurants/[bakeryId].tsx
+Design/Customer/our_products → app/(customer)/restaurants/products.tsx
+Design/Customer/product_details → app/(customer)/restaurants/product/[productId].tsx
 
-Notification modal must feel polished and premium.
+Design/Customer/shopping_cart → app/(customer)/cart/index.tsx
+Design/Customer/checkout → app/(customer)/checkout/index.tsx
+Design/Customer/payment_method → app/(customer)/checkout/payment.tsx
+
+Design/Customer/order_history → app/(customer)/orders/history.tsx
+Design/Customer/track_order → app/(customer)/orders/tracking.tsx
+
+Design/Customer/my_profile → app/(customer)/profile/index.tsx
 
 ---
 
-# 12. Priority Order
+DELIVERY SCREENS
 
-1. Push Notifications
-2. App Stability
-3. Safe Area Compliance
-4. Keyboard Safety
-5. Offline Support
-6. Clean Architecture
+Design/Delivery/delivery_partner_application → app/(driver)/apply.tsx
+Design/Delivery/delivery_requests → app/(driver)/orders/available.tsx
+Design/Delivery/active_delivery_tracking → app/(driver)/delivery/active.tsx
+Design/Delivery/delivery_provider_selection → app/(driver)/orders/select-provider.tsx
+Design/Delivery/delivery_provider_profile → app/(driver)/profile/index.tsx
 
-Any implementation violating these rules must be corrected immediately.
+---
+
+OWNER / VENDOR SCREENS
+
+Design/Owner/owner_dashboard → app/(vendor)/dashboard/index.tsx
+
+Design/Owner/incoming_orders → app/(vendor)/orders/index.tsx
+Design/Owner/order_details → app/(vendor)/orders/[orderId].tsx
+
+Design/Owner/manage_product → app/(vendor)/menu/index.tsx
+Design/Owner/product_inventory → app/(vendor)/menu/inventory.tsx
+
+Design/Owner/abc_pro_subscription → app/(vendor)/subscription.tsx
+
+Verification Flow
+
+Design/Owner/owner_verification_step_1 → app/(vendor)/verification/step1.tsx
+Design/Owner/owner_verification_step_2 → app/(vendor)/verification/step2.tsx
+Design/Owner/owner_verification_step_3 → app/(vendor)/verification/step3.tsx
+Design/Owner/owner_verification_step_4 → app/(vendor)/verification/step4.tsx
+Design/Owner/owner_verification_step_5 → app/(vendor)/verification/step5.tsx
+Design/Owner/owner_verification_success → app/(vendor)/verification/success.tsx
+
+---
+
+IMPLEMENTATION PROCESS
+
+For each design screen:
+
+1. Read the `code.html` file.
+2. Translate HTML structure to React Native JSX.
+3. Use NativeWind classes to replicate styling.
+4. Use reusable components where appropriate.
+5. Place the resulting screen in the mapped route inside `app/`.
+
+---
+
+FINAL GOAL
+
+All screens inside the `Design/` directory must be fully implemented as working Expo Router screens in the `app/` directory, following the mapping above.
+
+The UI should visually match the `screen.png` references as closely as possible while using React Native best practices.

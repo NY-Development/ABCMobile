@@ -1,179 +1,110 @@
 import { create } from 'zustand';
-import {
-  getUserProfile,
-  loginUser,
-  logoutUser,
-  registerUser,
-  requestPasswordReset,
-  resendUserOtp,
-  resetPassword,
-  verifyUserOtp,
-  type MessageResponse,
-  type AuthResponse,
-  type UserProfile,
-} from '../services/authService';
-import { tokenStorage } from '../utils/storage';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import * as SecureStore from 'expo-secure-store';
 
-export type User = UserProfile;
+export interface User {
+  id: string;
+  _id?: string;
+  email: string;
+  name?: string;
+  firstname?: string;
+  lastname?: string;
+  phone: string;
+  role: 'customer' | 'owner' | 'admin' | 'driver';
+  avatar?: string;
+  image?: string;
+  firstLogin?: boolean;
+  ownerInfo?: Record<string, any>;
+}
 
-type AuthState = {
+interface AuthState {
   user: User | null;
   token: string | null;
-  loading: boolean;
-  error: string | null;
-  initialized: boolean;
-  initialize: () => Promise<void>;
-  fetchProfile: () => Promise<void>;
-  register: (data: { name: string; email: string; password: string; phone?: string; role?: 'customer' | 'owner' }) => Promise<AuthResponse>;
-  login: (data: { email: string; password: string }) => Promise<AuthResponse>;
-  logout: () => Promise<void>;
-  verifyOtp: (data: { email: string; code: string }) => Promise<MessageResponse>;
-  resendOtp: (data: { email: string }) => Promise<MessageResponse>;
-  requestPasswordReset: (data: { email: string }) => Promise<MessageResponse>;
-  resetPassword: (data: { email: string; code: string; newPassword: string }) => Promise<MessageResponse>;
-  setTokenAndFetchUser: (token: string) => Promise<void>;
-};
+  isLoading: boolean;
+  isAuthenticated: boolean;
 
-const getErrorMessage = (error: unknown, fallback: string) => {
-  if (error && typeof error === 'object' && 'response' in error) {
-    const response = (error as { response?: { data?: { message?: string } } }).response;
-    if (response?.data?.message) return response.data.message;
-  }
-  if (error instanceof Error && error.message) return error.message;
-  return fallback;
-};
+  // Actions
+  setAuth: (user: User, token: string) => void;
+  setUser: (user: User) => void;
+  setLoading: (loading: boolean) => void;
+  clearAuth: () => Promise<void>;
+  initializeAuth: () => Promise<void>;
+}
 
-export const useAuthStore = create<AuthState>((set, get) => ({
-  user: null,
-  token: null,
-  loading: false,
-  error: null,
-  initialized: false,
+const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      user: null,
+      token: null,
+      isLoading: false,
+      isAuthenticated: false,
 
-  initialize: async () => {
-    const token = await tokenStorage.get();
-    if (!token) {
-      set({ initialized: true, user: null, token: null });
-      return;
+      setAuth: (user, token) => {
+        set({
+          user,
+          token,
+          isAuthenticated: true,
+          isLoading: false,
+        });
+      },
+
+      setUser: (user) => {
+        set({ user });
+      },
+
+      setLoading: (loading) => {
+        set({ isLoading: loading });
+      },
+
+      clearAuth: async () => {
+        try {
+          await SecureStore.deleteItemAsync('token');
+        } catch (error) {
+          console.error('Error clearing secure store:', error);
+        }
+        set({
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          isLoading: false,
+        });
+      },
+
+      initializeAuth: async () => {
+        try {
+          const storedToken = await SecureStore.getItemAsync('token');
+          if (storedToken) {
+            set({ token: storedToken });
+          }
+        } catch (error) {
+          console.error('Error initializing auth:', error);
+        }
+      },
+    }),
+    {
+      name: 'auth-storage',
+      storage: createJSONStorage(() => ({
+        getItem: async (name) => {
+          try {
+            const item = await SecureStore.getItemAsync(name);
+            return item ? JSON.parse(item) : null;
+          } catch {
+            return null;
+          }
+        },
+        setItem: async (name, value) => {
+          try {
+            await SecureStore.setItemAsync(name, JSON.stringify(value));
+          } catch {}
+        },
+        removeItem: async (name) => {
+          try {
+            await SecureStore.deleteItemAsync(name);
+          } catch {}
+        },
+      })),
     }
-    set({ token });
-    await get().fetchProfile();
-    set({ initialized: true });
-  },
+  )
+);
 
-  fetchProfile: async () => {
-    set({ loading: true, error: null });
-    try {
-      const profile = await getUserProfile();
-      set({ user: profile });
-    } catch (error) {
-      await tokenStorage.remove();
-      set({ user: null, token: null, error: getErrorMessage(error, 'Session expired.') });
-    } finally {
-      set({ loading: false });
-    }
-  },
-
-  register: async (data) => {
-    set({ loading: true, error: null });
-    try {
-      const result = await registerUser(data);
-      return result;
-    } catch (error) {
-      const message = getErrorMessage(error, 'Registration failed.');
-      set({ error: message });
-      throw new Error(message);
-    } finally {
-      set({ loading: false });
-    }
-  },
-
-  login: async (data) => {
-    set({ loading: true, error: null });
-    try {
-      const result = await loginUser(data);
-      if (result?.token) {
-        await tokenStorage.set(result.token);
-        set({ token: result.token, user: result.user ? result.user as UserProfile : null });
-      }
-      return result;
-    } catch (error) {
-      const message = getErrorMessage(error, 'Login failed.');
-      set({ error: message });
-      throw new Error(message);
-    } finally {
-      set({ loading: false });
-    }
-  },
-
-  logout: async () => {
-    set({ loading: true, error: null });
-    try {
-      await logoutUser();
-    } catch (error) {
-      const message = getErrorMessage(error, 'Logout failed.');
-      set({ error: message });
-    } finally {
-      await tokenStorage.remove();
-      set({ user: null, token: null, loading: false });
-    }
-  },
-
-  verifyOtp: async (data) => {
-    set({ loading: true, error: null });
-    try {
-      return await verifyUserOtp(data);
-    } catch (error) {
-      const message = getErrorMessage(error, 'OTP verification failed.');
-      set({ error: message });
-      throw new Error(message);
-    } finally {
-      set({ loading: false });
-    }
-  },
-
-  resendOtp: async (data) => {
-    set({ loading: true, error: null });
-    try {
-      return await resendUserOtp(data);
-    } catch (error) {
-      const message = getErrorMessage(error, 'OTP resend failed.');
-      set({ error: message });
-      throw new Error(message);
-    } finally {
-      set({ loading: false });
-    }
-  },
-
-  requestPasswordReset: async (data) => {
-    set({ loading: true, error: null });
-    try {
-      return await requestPasswordReset(data);
-    } catch (error) {
-      const message = getErrorMessage(error, 'Password reset request failed.');
-      set({ error: message });
-      throw new Error(message);
-    } finally {
-      set({ loading: false });
-    }
-  },
-
-  resetPassword: async (data) => {
-    set({ loading: true, error: null });
-    try {
-      return await resetPassword(data);
-    } catch (error) {
-      const message = getErrorMessage(error, 'Password reset failed.');
-      set({ error: message });
-      throw new Error(message);
-    } finally {
-      set({ loading: false });
-    }
-  },
-
-  setTokenAndFetchUser: async (token: string) => {
-    await tokenStorage.set(token);
-    set({ token });
-    await get().fetchProfile();
-  },
-}));
+export { useAuthStore };

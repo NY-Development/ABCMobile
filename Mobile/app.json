@@ -1,46 +1,41 @@
 {
   "expo": {
-    "name": "ABC Mobile",
-    "slug": "ABC-Mobile",
+    "name": "ABC",
+    "slug": "ABC",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon-square.png",
+    "icon": "./assets/images/icon.png",
+    "scheme": "ABC",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/images/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#f8f8f6"
+      "backgroundColor": "#ffffff"
     },
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.ABCMobile"
+      "supportsTablet": true
     },
     "android": {
+      "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon-square.png",
-        "backgroundColor": "#f8f8f6"
-      },
-      "softwareKeyboardLayoutMode": "resize",
-      "package": "com.anonymous.ABCMobile",
-      "permissions": [
-        "RECEIVE_BOOT_COMPLETED"
-      ]
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-font",
-      "expo-notifications"
+      "expo-router"
     ],
     "experiments": {
-      "tsconfigPaths": true
-    },
-    "extra": {
-      "eas": {
-        "projectId": "7bb90a7c-c171-477f-a9b2-7a568e3c433d"
-      }
+      "typedRoutes": true
     }
   }
 }

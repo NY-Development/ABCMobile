@@ -20,20 +20,25 @@ const uploadToImageKit = async (file) => {
 // ================== Register ==================
 export const register = async (req, res) => {
   try {
-    const { name, email, password, phone, role } = req.body; 
+    const { name, email, password, phone, role } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ $or: [{ email }, { phone }] });
     if (existingUser) {
-      return res.status(400).json({ message: "Email or Phone already registered" });
+      return res
+        .status(400)
+        .json({ message: "Email or Phone already registered" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const otp = generateOtp();
     const otpExpire = Date.now() + 5 * 60 * 1000; // 5 min expiry
 
-    // SPECIAL CASE: CONSTANT ADMIN 
-    if (email === "yamlaknegash96@gmail.com" || email === "ctemesgen85@gmail.com") {
+    // SPECIAL CASE: CONSTANT ADMIN
+    if (
+      email === "yamlaknegash96@gmail.com" ||
+      email === "ctemesgen85@gmail.com"
+    ) {
       const user = await User.create({
         name: name || "Admin",
         email,
@@ -51,7 +56,8 @@ export const register = async (req, res) => {
       return res.status(201).json({
         email: user.email,
         role: user.role,
-        message: "Admin account created successfully (no verification required).",
+        message:
+          "Admin account created successfully (no verification required).",
       });
     }
 
@@ -60,7 +66,7 @@ export const register = async (req, res) => {
       email,
       password: hashedPassword,
       phone,
-      role: role || "customer",  // default to "customer" if not provided
+      role: role || "customer", // default to "customer" if not provided
       verifyOtp: otp,
       verifyOtpExpireAt: otpExpire,
     });
@@ -68,10 +74,12 @@ export const register = async (req, res) => {
     await newUser.save();
 
     // Send OTP SMS
-   // await sendSms(phone, `Your verification OTP is ${otp}`);
+    // await sendSms(phone, `Your verification OTP is ${otp}`);
     await sendEmail(email, "Verify Your Account", `Your OTP is: ${otp}`);
 
-    res.status(201).json({ message: "User registered. Please check your email for OTP."  });
+    res
+      .status(201)
+      .json({ message: "User registered. Please check your email for OTP." });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
@@ -83,7 +91,7 @@ export const verifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
 
-    const user = await User.findOne({ email});
+    const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
 
     if (user.verifyOtp !== otp || user.verifyOtpExpireAt < Date.now()) {
@@ -95,17 +103,34 @@ export const verifyOtp = async (req, res) => {
     user.verifyOtpExpireAt = 0;
     await user.save();
 
-    res.json({ message: "Account verified successfully" });
+    // Generate JWT token after successful OTP verification
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "7d",
+      },
+    );
+
+    let ownerInfo = null;
+    if (user.role === "owner") {
+      ownerInfo = await Owner.findOne({ user: user._id }).lean();
+    }
+
+    res.json({
+      message: "Account verified successfully",
+      token,
+      user: { ...user.toObject(), ownerInfo },
+    });
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
 };
 
-
 // ================== Resend OTP ==================
 export const resendOtp = async (req, res) => {
   try {
-    const {email } = req.body;
+    const { email } = req.body;
 
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -129,7 +154,7 @@ export const resendOtp = async (req, res) => {
 // ================== Request Password Reset ==================
 export const requestPasswordReset = async (req, res) => {
   try {
-    const { email} = req.body;
+    const { email } = req.body;
 
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -141,7 +166,11 @@ export const requestPasswordReset = async (req, res) => {
     user.resetOtpExpireAt = otpExpire;
     await user.save();
 
-    await sendEmail(email, "Password Reset OTP", `Your password reset OTP is ${otp}`);
+    await sendEmail(
+      email,
+      "Password Reset OTP",
+      `Your password reset OTP is ${otp}`,
+    );
 
     res.json({ message: "Password reset OTP sent" });
   } catch (err) {
@@ -181,15 +210,22 @@ export const login = async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found" });
 
     if (!user.isAccountVerified) {
-      return res.status(400).json({ message: "Please verify your account first" });
+      return res
+        .status(400)
+        .json({ message: "Please verify your account first" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+    if (!isMatch)
+      return res.status(400).json({ message: "Invalid credentials" });
 
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
-      expiresIn: "7d",
-    });
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "7d",
+      },
+    );
 
     let ownerInfo = null;
     if (user.role === "owner") {
@@ -199,30 +235,28 @@ export const login = async (req, res) => {
     res.json({ token, user: { ...user.toObject(), ownerInfo } });
   } catch (err) {
     console.error("LOGIN_ERROR:", err); // Look at your terminal/logs for this!
-    res.status(500).json({ 
-    message: "Server error", 
-    dev_details: err.message // ONLY do this in development!
-  });
+    res.status(500).json({
+      message: "Server error",
+      dev_details: err.message, // ONLY do this in development!
+    });
   }
 };
-
 
 export const logout = async (req, res) => {
   try {
-    res.clearCookie('token'); // if token was stored in a cookie
+    res.clearCookie("token"); // if token was stored in a cookie
     return res.status(200).json({
       success: true,
-      message: 'You have been logged out successfully.',
+      message: "You have been logged out successfully.",
     });
   } catch (error) {
-    console.error('Logout error:', error);
+    console.error("Logout error:", error);
     return res.status(500).json({
       success: false,
-      message: 'Logout failed. Please try again.',
+      message: "Logout failed. Please try again.",
     });
   }
 };
-
 
 // ================== Profile ==================
 
@@ -262,7 +296,7 @@ export const getAllUsers = async (req, res) => {
           return { ...user, ownerInfo };
         }
         return user;
-      })
+      }),
     );
 
     res.status(200).json(usersWithOwnerInfo);
@@ -370,7 +404,8 @@ export const changePassword = async (req, res) => {
     await user.save();
 
     res.status(200).json({
-      message: "Password changed successfully. Please login again for security.",
+      message:
+        "Password changed successfully. Please login again for security.",
     });
   } catch (error) {
     console.error("❌ changePassword error:", error);
