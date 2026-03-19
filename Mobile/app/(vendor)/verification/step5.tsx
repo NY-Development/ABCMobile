@@ -1,164 +1,230 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Pressable, Image } from 'react-native';
+import { Controller, useForm } from 'react-hook-form';
+import { View, Text, ScrollView, Pressable, Image, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  step5Schema,
+  type Step5FormData,
+  CompleteVerificationData,
+} from '@/src/features/restaurants';
+import { useVerificationStore } from '@/src/features/restaurants/restaurants.store';
+import { useSubmitVerificationMutation } from '@/src/features/restaurants/restaurants.hooks';
+import { ArrowLeft, CheckCircle } from 'lucide-react-native';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 export default function OwnerVerificationStep5Screen() {
   const router = useRouter();
-  const [termsAccepted, setTermsAccepted] = useState(false);
+  const { step1, step2, step3, step4, setStep5 } = useVerificationStore();
+  const submitMutation = useSubmitVerificationMutation();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<Step5FormData>({
+    resolver: zodResolver(step5Schema),
+    defaultValues: {
+      termsAccepted: false,
+    },
+  });
+
+  const onSubmit = async (data: Step5FormData) => {
+    if (!step1 || !step2 || !step3 || !step4) {
+      Alert.alert('Error', 'Please complete all previous steps');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      setStep5(data);
+
+      const completeData: CompleteVerificationData = {
+        bakeryName: step1.bakeryName,
+        businessEmail: step1.businessEmail,
+        businessPhone: step1.businessPhone,
+        formattedAddress: step2.formattedAddress,
+        city: step2.city,
+        country: step2.country,
+        latitude: step2.latitude,
+        longitude: step2.longitude,
+        street: step2.street,
+        building: step2.building,
+        postalCode: step2.postalCode,
+        companyImage: step3.companyImage.uri,
+        tradingLicense: step4.tradingLicense.uri,
+        termsAccepted: data.termsAccepted,
+      };
+
+      await submitMutation.mutateAsync(completeData);
+      Alert.alert('Success', 'Application submitted successfully!');
+      router.push('/(vendor)/verification/success');
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to submit verification');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <View className="flex-1 bg-background">
       <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
-        {/* TopAppBar */}
-        <View className="flex-row items-center justify-between p-4 pb-2">
+        <View className="flex-row items-center justify-between border-b border-border bg-background px-4 py-3">
           <Pressable
             onPress={() => router.back()}
-            className="flex h-12 w-12 shrink-0 items-center justify-start text-slate-900 dark:text-slate-100">
-            <Text className="text-2xl">←</Text>
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
+            <ArrowLeft size={20} color="#ec5b13" />
           </Pressable>
-          <Text className="flex-1 text-lg font-bold leading-tight text-slate-900 dark:text-slate-100">
-            Owner Verification
+          <Text className="flex-1 text-center text-lg font-bold leading-tight text-foreground">
+            Review & Submit
           </Text>
         </View>
 
-        {/* Progress Section */}
-        <View className="flex-col gap-3 p-4">
-          <View className="flex-row items-center justify-between gap-6">
-            <Text className="text-base font-medium leading-normal text-slate-700 dark:text-slate-300">
-              Step 5 of 5
-            </Text>
-            <Text className="text-sm font-bold leading-normal text-primary">100%</Text>
+        <View className="flex-col gap-3 px-4 py-4">
+          <View className="flex-row items-end justify-between gap-6">
+            <View>
+              <Text className="text-base font-semibold leading-normal text-foreground">
+                Step 5 of 5
+              </Text>
+              <Text className="text-sm font-normal leading-normal text-muted-foreground">
+                Review & Submit
+              </Text>
+            </View>
+            <Text className="text-lg font-bold leading-normal text-primary">100%</Text>
           </View>
-          <View className="h-2 w-full rounded-full bg-primary/20">
-            <View className="h-2 rounded-full bg-primary" />
+          <View className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
+            <View className="h-2.5 w-full rounded-full bg-primary" />
           </View>
         </View>
 
-        <Text className="px-4 pb-2 pt-5 text-2xl font-bold leading-tight tracking-tight text-slate-900 dark:text-slate-100">
-          Review & Submit
-        </Text>
-        <Text className="mb-6 px-4 text-sm text-slate-600 dark:text-slate-400">
-          Please verify all information before submitting your application.
-        </Text>
+        <View className="px-4 py-6">
+          <Text className="mb-2 text-2xl font-bold leading-tight tracking-tight text-foreground">
+            Review Your Information
+          </Text>
+          <Text className="mb-6 text-base font-normal leading-normal text-muted-foreground">
+            Please verify all information before submitting your application.
+          </Text>
 
-        {/* Information Summary Sections */}
-        <View className="flex-col gap-1 px-4">
-          {/* Bakery Info */}
-          <View className="mb-4 rounded-xl border border-primary/10 bg-white p-4 dark:bg-slate-800/40">
+          {/* Business Info */}
+          <View className="mb-4 rounded-xl border border-border bg-card p-4">
             <View className="mb-3 flex-row items-center gap-2">
-              <Text className="text-xl text-primary">🏪</Text>
-              <Text className="text-base font-bold leading-tight text-slate-900 dark:text-slate-100">
-                Bakery Information
-              </Text>
+              <Text className="text-xl">🏪</Text>
+              <Text className="text-base font-bold text-foreground">Business Information</Text>
             </View>
-            <View className="space-y-3">
-              <View className="flex-row justify-between gap-x-6 border-b border-primary/5 pb-2">
-                <Text className="text-sm font-normal text-slate-500 dark:text-slate-400">
-                  Bakery Name
-                </Text>
-                <Text className="text-right text-sm font-semibold text-slate-900 dark:text-slate-100">
-                  Adama Bakery
+            <View className="space-y-2">
+              <View className="flex-row justify-between border-b border-border pb-2">
+                <Text className="text-sm text-muted-foreground">Bakery Name</Text>
+                <Text className="text-sm font-semibold text-foreground">{step1?.bakeryName}</Text>
+              </View>
+              <View className="flex-row justify-between border-b border-border pb-2">
+                <Text className="text-sm text-muted-foreground">Email</Text>
+                <Text className="text-sm font-semibold text-foreground">
+                  {step1?.businessEmail}
                 </Text>
               </View>
-              <View className="flex-row justify-between gap-x-6 border-b border-primary/5 pb-2">
-                <Text className="text-sm font-normal text-slate-500 dark:text-slate-400">
-                  Owner Name
-                </Text>
-                <Text className="text-right text-sm font-semibold text-slate-900 dark:text-slate-100">
-                  John Doe
-                </Text>
-              </View>
-              <View className="flex-row justify-between gap-x-6">
-                <Text className="text-sm font-normal text-slate-500 dark:text-slate-400">
-                  Address
-                </Text>
-                <Text className="text-right text-sm font-semibold text-slate-900 dark:text-slate-100">
-                  123 Wheat St, Addis Ababa
+              <View className="flex-row justify-between">
+                <Text className="text-sm text-muted-foreground">Phone</Text>
+                <Text className="text-sm font-semibold text-foreground">
+                  {step1?.businessPhone}
                 </Text>
               </View>
             </View>
           </View>
 
-          {/* Documents */}
-          <View className="mb-4 rounded-xl border border-primary/10 bg-white p-4 dark:bg-slate-800/40">
+          {/* Location Info */}
+          <View className="mb-4 rounded-xl border border-border bg-card p-4">
             <View className="mb-3 flex-row items-center gap-2">
-              <Text className="text-xl text-primary">📄</Text>
-              <Text className="text-base font-bold leading-tight text-slate-900 dark:text-slate-100">
-                Uploaded Documents
-              </Text>
+              <Text className="text-xl">📍</Text>
+              <Text className="text-base font-bold text-foreground">Location</Text>
             </View>
-            <View className="space-y-3">
-              <View className="flex-row items-center justify-between rounded-lg bg-background p-2 dark:bg-background/50">
-                <View className="flex-row items-center gap-3">
-                  <Text className="text-lg">🖼️</Text>
-                  <Text className="text-sm text-slate-700 dark:text-slate-300">
-                    bakery_facade.jpg
-                  </Text>
-                </View>
-                <Text className="text-lg">✅</Text>
+            <View className="space-y-2">
+              <View className="flex-row justify-between border-b border-border pb-2">
+                <Text className="text-sm text-muted-foreground">Address</Text>
+                <Text className="text-sm font-semibold text-foreground">
+                  {step2?.city}, {step2?.country}
+                </Text>
               </View>
-              <View className="flex-row items-center justify-between rounded-lg bg-background p-2 dark:bg-background/50">
-                <View className="flex-row items-center gap-3">
-                  <Text className="text-lg">📋</Text>
-                  <Text className="text-sm text-slate-700 dark:text-slate-300">
-                    business_license_2024.pdf
-                  </Text>
-                </View>
-                <Text className="text-lg">✅</Text>
+              <View className="flex-row justify-between">
+                <Text className="text-sm text-muted-foreground">Full Address</Text>
+                <Text className="text-xs font-semibold text-foreground">
+                  {step2?.formattedAddress}
+                </Text>
               </View>
             </View>
           </View>
 
-          {/* Location Preview */}
-          <View className="mb-6">
+          {/* Documents Info */}
+          <View className="mb-4 rounded-xl border border-border bg-card p-4">
             <View className="mb-3 flex-row items-center gap-2">
-              <Text className="text-xl text-primary">📍</Text>
-              <Text className="text-base font-bold leading-tight text-slate-900 dark:text-slate-100">
-                Mapped Location
-              </Text>
+              <Text className="text-xl">📄</Text>
+              <Text className="text-base font-bold text-foreground">Documents</Text>
             </View>
-            <View className="relative h-32 w-full overflow-hidden rounded-xl border border-primary/20">
-              <Image
-                source={{
-                  uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBOa6l46U5bEO-o3D3gBg7ChQOBV4JxdRn1c8-zal-fhpTxOEA5L5nWznHpMIKMr-EOwOnboSIpkFEMoTJDiyE1pQ0_q3UcLuuZ5YSXbgWtrB0sJ62PXELG6qQV2y9kyQeiWA1nF3piVHmQDEs5HYzxxEaWQwwlm9h7whfZZ9RZ3m6nco4RSZWjraKhsraxnave-cJgZCFLaaPYmZxgpPOGjCV3VBxWsgLdzUHJ6bc22U2RnjtTCl_N6cX5TlfmoVETPxubKkXvEYc',
-                }}
-                className="h-full w-full object-cover"
+            <View className="space-y-2">
+              <View className="flex-row items-center justify-between">
+                <Text className="text-sm text-muted-foreground">Company Image</Text>
+                <CheckCircle size={20} color="#10b981" />
+              </View>
+              <View className="flex-row items-center justify-between">
+                <Text className="text-sm text-muted-foreground">Trading License</Text>
+                <CheckCircle size={20} color="#10b981" />
+              </View>
+            </View>
+          </View>
+
+          {/* Terms Section */}
+          <View className="mb-6 rounded-xl border border-border bg-primary/5 p-4">
+            <View className="flex-row items-start gap-3">
+              <Controller
+                control={control}
+                name="termsAccepted"
+                render={({ field: { value, onChange } }) => (
+                  <Pressable
+                    onPress={() => onChange(!value)}
+                    className={`mt-1 h-5 w-5 rounded border-2 ${
+                      value ? 'border-primary bg-primary' : 'border-border'
+                    }`}>
+                    {value && <CheckCircle size={20} color="#fff" />}
+                  </Pressable>
+                )}
               />
+              <View className="flex-1">
+                <Text className="text-sm font-medium text-foreground">I agree to the terms</Text>
+                <Text className="mt-1 text-xs text-muted-foreground">
+                  I confirm that all information provided is accurate and complete. I understand
+                  that false information may result in rejection.
+                </Text>
+              </View>
             </View>
+            {errors.termsAccepted && (
+              <Text className="mt-2 text-xs text-red-500">{errors.termsAccepted.message}</Text>
+            )}
           </View>
 
-          {/* T&C Section */}
-          <View className="mb-8 rounded-xl border border-primary/20 bg-primary/5 p-4">
-            <View className="cursor-pointer flex-row items-start gap-3">
-              <Pressable
-                onPress={() => setTermsAccepted(!termsAccepted)}
-                className={`mt-1 h-5 w-5 items-center justify-center rounded border ${termsAccepted ? 'border-primary bg-primary' : 'border-primary bg-transparent'}`}>
-                {termsAccepted && <Text className="text-white">✓</Text>}
-              </Pressable>
-              <Text className="flex-1 text-sm leading-tight text-slate-700 dark:text-slate-300">
-                I confirm that all information provided is accurate and I agree to the{' '}
-                <Text className="font-medium text-primary underline">Terms and Conditions</Text> of
-                the verification process.
-              </Text>
-            </View>
-          </View>
+          <View className="h-6" />
         </View>
+      </ScrollView>
 
-        {/* Action Buttons */}
-        <View className="flex-col gap-3 px-4 pb-10">
+      <View className="border-t border-border bg-background px-4 py-4">
+        <View className="gap-3">
           <Pressable
-            onPress={() => router.push('/(vendor)/verification/success')}
-            className="w-full rounded-xl bg-primary py-4 font-bold text-white shadow-lg transition-colors hover:bg-primary/90">
-            <Text className="text-center font-bold text-white">Submit Application</Text>
+            disabled={isLoading}
+            onPress={handleSubmit(onSubmit)}
+            className={`flex-row items-center justify-center gap-2 rounded-xl px-6 py-4 ${
+              isLoading ? 'bg-primary/50' : 'bg-primary'
+            }`}>
+            <Text className="text-lg font-bold text-white">
+              {isLoading ? 'Submitting...' : 'Submit Application'}
+            </Text>
           </Pressable>
           <Pressable
+            disabled={isLoading}
             onPress={() => router.back()}
-            className="w-full rounded-xl border border-primary/30 bg-transparent py-4 font-semibold text-primary transition-colors hover:bg-primary/5">
+            className="rounded-xl border border-primary bg-transparent px-4 py-3">
             <Text className="text-center font-semibold text-primary">Back to Edit</Text>
           </Pressable>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      </View>
+    </View>
   );
 }

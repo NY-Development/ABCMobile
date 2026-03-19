@@ -12,6 +12,7 @@ export interface User {
   avatar?: string;
   image?: string;
   firstLogin?: boolean;
+  verificationStatus?: 'pending' | 'verified' | 'rejected';
   ownerInfo?: Record<string, any>;
 }
 

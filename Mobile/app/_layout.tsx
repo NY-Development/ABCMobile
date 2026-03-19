@@ -42,19 +42,6 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider value={NAV_THEME[colorScheme ?? 'light']}>
         <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-
-        {/* Global Theme Toggle Header */}
-        {shouldShowThemeHeader && (
-          <View className="flex-row items-center justify-end border-b border-border bg-card px-4 py-2">
-            <Pressable
-              onPress={toggleTheme}
-              className="rounded-full p-2"
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              {isDark ? <Sun size={20} color="#ec5b13" /> : <Moon size={20} color="#ec5b13" />}
-            </Pressable>
-          </View>
-        )}
-
         <Stack
           screenOptions={{
             headerShown: false,

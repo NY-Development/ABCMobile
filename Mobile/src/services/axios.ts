@@ -3,8 +3,8 @@ import * as SecureStore from 'expo-secure-store';
 import { useAuthStore } from '@/src/features/auth';
 
 const API: AxiosInstance = axios.create({
-  // baseURL: 'https://abc-mobile-indol.vercel.app/api',
-  baseURL: 'http://192.168.1.12:5000/api',
+  baseURL: 'https://abc-mobile-indol.vercel.app/api',
+  // baseURL: 'http://192.168.1.12:5000/api',
   withCredentials: true,
   timeout: 30000,
 });

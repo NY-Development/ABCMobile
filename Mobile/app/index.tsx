@@ -29,9 +29,6 @@ export default function IndexScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <View className="flex-1">
-        <View className="items-end px-4 pt-2">
-          <ThemeToggle />
-        </View>
         <Redirect href="/(global)/splash" />
       </View>
     </SafeAreaView>

@@ -29,7 +29,7 @@ export default function VendorSettingsScreen() {
         text: 'Logout',
         onPress: () => {
           logout();
-          router.replace('/login');
+          router.replace('/(global)/landing');
         },
       },
     ]);

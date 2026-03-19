@@ -1,16 +1,30 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text } from 'react-native';
 import { router } from 'expo-router';
 import { useThemeStore } from '@/src/features/theme';
 import { useAuthStore } from '@/src/features/auth';
+import { UtensilsCrossed } from 'lucide-react-native';
 
 export default function SplashScreen() {
   const { isDark } = useThemeStore();
   const { user, initializeAuth } = useAuthStore();
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     const bootstrap = async () => {
+      // Simulate loading progress
+      const progressInterval = setInterval(() => {
+        setProgress((prev) => {
+          const next = prev + Math.random() * 30;
+          return next > 80 ? 80 : next;
+        });
+      }, 300);
+
       await initializeAuth();
+
+      // Complete progress
+      clearInterval(progressInterval);
+      setProgress(100);
 
       // Navigate based on auth state
       setTimeout(() => {
@@ -23,27 +37,49 @@ export default function SplashScreen() {
         } else {
           router.replace('/(global)/landing');
         }
-      }, 1500);
+      }, 500);
     };
 
     bootstrap();
   }, [user]);
 
   return (
-    <View className={`flex-1 items-center justify-center ${isDark ? 'bg-slate-900' : 'bg-white'}`}>
-      <View className="items-center gap-4">
-        <Text className="mb-4 text-6xl">🍰</Text>
-        <Text className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-          Adama Bakery
-        </Text>
-        <View className="mt-6 flex-row gap-1">
-          {[0, 1, 2].map((i) => (
-            <View
-              key={i}
-              className={`h-2 w-2 rounded-full ${isDark ? 'bg-primary' : 'bg-primary'}`}
-            />
-          ))}
+    <View className="relative flex-1 items-center justify-center overflow-hidden bg-gradient-to-b from-primary to-primary/80">
+      {/* Decorative background elements */}
+      <View className="absolute right-0 top-0 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+      <View className="absolute bottom-0 left-0 h-80 w-80 rounded-full bg-black/10 blur-3xl" />
+
+      {/* Main content */}
+      <View className="z-10 items-center gap-8">
+        {/* Logo Circle */}
+        <View className="h-32 w-32 items-center justify-center rounded-full bg-card shadow-2xl shadow-black/30">
+          <UtensilsCrossed size={56} color="#ec5b13" strokeWidth={1.5} />
         </View>
+
+        {/* App Name */}
+        <View className="items-center gap-2">
+          <Text className="text-4xl font-bold tracking-tight text-card">Adama Bakery</Text>
+          <View className="h-1 w-12 rounded-full bg-card/40" />
+          <Text className="mt-2 text-lg font-medium text-card/80">Fresh Baked Goodness</Text>
+        </View>
+      </View>
+
+      {/* Loading Section - Bottom */}
+      <View className="absolute bottom-12 w-full items-center gap-4 px-8">
+        <Text className="text-sm font-medium text-card/90">Preparing your treats...</Text>
+
+        {/* Progress Bar */}
+        <View className="h-2 w-full overflow-hidden rounded-full bg-card/20">
+          <View className="h-full rounded-full bg-card" style={{ width: `${progress}%` }} />
+        </View>
+
+        {/* Progress Percentage */}
+        <Text className="text-xs text-card/70">{Math.round(progress)}%</Text>
+
+        {/* Brand Footer */}
+        <Text className="mt-4 text-[10px] font-bold uppercase tracking-widest text-card/40">
+          Premium Quality Est. 2024
+        </Text>
       </View>
     </View>
   );

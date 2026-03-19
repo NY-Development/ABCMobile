@@ -1,145 +1,216 @@
-import React from 'react';
-import { View, Text, ScrollView, Pressable, Switch, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, Pressable, Switch } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useThemeStore } from '@/src/features/theme';
-import { useAuthStore } from '@/src/features/auth';
-import { ScreenLayout } from '@/src/components/ScreenLayout';
-import { Bell, Globe, LogOut, ChevronRight, Moon, User } from 'lucide-react-native';
+import {
+  Bell,
+  Moon,
+  Globe,
+  Info,
+  FileText,
+  Scale,
+  LogIn,
+  Home,
+  Search,
+  Clock,
+  Settings,
+  ChevronRight,
+  ArrowLeft,
+} from 'lucide-react-native';
+import { GlobalBottomNav } from '@/src/components/GlobalBottomNav';
 
 export default function SettingsScreen() {
   const { isDark, toggleTheme } = useThemeStore();
-  const { user, logout } = useAuthStore();
-  const textClass = isDark ? 'text-slate-400' : 'text-slate-600';
-
-  const handleLogout = () => {
-    Alert.alert('Logout', 'Are you sure you want to logout?', [
-      { text: 'Cancel', onPress: () => {} },
-      {
-        text: 'Logout',
-        onPress: async () => {
-          await logout();
-          router.replace('/(global)/login');
-        },
-      },
-    ]);
-  };
-
-  const settingItems = [
-    {
-      icon: <User size={20} color="#ec5b13" />,
-      label: 'Profile Settings',
-      onPress: () => router.push('/(customer)/profile'),
-    },
-    {
-      icon: <Bell size={20} color="#ec5b13" />,
-      label: 'Notifications',
-      toggle: true,
-    },
-    {
-      icon: <Globe size={20} color="#ec5b13" />,
-      label: 'Language',
-      description: 'English',
-      onPress: () => {},
-    },
-  ];
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [darkModeEnabled, setDarkModeEnabled] = useState(isDark);
 
   return (
-    <ScreenLayout title="Settings" showBackButton={true} showThemeToggle={true}>
+    <SafeAreaView className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-background-light'}`}>
+      {/* Header */}
+      <View
+        className={`flex-row items-center gap-2 border-b px-4 py-3 ${
+          isDark ? 'bg-background-dark border-border' : 'bg-background-light border-border'
+        }`}>
+        <Pressable
+          onPress={() => router.back()}
+          className="rounded-full p-2 active:opacity-70"
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <ArrowLeft size={24} color={isDark ? '#ffffff' : '#1e293b'} />
+        </Pressable>
+        <Text
+          className={`text-lg font-bold ${isDark ? 'text-card-foreground' : 'text-foreground'}`}>
+          Settings
+        </Text>
+      </View>
+
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40 }}>
-        {/* Profile Section */}
-        {user && (
-          <View
-            className={`mx-6 mb-6 rounded-lg border p-4 ${
-              isDark ? 'border-slate-700 bg-slate-800' : 'border-slate-200 bg-slate-50'
+        contentContainerStyle={{ paddingBottom: 120 }}>
+        {/* Preferences Section */}
+        <View className="gap-2 px-4 py-6">
+          <Text
+            className={`mb-2 px-2 text-xs font-bold uppercase tracking-wider ${
+              isDark ? 'text-muted-foreground' : 'text-muted-foreground'
             }`}>
-            <Text
-              className={`text-sm font-semibold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-              Logged in as
-            </Text>
-            <Text className={`mt-2 text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              {user.name}
-            </Text>
-            <Text className={`mt-1 text-sm ${textClass}`}>{user.email}</Text>
-          </View>
-        )}
+            Preferences
+          </Text>
 
-        {/* Settings Items */}
-        <View className="mb-6 gap-3 px-6">
-          {settingItems.map((item, idx) => (
-            <Pressable
-              key={idx}
-              onPress={item.onPress}
-              className={`flex-row items-center justify-between rounded-lg border p-4 ${
-                isDark ? 'border-slate-700 bg-slate-800' : 'border-slate-200 bg-white'
-              }`}>
-              <View className="flex-1 flex-row items-center gap-3">
-                {item.icon}
-                <View>
-                  <Text className={`font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                    {item.label}
-                  </Text>
-                  {item.description && (
-                    <Text className={`mt-1 text-xs ${textClass}`}>{item.description}</Text>
-                  )}
-                </View>
+          {/* Notifications */}
+          <View
+            className={`flex-row items-center justify-between rounded-xl border px-4 py-4 ${
+              isDark ? 'border-border bg-card' : 'border-border bg-card'
+            }`}>
+            <View className="flex-row items-center gap-4">
+              <View className={`rounded-lg p-2 ${isDark ? 'bg-primary/10' : 'bg-primary/10'}`}>
+                <Bell size={20} color="#ec5b13" />
               </View>
-              {item.toggle ? (
-                <Switch value={isDark} onValueChange={toggleTheme} />
-              ) : (
-                <ChevronRight size={20} color={isDark ? '#64748b' : '#cbd5e1'} />
-              )}
-            </Pressable>
-          ))}
+              <Text
+                className={`text-sm font-medium ${isDark ? 'text-card-foreground' : 'text-foreground'}`}>
+                Notifications
+              </Text>
+            </View>
+            <Switch
+              value={notificationsEnabled}
+              onValueChange={setNotificationsEnabled}
+              trackColor={{ false: '#cbd5e1', true: '#ec5b13' }}
+            />
+          </View>
+
+          {/* Dark Mode */}
+          <View
+            className={`flex-row items-center justify-between rounded-xl border px-4 py-4 ${
+              isDark ? 'border-border bg-card' : 'border-border bg-card'
+            }`}>
+            <View className="flex-row items-center gap-4">
+              <View className={`rounded-lg p-2 ${isDark ? 'bg-primary/10' : 'bg-primary/10'}`}>
+                <Moon size={20} color="#ec5b13" />
+              </View>
+              <Text
+                className={`text-sm font-medium ${isDark ? 'text-card-foreground' : 'text-foreground'}`}>
+                Dark Mode
+              </Text>
+            </View>
+            <Switch
+              value={darkModeEnabled}
+              onValueChange={(value) => {
+                setDarkModeEnabled(value);
+                toggleTheme();
+              }}
+              trackColor={{ false: '#cbd5e1', true: '#ec5b13' }}
+            />
+          </View>
+
+          {/* Language */}
+          <Pressable
+            onPress={() => {}}
+            className={`flex-row items-center justify-between rounded-xl border px-4 py-4 active:opacity-70 ${
+              isDark ? 'border-border bg-card' : 'border-border bg-card'
+            }`}>
+            <View className="flex-row items-center gap-4">
+              <View className={`rounded-lg p-2 ${isDark ? 'bg-primary/10' : 'bg-primary/10'}`}>
+                <Globe size={20} color="#ec5b13" />
+              </View>
+              <View>
+                <Text
+                  className={`text-sm font-medium ${isDark ? 'text-card-foreground' : 'text-foreground'}`}>
+                  Language
+                </Text>
+              </View>
+            </View>
+            <View className="flex-row items-center gap-2">
+              <Text
+                className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
+                English (US)
+              </Text>
+              <ChevronRight size={20} color={isDark ? '#64748b' : '#cbd5e1'} />
+            </View>
+          </Pressable>
         </View>
 
-        {/* About & Help */}
-        <View className="mb-6 gap-3 px-6">
+        {/* Legal & Info Section */}
+        <View className="gap-2 px-4 py-6">
+          <Text
+            className={`mb-2 px-2 text-xs font-bold uppercase tracking-wider ${
+              isDark ? 'text-muted-foreground' : 'text-muted-foreground'
+            }`}>
+            Legal & Info
+          </Text>
+
+          {/* About */}
           <Pressable
             onPress={() => router.push('/(global)/about')}
-            className={`flex-row items-center justify-between rounded-lg border p-4 ${
-              isDark ? 'border-slate-700 bg-slate-800' : 'border-slate-200 bg-white'
+            className={`flex-row items-center justify-between rounded-xl border px-4 py-4 active:opacity-70 ${
+              isDark ? 'border-border bg-card' : 'border-border bg-card'
             }`}>
-            <Text className={`font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              About Adama Bakery
-            </Text>
+            <View className="flex-row items-center gap-4">
+              <View className={`rounded-lg p-2 ${isDark ? 'bg-primary/10' : 'bg-primary/10'}`}>
+                <Info size={20} color="#ec5b13" />
+              </View>
+              <Text
+                className={`text-sm font-medium ${isDark ? 'text-card-foreground' : 'text-foreground'}`}>
+                About
+              </Text>
+            </View>
             <ChevronRight size={20} color={isDark ? '#64748b' : '#cbd5e1'} />
           </Pressable>
 
+          {/* Privacy Policy */}
           <Pressable
             onPress={() => router.push('/(global)/privacy-policy')}
-            className={`flex-row items-center justify-between rounded-lg border p-4 ${
-              isDark ? 'border-slate-700 bg-slate-800' : 'border-slate-200 bg-white'
+            className={`flex-row items-center justify-between rounded-xl border px-4 py-4 active:opacity-70 ${
+              isDark ? 'border-border bg-card' : 'border-border bg-card'
             }`}>
-            <Text className={`font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              Privacy Policy
-            </Text>
+            <View className="flex-row items-center gap-4">
+              <View className={`rounded-lg p-2 ${isDark ? 'bg-primary/10' : 'bg-primary/10'}`}>
+                <Scale size={20} color="#ec5b13" />
+              </View>
+              <Text
+                className={`text-sm font-medium ${isDark ? 'text-card-foreground' : 'text-foreground'}`}>
+                Privacy Policy
+              </Text>
+            </View>
             <ChevronRight size={20} color={isDark ? '#64748b' : '#cbd5e1'} />
           </Pressable>
 
+          {/* Terms of Service */}
           <Pressable
             onPress={() => router.push('/(global)/terms')}
-            className={`flex-row items-center justify-between rounded-lg border p-4 ${
-              isDark ? 'border-slate-700 bg-slate-800' : 'border-slate-200 bg-white'
+            className={`flex-row items-center justify-between rounded-xl border px-4 py-4 active:opacity-70 ${
+              isDark ? 'border-border bg-card' : 'border-border bg-card'
             }`}>
-            <Text className={`font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              Terms of Service
-            </Text>
+            <View className="flex-row items-center gap-4">
+              <View className={`rounded-lg p-2 ${isDark ? 'bg-primary/10' : 'bg-primary/10'}`}>
+                <FileText size={20} color="#ec5b13" />
+              </View>
+              <Text
+                className={`text-sm font-medium ${isDark ? 'text-card-foreground' : 'text-foreground'}`}>
+                Terms of Service
+              </Text>
+            </View>
             <ChevronRight size={20} color={isDark ? '#64748b' : '#cbd5e1'} />
           </Pressable>
         </View>
 
-        {/* Logout Button */}
-        <View className="px-6">
+        {/* Action Zone */}
+        <View className="px-4 py-6">
           <Pressable
-            onPress={handleLogout}
-            className="flex-row items-center justify-center gap-2 rounded-lg bg-red-600 p-4">
-            <LogOut size={20} color="white" />
-            <Text className="font-bold text-white">Logout</Text>
+            onPress={() => router.push('/(global)/login')}
+            className="flex-row items-center justify-center gap-2 rounded-xl bg-primary py-4 active:opacity-80">
+            <LogIn size={20} color="white" />
+            <Text className="font-bold text-white">Login</Text>
           </Pressable>
+          <Text
+            className={`mt-6 text-center text-[10px] ${
+              isDark ? 'text-muted-foreground' : 'text-muted-foreground'
+            }`}>
+            Adama Bakery & Cake v2.4.0 (Build 2023)
+          </Text>
         </View>
       </ScrollView>
-    </ScreenLayout>
+
+      {/* Bottom Navigation Bar */}
+      <GlobalBottomNav />
+    </SafeAreaView>
   );
 }
