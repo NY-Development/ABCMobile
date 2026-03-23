@@ -6,6 +6,7 @@ import { useThemeStore } from '@/src/features/theme';
 import { useVerifyOTPMutation, useResendOTPMutation } from '@/src/features/auth';
 import { ScreenLayout } from '@/src/components/ScreenLayout';
 import { PrimaryButton } from '@/src/components/FormComponents';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function VerifyOtpScreen() {
   const { isDark } = useThemeStore();
@@ -30,7 +31,7 @@ export default function VerifyOtpScreen() {
 
   useEffect(() => {
     if (verifyMutation.isSuccess) {
-      const user = (verifyMutation.data.user as any)?.user;
+      const user = verifyMutation.data?.user as any;
 
       // Determine destination based on role
       let destination: any = '/(customer)/home'; // default
@@ -42,12 +43,40 @@ export default function VerifyOtpScreen() {
         destination = '/(admin)/dashboard';
       }
 
-      Alert.alert('Success', 'Email verified successfully!', [
-        {
-          text: 'OK',
-          onPress: () => router.replace(destination),
-        },
-      ]);
+      // Resume last route if the user got redirected here due to missing/expired token.
+      (async () => {
+        const lastRoute = await AsyncStorage.getItem('lastRoute');
+        if (lastRoute) {
+          const role = user?.role;
+          const firstLogin = user?.firstLogin === true;
+          const ownerInfo = user?.ownerInfo as any;
+          const companyVerified = ownerInfo?.companyVerified === true;
+
+          const isAllowed =
+            !lastRoute.startsWith('/(global)/') &&
+            ((role === 'owner' &&
+              lastRoute.startsWith('/(vendor)') &&
+              (firstLogin
+                ? lastRoute.includes('/(vendor)/verification/step1')
+                : !companyVerified
+                  ? lastRoute.includes('/(vendor)/verification/')
+                  : true)) ||
+              (role === 'admin' && lastRoute.startsWith('/(admin)/')) ||
+              (role === 'customer' && lastRoute.startsWith('/(customer)/')));
+
+          if (isAllowed) {
+            await AsyncStorage.removeItem('lastRoute').catch(() => {});
+            destination = lastRoute;
+          }
+        }
+
+        Alert.alert('Success', 'Email verified successfully!', [
+          {
+            text: 'OK',
+            onPress: () => router.replace(destination),
+          },
+        ]);
+      })();
     }
   }, [verifyMutation.isSuccess, verifyMutation.data]);
 

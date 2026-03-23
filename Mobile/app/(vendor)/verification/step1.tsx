@@ -13,6 +13,15 @@ export default function OwnerVerificationStep1Screen() {
   const router = useRouter();
   const { setStep1, step1 } = useVerificationStore();
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    // If there's no history (reload / deep link), fall back safely.
+    router.replace('/(vendor)/dashboard' as any);
+  };
+
   const {
     control,
     handleSubmit,
@@ -47,7 +56,7 @@ export default function OwnerVerificationStep1Screen() {
         {/* Top Navigation */}
         <View className="flex-row items-center justify-between border-b border-border bg-background px-4 py-3">
           <Pressable
-            onPress={() => router.back()}
+            onPress={handleBack}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
             <ArrowLeft size={20} color="#ec5b13" />
           </Pressable>

@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { View, Text, ScrollView, Pressable, Image, Alert } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as DocumentPicker from 'expo-document-picker';
@@ -8,12 +8,27 @@ import { step4Schema, type Step4FormData } from '@/src/features/restaurants';
 import { useVerificationStore } from '@/src/features/restaurants/restaurants.store';
 import { ArrowLeft, FileText, Trash2 } from 'lucide-react-native';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { InAppAlert } from '@/src/components/InAppAlert';
 
 export default function OwnerVerificationStep4Screen() {
   const router = useRouter();
   const { setStep4, step4 } = useVerificationStore();
   const [fileSelected, setFileSelected] = useState<boolean>(!!step4?.tradingLicense?.uri);
   const [isPDF, setIsPDF] = useState(step4?.isPDF || false);
+  const [banner, setBanner] = useState<{
+    visible: boolean;
+    type: 'success' | 'error' | 'warning';
+    title: string;
+    message: string;
+  }>({ visible: false, type: 'warning', title: '', message: '' });
+
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace('/(vendor)/verification/step3' as any);
+  };
 
   const {
     control,
@@ -48,7 +63,12 @@ export default function OwnerVerificationStep4Screen() {
         setValue('isPDF', isPdfFile);
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to pick document');
+      setBanner({
+        visible: true,
+        type: 'error',
+        title: 'Upload failed',
+        message: 'Failed to pick document',
+      });
     }
   };
 
@@ -61,7 +81,12 @@ export default function OwnerVerificationStep4Screen() {
 
   const handleNext = (data: Step4FormData) => {
     if (!data.tradingLicense.uri) {
-      Alert.alert('Error', 'Please upload trading license');
+      setBanner({
+        visible: true,
+        type: 'warning',
+        title: 'Document required',
+        message: 'Please upload trading license',
+      });
       return;
     }
     setStep4(data);
@@ -73,7 +98,7 @@ export default function OwnerVerificationStep4Screen() {
       <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
         <View className="flex-row items-center justify-between border-b border-border bg-background px-4 py-3">
           <Pressable
-            onPress={() => router.back()}
+            onPress={handleBack}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
             <ArrowLeft size={20} color="#ec5b13" />
           </Pressable>
@@ -83,6 +108,13 @@ export default function OwnerVerificationStep4Screen() {
         </View>
 
         <View className="flex-col gap-3 px-4 py-4">
+          <InAppAlert
+            visible={banner.visible}
+            type={banner.type}
+            title={banner.title}
+            message={banner.message}
+            onClose={() => setBanner((s) => ({ ...s, visible: false }))}
+          />
           <View className="flex-row items-end justify-between gap-6">
             <View>
               <Text className="text-base font-semibold leading-normal text-foreground">
@@ -175,7 +207,7 @@ export default function OwnerVerificationStep4Screen() {
             <Text className="text-lg">→</Text>
           </Pressable>
           <Pressable
-            onPress={() => router.back()}
+            onPress={handleBack}
             className="rounded-xl border border-primary bg-transparent px-4 py-3">
             <Text className="text-center font-semibold text-primary">Back</Text>
           </Pressable>

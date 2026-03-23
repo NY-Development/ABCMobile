@@ -20,7 +20,7 @@ export default function VendorLayout() {
 
   useEffect(() => {
     if (!user || !token) {
-      router.replace('/(global)/landing');
+      router.replace('/(global)/login');
     }
   }, [user, token, router]);
 

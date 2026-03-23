@@ -33,6 +33,14 @@ interface LocationData {
 export default function OwnerVerificationStep2Screen() {
   const router = useRouter();
   const { setStep2, step2 } = useVerificationStore();
+
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace('/(vendor)/verification/step1' as any);
+  };
   const [autoLocation, setAutoLocation] = useState<LocationData | null>(null);
   const [loadingLocation, setLoadingLocation] = useState(true);
   const [useAutoLink, setUseAutoLink] = useState(false);
@@ -207,7 +215,7 @@ export default function OwnerVerificationStep2Screen() {
         {/* Top Navigation */}
         <View className="flex-row items-center justify-between border-b border-border bg-background px-4 py-3">
           <Pressable
-            onPress={() => router.back()}
+            onPress={handleBack}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
             <ArrowLeft size={20} color="#ec5b13" />
           </Pressable>

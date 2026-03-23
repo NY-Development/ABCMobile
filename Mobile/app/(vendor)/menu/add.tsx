@@ -6,7 +6,7 @@ export default function VendorAddMenuItemScreen() {
   const router = useRouter();
 
   useEffect(() => {
-    // Reuse the already-built "Add / Edit Product" form screen.
+    // Reuse the already-built product form in "add" mode.
     router.replace('/(vendor)/menu');
   }, [router]);
 

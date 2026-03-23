@@ -3,8 +3,8 @@ import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/src/features/auth';
 import { useVerificationStore } from '@/src/features/restaurants/restaurants.store';
-import { ArrowLeft, CheckCircle, RotateCcw } from 'lucide-react-native';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { CheckCircle, RotateCcw } from 'lucide-react-native';
+import { useQuery } from '@tanstack/react-query';
 import * as adminService from '@/src/services/admin';
 import { Icon } from '@/components/ui/icon';
 
@@ -15,7 +15,7 @@ export default function OwnerVerificationSuccessScreen() {
 
   const ownerId = useMemo(() => {
     if (!user) return null;
-    return (user as any)?._id ?? (user as any)?.id ?? null;
+    return (user as any)?.ownerInfo?._id ?? (user as any)?._id ?? (user as any)?.id ?? null;
   }, [user]);
 
   const {
@@ -38,13 +38,6 @@ export default function OwnerVerificationSuccessScreen() {
 
   const companyVerified = Boolean((ownerData as any)?.companyVerified);
 
-  const verifyMutation = useMutation({
-    mutationFn: async () => {
-      if (!ownerId) return null;
-      return adminService.verifyCompany(ownerId);
-    },
-  });
-
   useEffect(() => {
     // If user is not an owner or verification is not pending, redirect
     if (!user || user.role !== 'owner') {
@@ -64,12 +57,10 @@ export default function OwnerVerificationSuccessScreen() {
   };
 
   const handleReloadStatus = async () => {
-    try {
-      await verifyMutation.mutateAsync();
-    } catch {
-      // If the user isn't allowed to call this endpoint, we still rely on the refetch below.
+    const refreshed = await refetchOwner();
+    if ((refreshed.data as any)?.companyVerified) {
+      router.replace('/(vendor)/dashboard');
     }
-    await refetchOwner();
   };
 
   if (!user) return null;
@@ -170,12 +161,12 @@ export default function OwnerVerificationSuccessScreen() {
       <View className="gap-4 bg-background p-6">
         <Pressable
           onPress={handleReloadStatus}
-          disabled={isOwnerFetching || verifyMutation.isPending}
+          disabled={isOwnerFetching}
           className="w-full flex-row items-center justify-center gap-2 rounded-xl bg-primary px-6 py-4 shadow-lg"
         >
           <Icon as={RotateCcw} size={20} className="text-primary-foreground" />
           <Text className="text-lg font-bold text-primary-foreground">
-            {isOwnerFetching || verifyMutation.isPending ? 'Checking...' : 'Reload'}
+            {isOwnerFetching ? 'Checking...' : 'Reload'}
           </Text>
         </Pressable>
         <Pressable

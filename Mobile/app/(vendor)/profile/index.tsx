@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { Phone, Mail, MapPin, CheckCircle, Eye, Boxes } from 'lucide-react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/src/features/auth';
-import * as adminService from '@/src/services/admin';
+import { authAPI } from '@/src/features/auth/auth.api';
 import { vendorAPI } from '@/src/services/vendor';
 import { Icon } from '@/components/ui/icon';
 
@@ -12,14 +12,15 @@ export default function VendorProfileScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
 
-  const ownerId = (user as any)?._id ?? (user as any)?.id;
+  const ownerId = (user as any)?.ownerInfo?._id ?? (user as any)?._id ?? (user as any)?.id;
 
-  const { data: owner } = useQuery({
-    queryKey: ['admin', 'owner', ownerId],
-    enabled: !!ownerId,
-    queryFn: () => adminService.getOwnerById(ownerId),
+  const { data: profileData } = useQuery({
+    queryKey: ['auth', 'profile', 'vendor'],
+    queryFn: () => authAPI.getProfile(),
     staleTime: 1000 * 60,
   });
+  const owner = (profileData as any)?.ownerInfo ?? (user as any)?.ownerInfo;
+  const profileUser = (profileData as any) ?? user;
 
   const { data: productsData } = useQuery({
     queryKey: ['vendor', 'products', 'my'],
@@ -34,7 +35,6 @@ export default function VendorProfileScreen() {
 
   const heroImage = owner?.companyImage;
   const isVerified = Boolean(owner?.companyVerified);
-
   return (
     <View className="flex-1 bg-background">
       <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
@@ -126,7 +126,7 @@ export default function VendorProfileScreen() {
               <Icon as={Phone} size={20} className="text-muted-foreground" />
               <View className="flex-1">
                 <Text className="text-xs text-muted-foreground">Phone</Text>
-                <Text className="mt-1 text-sm font-semibold text-foreground">{(user as any)?.phone || 'N/A'}</Text>
+                <Text className="mt-1 text-sm font-semibold text-foreground">{(profileUser as any)?.phone || 'N/A'}</Text>
               </View>
             </View>
 
@@ -134,7 +134,7 @@ export default function VendorProfileScreen() {
               <Icon as={Mail} size={20} className="text-muted-foreground" />
               <View className="flex-1">
                 <Text className="text-xs text-muted-foreground">Email</Text>
-                <Text className="mt-1 text-sm font-semibold text-foreground">{(user as any)?.email || 'N/A'}</Text>
+                <Text className="mt-1 text-sm font-semibold text-foreground">{(profileUser as any)?.email || 'N/A'}</Text>
               </View>
             </View>
 

@@ -62,4 +62,15 @@ export const authAPI = {
     const response = await API.get<AuthResponse>('/auth/profile');
     return response.data;
   },
+
+  updateProfile: async (data: { name?: string; phone?: string; image?: any }) => {
+    const formData = new FormData();
+    if (data.name) formData.append('name', data.name);
+    if (data.phone) formData.append('phone', data.phone);
+    if (data.image?.uri) formData.append('image', data.image as any);
+    const response = await API.put('/auth/update-profile', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
 };

@@ -28,18 +28,40 @@ export const restaurantsAPI = {
     }
 
     // Step 3: Company Image
-    if (data.companyImage instanceof FormData) {
-      formData.append('companyImage', data.companyImage);
-    } else if (typeof data.companyImage === 'string') {
-      formData.append('companyImage', data.companyImage);
-    }
+    const appendFile = (fieldName: string, file: any) => {
+      // React Native: FormData needs { uri, name, type } for uploads.
+      if (!file) return;
+
+      if (file instanceof FormData) {
+        // TS typing for RN FormData is often too strict; we only use this for file uploads.
+        formData.append(fieldName, file as any);
+        return;
+      }
+
+      if (typeof file === 'string') {
+        const uri = file;
+        const ext = uri.split('.').pop()?.toLowerCase();
+        const name = uri.split('/').pop() || `upload.${ext || 'jpg'}`;
+        const isPdf = ext === 'pdf';
+        const type = isPdf ? 'application/pdf' : 'image/jpeg';
+        formData.append(fieldName, { uri, name, type } as any);
+        return;
+      }
+
+      if (typeof file === 'object' && typeof file.uri === 'string') {
+        const uri = file.uri;
+        const ext = file.fileName?.split('.').pop()?.toLowerCase() || uri.split('.').pop()?.toLowerCase();
+        const isPdf = ext === 'pdf';
+        const name = file.fileName || uri.split('/').pop() || `upload.${ext || (isPdf ? 'pdf' : 'jpg')}`;
+        const type = isPdf ? 'application/pdf' : 'image/jpeg';
+        formData.append(fieldName, { uri, name, type } as any);
+      }
+    };
+
+    appendFile('companyImage', data.companyImage);
 
     // Step 4: Trading License
-    if (data.tradingLicense instanceof FormData) {
-      formData.append('tradingLicense', data.tradingLicense);
-    } else if (typeof data.tradingLicense === 'string') {
-      formData.append('tradingLicense', data.tradingLicense);
-    }
+    appendFile('tradingLicense', data.tradingLicense);
 
     const response = await API.post<VerificationResponse>('/owners/additional-info', formData, {
       headers: {

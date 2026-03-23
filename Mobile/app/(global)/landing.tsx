@@ -6,6 +6,7 @@ import { useThemeStore } from '@/src/features/theme';
 import { GlobalBottomNav } from '@/src/components/GlobalBottomNav';
 import PrimaryButton from '@/src/components/PrimaryButton';
 import { Search } from 'lucide-react-native';
+import icon from '../../assets/images/icon.png';
 
 export default function LandingScreen() {
   const { isDark } = useThemeStore();
@@ -57,13 +58,13 @@ export default function LandingScreen() {
   ];
 
   return (
-    <SafeAreaView className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-background-light'}`}>
+    <SafeAreaView className={`flex-1 ${isDark ? 'bg-background' : 'dark:bg-background bg-background'}`}>
       {/* Header */}
       <View
         className={`flex-row items-center justify-between border-b px-4 py-3 ${
-          isDark ? 'bg-background-dark border-border' : 'bg-background-light border-border'
+          isDark ? 'bg-background border-border' : 'bg-background border-border'
         }`}>
-        <Text className="text-2xl">🍞</Text>
+        <Image source={icon} className='w-10 h-10 rounded-full object-cover' />
         <Text
           className={`text-lg font-bold ${isDark ? 'text-card-foreground' : 'text-foreground'}`}>
           ABC Bakery
@@ -88,10 +89,11 @@ export default function LandingScreen() {
             overflow: 'hidden',
             marginHorizontal: 24,
             borderRadius: 12,
+            marginTop: 12,
           }}
           >
           <View className="items-center justify-center gap-4">
-            <Text className="text-center text-4xl font-black text-white">Adama Bakery & Cake</Text>
+            <Text className="text-center text-4xl font-black text-primary">Adama Bakery & Cake</Text>
             <Text className="text-center text-sm leading-relaxed text-white/90">
               Experience the taste of artisan cakes and freshly baked goods made with love and local
               ingredients.

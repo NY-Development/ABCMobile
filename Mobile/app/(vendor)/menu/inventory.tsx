@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, Pressable, ActivityIndicator, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Search, Pencil, Trash2, Plus, Boxes } from 'lucide-react-native';
 import { useQuery } from '@tanstack/react-query';
@@ -84,7 +84,9 @@ export default function ProductInventoryScreen() {
                 key={p._id}
                 className="mb-3 flex-row rounded-xl border border-border bg-card p-3"
               >
-                <View className="h-20 w-20 rounded-lg bg-muted" />
+                <View className="h-20 w-20 rounded-lg bg-muted">
+                  <Image source={{ uri: p.image }} className="h-full w-full rounded-lg" />
+                </View>
                 <View className="ml-3 flex-1">
                   <Text className="font-bold text-foreground">{p.name}</Text>
                   <View className="mt-1 flex-row items-center gap-2">

@@ -72,8 +72,22 @@ export interface CompleteVerificationData {
   street?: string;
   building?: string;
   postalCode?: string;
-  companyImage: FormData | string;
-  tradingLicense: FormData | string;
+  companyImage:
+    | FormData
+    | string
+    | {
+        uri: string;
+        fileName?: string;
+        fileSize?: number;
+      };
+  tradingLicense:
+    | FormData
+    | string
+    | {
+        uri: string;
+        fileName?: string;
+        fileSize?: number;
+      };
   termsAccepted: boolean;
 }
 

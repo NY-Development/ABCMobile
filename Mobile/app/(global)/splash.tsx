@@ -4,10 +4,11 @@ import { router } from 'expo-router';
 import { useThemeStore } from '@/src/features/theme';
 import { useAuthStore } from '@/src/features/auth';
 import { UtensilsCrossed } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function SplashScreen() {
   const { isDark } = useThemeStore();
-  const { user, initializeAuth } = useAuthStore();
+  const { user, token, initializeAuth } = useAuthStore();
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -18,7 +19,7 @@ export default function SplashScreen() {
           const next = prev + Math.random() * 30;
           return next > 80 ? 80 : next;
         });
-      }, 300);
+      }, 3000);
 
       await initializeAuth();
 
@@ -28,12 +29,30 @@ export default function SplashScreen() {
 
       // Navigate based on auth state
       setTimeout(() => {
-        if (user) {
-          if (user.role === 'owner') {
-            router.replace('/(vendor)/dashboard');
-          } else {
-            router.replace('/(customer)/home');
-          }
+        if (user || token) {
+          (async () => {
+            const lastRoute = await AsyncStorage.getItem('lastRoute');
+            if (lastRoute && !lastRoute.startsWith('/(global)/')) {
+              // Resume the last route even if `user` hasn't rehydrated yet.
+              await AsyncStorage.removeItem('lastRoute').catch(() => {});
+              router.replace(lastRoute);
+              return;
+            }
+
+            // Fallback to role-based landing (only if we have user info).
+            if (user) {
+              if (user.role === 'owner') {
+                router.replace('/(vendor)/dashboard');
+              } else if (user.role === 'admin') {
+                router.replace('/(admin)/dashboard');
+              } else {
+                router.replace('/(customer)/home');
+              }
+              return;
+            }
+
+            router.replace('/(global)/landing');
+          })();
         } else {
           router.replace('/(global)/landing');
         }

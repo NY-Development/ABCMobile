@@ -4,12 +4,13 @@ import { NAV_THEME } from '@/lib/theme';
 import { ThemeProvider } from '@react-navigation/native';
 import { PortalHost } from '@rn-primitives/portal';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { Stack, usePathname, useRouter } from 'expo-router';
+import { Stack, usePathname, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'nativewind';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Pressable } from 'react-native';
 import { Sun, Moon } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { queryClient } from '@/src/config/queryClient';
 import { useAuthStore } from '@/src/features/auth';
@@ -23,23 +24,43 @@ export {
 export default function RootLayout() {
   const router = useRouter();
   const { colorScheme, setColorScheme } = useColorScheme();
-  const { initializeAuth, user, token } = useAuthStore();
-  const { isDark, toggleTheme } = useThemeStore();
+  const { initializeAuth, token } = useAuthStore();
+  const { isDark } = useThemeStore();
   const pathname = usePathname();
+  const segments = useSegments();
+  const [authBootstrapped, setAuthBootstrapped] = useState(false);
 
-  // Determine if we should show theme toggle header (hide on login/signup screens)
-  const shouldShowThemeHeader =
-    !pathname.includes('/(global)/login') && !pathname.includes('/(global)/signup');
+  const currentGroup = (segments?.[0] as string) || '';
+  const isProtectedGroup =
+    currentGroup === '(customer)' ||
+    currentGroup === '(vendor)' ||
+    currentGroup === '(admin)' ||
+    currentGroup === '(driver)';
+
+  // Protected route guard: if no token, send user to login (except public routes).
+  useEffect(() => {
+    if (!authBootstrapped) return;
+    if (!token && isProtectedGroup) {
+      AsyncStorage.setItem('lastRoute', pathname || '/(global)/landing').catch(() => {});
+      router.replace('/(global)/login');
+    }
+  }, [authBootstrapped, token, isProtectedGroup, pathname, router]);
+
+  // Persist last visited route (so splash can "resume" on reload).
+  useEffect(() => {
+    if (!authBootstrapped) return;
+    if (!token) return;
+    if (!pathname) return;
+    if (!isProtectedGroup) return;
+    AsyncStorage.setItem('lastRoute', pathname).catch(() => {});
+  }, [authBootstrapped, token, pathname, isProtectedGroup]);
 
   useEffect(() => {
-    initializeAuth();
+    (async () => {
+      await initializeAuth();
+      setAuthBootstrapped(true);
+    })();
   }, []);
-
-  // useEffect(() => {
-  //   if (!user || !token) {
-  //     router.replace('/(global)/landing');
-  //   }
-  // }, [user, token, router]);
 
   useEffect(() => {
     setColorScheme(isDark ? 'dark' : 'light');

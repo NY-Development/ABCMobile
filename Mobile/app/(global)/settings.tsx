@@ -21,17 +21,14 @@ import {
 import { GlobalBottomNav } from '@/src/components/GlobalBottomNav';
 
 export default function SettingsScreen() {
-  const { isDark, toggleTheme } = useThemeStore();
+  const { isDark, setTheme } = useThemeStore();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [darkModeEnabled, setDarkModeEnabled] = useState(isDark);
 
   return (
-    <SafeAreaView className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-background-light'}`}>
+    <SafeAreaView className="flex-1 bg-background">
       {/* Header */}
       <View
-        className={`flex-row items-center gap-2 border-b px-4 py-3 ${
-          isDark ? 'bg-background-dark border-border' : 'bg-background-light border-border'
-        }`}>
+        className="flex-row items-center gap-2 border-b bg-card border-border px-4 py-3">
         <Pressable
           onPress={() => router.back()}
           className="rounded-full p-2 active:opacity-70"
@@ -92,11 +89,8 @@ export default function SettingsScreen() {
               </Text>
             </View>
             <Switch
-              value={darkModeEnabled}
-              onValueChange={(value) => {
-                setDarkModeEnabled(value);
-                toggleTheme();
-              }}
+              value={isDark}
+              onValueChange={(value) => setTheme(value)}
               trackColor={{ false: '#cbd5e1', true: '#ec5b13' }}
             />
           </View>

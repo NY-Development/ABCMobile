@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { View, Text, ScrollView, Pressable, Image, Alert } from 'react-native';
+import { View, Text, ScrollView, Pressable, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
@@ -8,11 +8,26 @@ import { step3Schema, type Step3FormData } from '@/src/features/restaurants';
 import { useVerificationStore } from '@/src/features/restaurants/restaurants.store';
 import { ArrowLeft, Upload, Trash2, Image as ImageIcon } from 'lucide-react-native';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { InAppAlert } from '@/src/components/InAppAlert';
 
 export default function OwnerVerificationStep3Screen() {
   const router = useRouter();
   const { setStep3, step3 } = useVerificationStore();
   const [imagePreview, setImagePreview] = useState<string | null>(step3?.companyImage?.uri || null);
+  const [banner, setBanner] = useState<{
+    visible: boolean;
+    type: 'success' | 'error' | 'warning';
+    title: string;
+    message: string;
+  }>({ visible: false, type: 'warning', title: '', message: '' });
+
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace('/(vendor)/verification/step2' as any);
+  };
 
   const {
     control,
@@ -28,24 +43,43 @@ export default function OwnerVerificationStep3Screen() {
 
   const pickImage = async () => {
     try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        setBanner({
+          visible: true,
+          type: 'warning',
+          title: 'Permission required',
+          message: 'Please allow photo library access to upload your company image.',
+        });
+        return;
+      }
+
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        // Use the new `MediaType` string values (lowercase) expected by Expo SDK 17+.
+        // `MediaTypeOptions.Images` returns "Images" (capitalized) which crashes on Android.
+        mediaTypes: ['images'] as ImagePicker.MediaType[],
         allowsEditing: true,
         aspect: [16, 9],
         quality: 0.8,
       });
 
-      if (!result.canceled && result.assets[0]) {
-        const asset = result.assets[0];
+      const asset = !result.canceled ? result.assets?.[0] : undefined;
+      if (asset?.uri) {
         setImagePreview(asset.uri);
         setValue('companyImage', {
           uri: asset.uri,
           fileName: asset.fileName || 'company-image.jpg',
-          fileSize: asset.fileSize,
+          fileSize: asset.fileSize ?? 0,
         });
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to pick image');
+      setBanner({
+        visible: true,
+        type: 'error',
+        title: 'Upload failed',
+        message: 'Failed to pick image',
+      });
+      console.log('Error picking image', error);
     }
   };
 
@@ -56,7 +90,12 @@ export default function OwnerVerificationStep3Screen() {
 
   const handleNext = (data: Step3FormData) => {
     if (!data.companyImage.uri) {
-      Alert.alert('Error', 'Please upload a company image');
+      setBanner({
+        visible: true,
+        type: 'warning',
+        title: 'Image required',
+        message: 'Please upload a company image',
+      });
       return;
     }
     setStep3(data);
@@ -68,7 +107,7 @@ export default function OwnerVerificationStep3Screen() {
       <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
         <View className="flex-row items-center justify-between border-b border-border bg-background px-4 py-3">
           <Pressable
-            onPress={() => router.back()}
+            onPress={handleBack}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
             <ArrowLeft size={20} color="#ec5b13" />
           </Pressable>
@@ -78,6 +117,13 @@ export default function OwnerVerificationStep3Screen() {
         </View>
 
         <View className="flex-col gap-3 px-4 py-4">
+          <InAppAlert
+            visible={banner.visible}
+            type={banner.type}
+            title={banner.title}
+            message={banner.message}
+            onClose={() => setBanner((s) => ({ ...s, visible: false }))}
+          />
           <View className="flex-row items-end justify-between gap-6">
             <View>
               <Text className="text-base font-semibold leading-normal text-foreground">
@@ -146,7 +192,7 @@ export default function OwnerVerificationStep3Screen() {
             <Text className="text-lg">→</Text>
           </Pressable>
           <Pressable
-            onPress={() => router.back()}
+            onPress={handleBack}
             className="rounded-xl border border-primary bg-transparent px-4 py-3">
             <Text className="text-center font-semibold text-primary">Back</Text>
           </Pressable>

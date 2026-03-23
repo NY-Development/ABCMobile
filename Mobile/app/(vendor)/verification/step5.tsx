@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { View, Text, ScrollView, Pressable, Image, Alert } from 'react-native';
+import { View, Text, ScrollView, Pressable, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -12,12 +12,27 @@ import { useVerificationStore } from '@/src/features/restaurants/restaurants.sto
 import { useSubmitVerificationMutation } from '@/src/features/restaurants/restaurants.hooks';
 import { ArrowLeft, CheckCircle } from 'lucide-react-native';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { InAppAlert } from '@/src/components/InAppAlert';
 
 export default function OwnerVerificationStep5Screen() {
   const router = useRouter();
   const { step1, step2, step3, step4, setStep5 } = useVerificationStore();
   const submitMutation = useSubmitVerificationMutation();
   const [isLoading, setIsLoading] = useState(false);
+  const [banner, setBanner] = useState<{
+    visible: boolean;
+    type: 'success' | 'error' | 'warning';
+    title: string;
+    message: string;
+  }>({ visible: false, type: 'warning', title: '', message: '' });
+
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace('/(vendor)/verification/step4' as any);
+  };
 
   const {
     control,
@@ -32,7 +47,12 @@ export default function OwnerVerificationStep5Screen() {
 
   const onSubmit = async (data: Step5FormData) => {
     if (!step1 || !step2 || !step3 || !step4) {
-      Alert.alert('Error', 'Please complete all previous steps');
+      setBanner({
+        visible: true,
+        type: 'warning',
+        title: 'Incomplete steps',
+        message: 'Please complete all previous steps',
+      });
       return;
     }
 
@@ -52,16 +72,27 @@ export default function OwnerVerificationStep5Screen() {
         street: step2.street,
         building: step2.building,
         postalCode: step2.postalCode,
-        companyImage: step3.companyImage.uri,
-        tradingLicense: step4.tradingLicense.uri,
+        // Pass the file descriptors (uri + filename) so the API can upload them correctly.
+        companyImage: step3.companyImage,
+        tradingLicense: step4.tradingLicense,
         termsAccepted: data.termsAccepted,
       };
 
       await submitMutation.mutateAsync(completeData);
-      Alert.alert('Success', 'Application submitted successfully!');
+      setBanner({
+        visible: true,
+        type: 'success',
+        title: 'Submitted',
+        message: 'Application submitted successfully!',
+      });
       router.push('/(vendor)/verification/success');
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to submit verification');
+      setBanner({
+        visible: true,
+        type: 'error',
+        title: 'Submission failed',
+        message: error.message || 'Failed to submit verification',
+      });
     } finally {
       setIsLoading(false);
     }
@@ -72,7 +103,7 @@ export default function OwnerVerificationStep5Screen() {
       <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
         <View className="flex-row items-center justify-between border-b border-border bg-background px-4 py-3">
           <Pressable
-            onPress={() => router.back()}
+            onPress={handleBack}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
             <ArrowLeft size={20} color="#ec5b13" />
           </Pressable>
@@ -82,6 +113,13 @@ export default function OwnerVerificationStep5Screen() {
         </View>
 
         <View className="flex-col gap-3 px-4 py-4">
+          <InAppAlert
+            visible={banner.visible}
+            type={banner.type}
+            title={banner.title}
+            message={banner.message}
+            onClose={() => setBanner((s) => ({ ...s, visible: false }))}
+          />
           <View className="flex-row items-end justify-between gap-6">
             <View>
               <Text className="text-base font-semibold leading-normal text-foreground">
@@ -219,7 +257,7 @@ export default function OwnerVerificationStep5Screen() {
           </Pressable>
           <Pressable
             disabled={isLoading}
-            onPress={() => router.back()}
+            onPress={handleBack}
             className="rounded-xl border border-primary bg-transparent px-4 py-3">
             <Text className="text-center font-semibold text-primary">Back to Edit</Text>
           </Pressable>
