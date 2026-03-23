@@ -1,15 +1,49 @@
-import React, { useEffect } from 'react';
-import { View, Text, ScrollView, Pressable, Button, Image } from 'react-native';
+import React, { useEffect, useMemo } from 'react';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/src/features/auth';
 import { useVerificationStore } from '@/src/features/restaurants/restaurants.store';
-import { ArrowLeft, LogOut } from 'lucide-react-native';
+import { ArrowLeft, CheckCircle, RotateCcw } from 'lucide-react-native';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import * as adminService from '@/src/services/admin';
+import { Icon } from '@/components/ui/icon';
 
 export default function OwnerVerificationSuccessScreen() {
   const router = useRouter();
   const { user, clearAuth } = useAuthStore();
   const { clearVerification } = useVerificationStore();
+
+  const ownerId = useMemo(() => {
+    if (!user) return null;
+    return (user as any)?._id ?? (user as any)?.id ?? null;
+  }, [user]);
+
+  const {
+    data: ownerData,
+    refetch: refetchOwner,
+    isFetching: isOwnerFetching,
+  } = useQuery({
+    queryKey: ['admin', 'owner', ownerId, 'verification'],
+    enabled: !!ownerId,
+    queryFn: () => {
+      if (!ownerId) return null;
+      return adminService.getOwnerById(ownerId);
+    },
+    staleTime: 0,
+    refetchInterval: (data) => {
+      if ((data as any)?.companyVerified) return false;
+      return 15000; // keep checking until admin verifies
+    },
+  });
+
+  const companyVerified = Boolean((ownerData as any)?.companyVerified);
+
+  const verifyMutation = useMutation({
+    mutationFn: async () => {
+      if (!ownerId) return null;
+      return adminService.verifyCompany(ownerId);
+    },
+  });
 
   useEffect(() => {
     // If user is not an owner or verification is not pending, redirect
@@ -18,14 +52,24 @@ export default function OwnerVerificationSuccessScreen() {
     }
   }, [user, router]);
 
+  useEffect(() => {
+    if (!companyVerified) return;
+    router.replace('/(vendor)/dashboard');
+  }, [companyVerified, router]);
+
   const handleLogout = async () => {
     await clearAuth();
     clearVerification();
     router.replace('/(global)/login');
   };
 
-  const handleViewStatus = () => {
-    router.push('/(vendor)/dashboard');
+  const handleReloadStatus = async () => {
+    try {
+      await verifyMutation.mutateAsync();
+    } catch {
+      // If the user isn't allowed to call this endpoint, we still rely on the refetch below.
+    }
+    await refetchOwner();
   };
 
   if (!user) return null;
@@ -37,11 +81,6 @@ export default function OwnerVerificationSuccessScreen() {
         contentContainerStyle={{ paddingBottom: 40 }}>
         {/* Top App Bar */}
         <View className="flex-row items-center justify-between border-b border-border bg-background px-4 py-3">
-          <Pressable
-            onPress={() => router.back()}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
-            <ArrowLeft size={20} color="#ec5b13" />
-          </Pressable>
           <Text className="flex-1 text-center text-lg font-bold leading-tight text-foreground">
             Verification
           </Text>
@@ -54,15 +93,9 @@ export default function OwnerVerificationSuccessScreen() {
             <View className="flex h-32 w-32 items-center justify-center rounded-full bg-primary/10">
               <View className="flex h-24 w-24 items-center justify-center rounded-full bg-primary/20">
                 <View className="flex h-16 w-16 items-center justify-center rounded-full bg-primary shadow-lg">
-                  <Text className="text-4xl font-bold text-white">✓</Text>
+                  <Icon as={CheckCircle} size={36} className="text-primary-foreground" />
                 </View>
               </View>
-            </View>
-            <View className="absolute -right-2 -top-2 text-primary opacity-50">
-              <Text className="text-3xl">🍰</Text>
-            </View>
-            <View className="absolute -bottom-2 -left-2 text-primary opacity-50">
-              <Text className="text-3xl">🎂</Text>
             </View>
           </View>
 
@@ -81,16 +114,16 @@ export default function OwnerVerificationSuccessScreen() {
             <View className="flex-row items-stretch justify-between gap-4 rounded-xl border border-border bg-card p-5 shadow-sm">
               <View className="flex-1 flex-col gap-2">
                 <View className="flex-row items-center gap-2">
-                  <View className="h-2 w-2 rounded-full bg-amber-500" />
-                  <Text className="text-xs font-bold uppercase tracking-wider text-amber-600">
-                    Status: Pending Review
+                  <View className="h-2 w-2 rounded-full bg-primary/60" />
+                  <Text className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Status: {companyVerified ? 'Verified' : 'Pending Review'}
                   </Text>
                 </View>
                 <Text className="text-lg font-bold leading-tight text-foreground">
                   Bakery Profile Verification
                 </Text>
                 <Text className="text-sm font-normal leading-normal text-muted-foreground">
-                  Step 5 of 5 Complete
+                  Application Submitted
                 </Text>
               </View>
               <View className="h-full w-24 shrink-0 rounded-xl bg-primary/10" />
@@ -136,10 +169,14 @@ export default function OwnerVerificationSuccessScreen() {
       {/* Footer Actions */}
       <View className="gap-4 bg-background p-6">
         <Pressable
-          onPress={handleViewStatus}
-          className="w-full flex-row items-center justify-center gap-2 rounded-xl bg-primary px-6 py-4 shadow-lg">
-          <Text className="text-lg font-bold text-white">Go to Dashboard</Text>
-          <Text className="text-lg">→</Text>
+          onPress={handleReloadStatus}
+          disabled={isOwnerFetching || verifyMutation.isPending}
+          className="w-full flex-row items-center justify-center gap-2 rounded-xl bg-primary px-6 py-4 shadow-lg"
+        >
+          <Icon as={RotateCcw} size={20} className="text-primary-foreground" />
+          <Text className="text-lg font-bold text-primary-foreground">
+            {isOwnerFetching || verifyMutation.isPending ? 'Checking...' : 'Reload'}
+          </Text>
         </Pressable>
         <Pressable
           onPress={handleLogout}

@@ -28,6 +28,9 @@ export default function LoginScreen() {
     try {
       const res = await loginMutation.mutateAsync(data);
       const loggedInUser = res?.user;
+      const ownerInfo = loggedInUser?.ownerInfo as any;
+      console.log(loggedInUser);
+      console.log(ownerInfo);
 
       // Validate user and role
       if (!loggedInUser || !loggedInUser.role) {
@@ -56,13 +59,11 @@ export default function LoginScreen() {
       if (loggedInUser.role === 'owner') {
         // Check verification status first
         if (
-          loggedInUser.verificationStatus === 'pending' ||
-          loggedInUser.verificationStatus === 'submitted'
+          loggedInUser.firstLogin === true
         ) {
-          destination = '/(vendor)/verification/success';
-        } else if (loggedInUser.firstLogin === true) {
-          // First login for owner
           destination = '/(vendor)/verification/step1';
+        } else if (ownerInfo.companyVerified === false) {
+          destination = '/(vendor)/verification/success';
         } else {
           destination = '/(vendor)/dashboard';
         }
@@ -78,6 +79,7 @@ export default function LoginScreen() {
     } catch (error: any) {
       const errorMsg = error.response?.data?.message || 'An error occurred during login';
       Alert.alert('Login Failed', errorMsg);
+      console.log(error);
     }
   };
 

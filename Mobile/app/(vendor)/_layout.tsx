@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { Slot, usePathname, useRouter } from 'expo-router';
 import {
@@ -11,17 +11,24 @@ import {
 } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/src/features/auth';
+import { Icon as UiIcon } from '@/components/ui/icon';
 
 export default function VendorLayout() {
   const router = useRouter();
   const pathname = usePathname();
-  const { user } = useAuthStore();
+  const { user, token } = useAuthStore();
+
+  useEffect(() => {
+    if (!user || !token) {
+      router.replace('/(global)/landing');
+    }
+  }, [user, token, router]);
 
   // Check if user is in verification flow
   const isInVerification = pathname.startsWith('/(vendor)/verification');
   const isFirstLogin = user?.firstLogin === true;
-  const shouldHideNav = isInVerification || isFirstLogin;
-
+  const shouldHideNav2 = isInVerification || isFirstLogin;
+  const shouldHideNav = isInVerification
   const isDashboard = pathname.startsWith('/(vendor)/dashboard');
   const isInventory = pathname.startsWith('/(vendor)/menu/inventory');
   const isOrders = pathname.startsWith('/(vendor)/orders');
@@ -45,7 +52,11 @@ export default function VendorLayout() {
       className={`flex-1 items-center gap-1 rounded-lg py-2 ${
         isActive ? 'bg-primary/10' : ''
       } ${shouldHideNav ? 'opacity-50' : ''}`}>
-      <Icon size={20} color={isActive ? '#ec5b13' : '#6b7280'} />
+      <UiIcon
+        as={Icon}
+        size={20}
+        className={isActive ? 'text-primary' : 'text-muted-foreground'}
+      />
       <Text
         className={`text-[10px] font-bold uppercase ${
           isActive ? 'text-primary' : 'text-muted-foreground'

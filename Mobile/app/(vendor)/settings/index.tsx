@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, ScrollView, Pressable, Switch, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useLogoutMutation } from '@/src/hooks/useAuth';
+import { useAuthStore } from '@/src/features/auth';
 import {
   Bell,
   Clock,
@@ -13,10 +14,43 @@ import {
   ChevronRight,
   AlertCircle,
 } from 'lucide-react-native';
+import { useQuery } from '@tanstack/react-query';
+import * as adminService from '@/src/services/admin';
+import { vendorAPI } from '@/src/services/vendor';
 
 export default function VendorSettingsScreen() {
   const router = useRouter();
   const { mutate: logout, isPending: isLoggingOut } = useLogoutMutation();
+  const { user } = useAuthStore();
+
+  const ownerId = (user as any)?._id ?? (user as any)?.id;
+
+  const { data: owner } = useQuery({
+    queryKey: ['admin', 'owner', ownerId],
+    enabled: !!ownerId,
+    queryFn: () => adminService.getOwnerById(ownerId),
+    staleTime: 1000 * 60,
+  });
+
+  const { data: ordersData } = useQuery({
+    queryKey: ['vendor', 'orders', 'my'],
+    queryFn: () => vendorAPI.getMyOrders(),
+    staleTime: 1000 * 60,
+  });
+
+  const orders = ordersData?.orders ?? [];
+  const pendingOrdersCount = useMemo(
+    () => orders.filter((o: any) => o?.status === 'pending').length,
+    [orders]
+  );
+  const todayRevenue = useMemo(() => {
+    const start = Date.now() - 24 * 60 * 60 * 1000;
+    return orders
+      .filter((o: any) => o?.status === 'delivered')
+      .filter((o: any) => new Date(o.createdAt ?? o.updatedAt ?? 0).getTime() >= start)
+      .reduce((sum: number, o: any) => sum + (Number(o.totalPrice) || 0), 0);
+  }, [orders]);
+
   const [notifications, setNotifications] = useState({
     newOrders: true,
     dailyReports: true,
@@ -46,13 +80,15 @@ export default function VendorSettingsScreen() {
         {/* Profile Section */}
         <View className="mx-4 mb-6 mt-4 flex-row items-center gap-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
           <View className="h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-            <Text className="text-3xl">🍰</Text>
+            <Text className="text-xl font-bold text-primary">BK</Text>
           </View>
           <View className="flex-1">
-            <Text className="text-lg font-bold text-foreground">Adama Bakery</Text>
-            <Text className="text-sm text-muted-foreground">Owner: Adama Kebede</Text>
+            <Text className="text-lg font-bold text-foreground">{owner?.companyName || 'Bakery'}</Text>
+            <Text className="text-sm text-muted-foreground">
+              Owner: {(user as any)?.name || (user as any)?.email || '—'}
+            </Text>
             <View className="mt-2 inline-flex flex-row items-center gap-1 rounded-full bg-primary/10 px-3 py-1">
-              <Text className="text-xs font-bold text-primary">Premium Partner</Text>
+              <Text className="text-xs font-bold text-primary">{owner?.companyVerified ? 'Verified' : 'Pending'}</Text>
             </View>
           </View>
         </View>
@@ -61,9 +97,11 @@ export default function VendorSettingsScreen() {
         <View className="mx-4 mb-6 flex-row items-center justify-between rounded-2xl bg-primary p-6 shadow-lg">
           <View>
             <Text className="text-xs font-semibold uppercase text-primary/70">Daily Payouts</Text>
-            <Text className="mt-1 text-3xl font-bold text-white">$1,240.50</Text>
+            <Text className="mt-1 text-3xl font-bold text-primary-foreground">
+              ETB {todayRevenue.toLocaleString()}
+            </Text>
             <Pressable className="mt-3 flex-row items-center justify-center rounded-lg bg-white/20 px-4 py-2">
-              <Text className="text-sm font-bold text-white">View Wallet</Text>
+              <Text className="text-sm font-bold text-primary-foreground">View Wallet</Text>
             </Pressable>
           </View>
           <View className="h-20 w-20 items-center justify-center rounded-full bg-white/10">

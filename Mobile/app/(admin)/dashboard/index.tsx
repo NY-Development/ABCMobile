@@ -1,149 +1,170 @@
 import React, { useMemo } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
+import { View, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useThemeStore } from '@/src/features/theme';
 import { useAdminDashboardStats } from '@/src/features/admin/hooks';
-import { Sun, Moon, Bell } from 'lucide-react-native';
+import {
+  Bell,
+  Users,
+  Store,
+  Package,
+  ShoppingCart,
+  DollarSign,
+  Star,
+  BarChart,
+  CreditCard,
+  CheckCircle,
+  UserCircle,
+  ArrowRight,
+  TrendingUp,
+  TrendingDown,
+} from 'lucide-react-native';
+import { Button } from '@/components/ui/button';
+import { Text } from '@/components/ui/text';
+import { Icon } from '@/components/ui/icon';
+import { AdminBottomNav } from '../components/AdminBottomNav';
 
-interface StatCard {
+interface StatCardType {
   id: string;
-  icon: string;
+  icon: any;
   label: string;
   value: string;
   color: string;
 }
 
-interface DashboardStats {
-  totalUsers: number;
-  totalOwners: number;
-  totalProducts: number;
-  totalOrders: number;
-  totalReviews: number;
-  totalRevenue: number;
-}
+export default function AdminDashboardScreen() {
+  const navItems = [
+    { label: 'Dashboard', icon: BarChart, route: '/(admin)/dashboard', active: true },
+    { label: 'Users', icon: Users, route: '/(admin)/users' },
+    { label: 'Transactions', icon: CreditCard, route: '/(admin)/transactions' },
+    { label: 'Verification', icon: CheckCircle, route: '/(admin)/verification' },
+    { label: 'Profile', icon: UserCircle, route: '/(admin)/profile' },
+  ];
 
-const navItems = [
-  { label: 'Dashboard', icon: '📊', route: '/(admin)/dashboard', active: true },
-  { label: 'Users', icon: '👥', route: '/(admin)/users' },
-  { label: 'Transactions', icon: '💳', route: '/(admin)/transactions' },
-  { label: 'Verification', icon: '✓', route: '/(admin)/verification' },
-  { label: 'Profile', icon: '👨‍💼', route: '/(admin)/profile' },
-];
-
-export default function AdminDashboard() {
   const router = useRouter();
-  const { isDark, toggleTheme } = useThemeStore();
+  const { toggleTheme } = useThemeStore();
   const { data: dashboardData, isLoading, error } = useAdminDashboardStats();
 
   // Format the data from the API
   const stats = useMemo(
     () => ({
-      totalUsers: dashboardData?.totalUsers ?? 0,
-      totalOwners: dashboardData?.totalOwners ?? 0,
-      totalProducts: dashboardData?.totalProducts ?? 0,
-      totalOrders: dashboardData?.totalOrders ?? 0,
-      totalReviews: dashboardData?.totalReviews ?? 0,
-      totalRevenue: dashboardData?.totalRevenue ?? 0,
+      totalUsers: dashboardData?.stats?.totalUsers ?? 0,
+      totalOwners: dashboardData?.stats?.totalOwners ?? 0,
+      totalProducts: dashboardData?.stats?.totalProducts ?? 0,
+      totalOrders: dashboardData?.stats?.totalOrders ?? 0,
+      totalReviews: dashboardData?.stats?.totalReviews ?? 0,
+      totalRevenue: dashboardData?.stats?.totalRevenue ?? 0,
     }),
     [dashboardData]
   );
 
-  const StatCard = ({ stat }: { stat: StatCard }) => (
-    <View
-      className={`background:border flex-1 rounded-xl border p-4 text-foreground shadow-sm ${isDark ? 'bg-slate-900' : 'bg-white'}`}>
-      <View className={`mb-3 flex h-10 w-10 items-center justify-center rounded-lg ${stat.color}`}>
-        <Text className="text-lg">{stat.icon}</Text>
+  const monthlySales = dashboardData?.stats?.monthlySales ?? [];
+  const topProducts = dashboardData?.stats?.topProducts ?? [];
+
+  const revenueTrend = useMemo(() => {
+    if (!monthlySales || monthlySales.length < 2) return { last: 0, prev: 0, pct: 0 };
+
+    const last = Number(monthlySales[monthlySales.length - 1]?.totalRevenue ?? 0);
+    const prev = Number(monthlySales[monthlySales.length - 2]?.totalRevenue ?? 0);
+
+    const pct = prev ? ((last - prev) / prev) * 100 : 0;
+    return { last, prev, pct };
+  }, [monthlySales]);
+
+  const trendBars = useMemo(() => {
+    const values = (monthlySales ?? []).map((m: any) => Number(m?.totalRevenue ?? 0));
+    const max = Math.max(...values, 1);
+    return values.map((v) => Math.max(5, Math.round((v / max) * 100)));
+  }, [monthlySales]);
+
+  const statCards: StatCardType[] = [
+    {
+      id: '1',
+      icon: Users,
+      label: 'Total Users',
+      value: stats.totalUsers.toLocaleString(),
+      color: 'bg-primary/10',
+    },
+    {
+      id: '2',
+      icon: Store,
+      label: 'Total Owners',
+      value: stats.totalOwners.toLocaleString(),
+      color: 'bg-primary/10',
+    },
+    {
+      id: '3',
+      icon: Package,
+      label: 'Products',
+      value: stats.totalProducts.toLocaleString(),
+      color: 'bg-primary/10',
+    },
+    {
+      id: '4',
+      icon: ShoppingCart,
+      label: 'Orders',
+      value: stats.totalOrders.toLocaleString(),
+      color: 'bg-primary/10',
+    },
+    {
+      id: '5',
+      icon: DollarSign,
+      label: 'Revenue',
+      value: `ETB ${stats.totalRevenue.toLocaleString()}`,
+      color: 'bg-primary/10',
+    },
+  ];
+
+  const StatCard = ({ stat }: { stat: StatCardType }) => (
+    <View className="flex-1 rounded-xl border border-border bg-card p-4 shadow-sm">
+      <View className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+        <Icon as={stat.icon} size={24} className="text-primary" />
       </View>
-      <Text className={`text-2xl font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-        {stat.value}
-      </Text>
-      <Text
-        className={`mt-1 text-xs font-medium uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+      <Text className="text-2xl font-bold text-foreground">{stat.value}</Text>
+      <Text className="mt-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
         {stat.label}
       </Text>
     </View>
   );
 
-  const statCards: StatCard[] = [
-    {
-      id: '1',
-      icon: '👤',
-      label: 'Total Users',
-      value: stats.totalUsers.toLocaleString(),
-      color: 'bg-blue-50 dark:bg-blue-900/20',
-    },
-    {
-      id: '2',
-      icon: '🏪',
-      label: 'Total Owners',
-      value: stats.totalOwners.toLocaleString(),
-      color: 'bg-purple-50 dark:bg-purple-900/20',
-    },
-    {
-      id: '3',
-      icon: '📦',
-      label: 'Products',
-      value: stats.totalProducts.toLocaleString(),
-      color: 'bg-orange-50 dark:bg-orange-900/20',
-    },
-    {
-      id: '4',
-      icon: '🛒',
-      label: 'Orders',
-      value: stats.totalOrders.toLocaleString(),
-      color: 'bg-green-50 dark:bg-green-900/20',
-    },
-  ];
-
   return (
-    <SafeAreaView className={`flex-1 ${isDark ? 'bg-slate-950' : 'bg-background'}`}>
-      <ScrollView showsVerticalScrollIndicator={false} className="flex-1 pb-24">
+    <SafeAreaView className="flex-1 bg-background">
+      <ScrollView className="flex-1 pb-24">
         {/* Header */}
-        <View
-          className={`sticky top-0 z-10 flex-row items-center justify-between border-b p-4 ${isDark ? 'border-slate-800 bg-slate-900/50' : 'border-border bg-card'}`}>
-          <View className="flex-1">
-            <Text className={`text-lg font-bold ${isDark ? 'text-slate-100' : 'text-foreground'}`}>
-              Insights Dashboard
-            </Text>
-          </View>
-          <Pressable
+        <View className="flex-row items-center justify-between px-4 pb-2 pt-6">
+          <Text className="text-lg font-bold text-foreground">Insights Dashboard</Text>
+          <Button
+            variant="secondary"
+            size="icon"
             onPress={toggleTheme}
-            className={`mr-3 flex h-10 w-10 items-center justify-center rounded-full ${isDark ? 'bg-slate-800' : 'bg-secondary'}`}
-            style={{ cursor: 'pointer' }}>
-            {isDark ? <Sun size={20} color="#ec5b13" /> : <Moon size={20} color="#ec5b13" />}
-          </Pressable>
-          <Pressable
-            className={`flex h-10 w-10 items-center justify-center rounded-full ${isDark ? 'bg-slate-800' : 'bg-secondary'}`}
-            style={{ cursor: 'pointer' }}>
-            <Bell size={20} color="#ec5b13" />
-          </Pressable>
+            className="rounded-full"
+          >
+            <Icon as={Bell} size={20} className="text-primary" />
+          </Button>
         </View>
 
         {/* Loading State */}
         {isLoading && (
           <View className="flex-1 items-center justify-center py-8">
-            <ActivityIndicator size="large" color="#ec5b13" />
+            <ActivityIndicator size="large" color="#f97015" />
           </View>
         )}
 
         {/* Error State */}
         {error && (
-          <View className="m-4 rounded-lg bg-red-500/10 p-4">
-            <Text className="font-semibold text-red-600">Error loading dashboard data</Text>
-            <Text className="mt-1 text-xs text-red-500">Please try again later</Text>
+          <View className="m-4 rounded-lg bg-destructive/10 p-4">
+            <Text className="font-semibold text-destructive">Error loading dashboard data</Text>
+            <Text className="mt-1 text-xs text-muted-foreground">Please try again later</Text>
           </View>
         )}
 
-        {!isLoading && (
+        {!isLoading && !error && (
           <>
             {/* Refreshing Indicator */}
             <View className="px-4 py-4">
               <View className="flex-row items-center justify-center gap-2">
-                <Text
-                  className={`text-xs font-medium ${isDark ? 'text-slate-400' : 'text-muted-foreground'}`}>
-                  Data loaded
-                </Text>
+                <Text className="text-xs font-medium text-muted-foreground">Data loaded</Text>
               </View>
             </View>
 
@@ -151,32 +172,47 @@ export default function AdminDashboard() {
             <View className="mx-4 mb-6 overflow-hidden rounded-xl bg-primary p-6 shadow-lg">
               <View className="mb-4 flex-row items-center justify-between">
                 <View>
-                  <Text className="text-xs font-semibold uppercase tracking-wider text-white/80">
+                  <Text className="text-xs font-semibold uppercase tracking-wider text-primary-foreground/80">
                     Total Revenue
                   </Text>
-                  <Text className="mt-2 text-3xl font-bold text-white">
-                    ${(stats.totalRevenue / 1000).toFixed(1)}K
+                  <Text className="mt-2 text-3xl font-bold text-primary-foreground">
+                    {(stats.totalRevenue / 1000).toFixed(1)}K
                   </Text>
-                  <Text className="mt-1 text-sm text-white/60">vs last month $407,315</Text>
+                  <Text className="mt-1 text-sm text-primary-foreground/60">
+                    Last month: ETB {revenueTrend.last.toLocaleString()}
+                  </Text>
                 </View>
-                <View className="rounded-full bg-green-500/20 px-3 py-2">
-                  <Text className="text-xs font-bold text-green-400">+12.5% ↑</Text>
+                <View
+                  className={`rounded-full px-3 py-2 ${
+                    revenueTrend.pct >= 0 ? 'bg-primary-foreground/15' : 'bg-destructive/15'
+                  }`}
+                >
+                  <View className="flex-row items-center gap-1">
+                    <Icon
+                      as={revenueTrend.pct >= 0 ? TrendingUp : TrendingDown}
+                      size={14}
+                      className={revenueTrend.pct >= 0 ? 'text-primary-foreground' : 'text-destructive-foreground'}
+                    />
+                    <Text className="text-xs font-bold text-primary-foreground">
+                      {revenueTrend.pct >= 0 ? '+' : ''}
+                      {revenueTrend.pct.toFixed(1)}%
+                    </Text>
+                  </View>
                 </View>
               </View>
-              <Pressable
-                className="mt-4 flex-row items-center justify-center gap-2 rounded-lg bg-white/20 py-2.5"
-                style={{ cursor: 'pointer' }}>
-                <Text className="text-sm font-bold text-white">View Detailed Report</Text>
-                <Text className="text-white">→</Text>
-              </Pressable>
+              <Button
+                variant="ghost"
+                onPress={() => router.push('/(admin)/transactions')}
+                className="mt-4 flex-row items-center justify-center gap-2 rounded-lg bg-primary-foreground/20"
+              >
+                <Text className="text-sm font-bold text-primary-foreground">View Detailed Report</Text>
+                <Icon as={ArrowRight} size={18} className="text-primary-foreground" />
+              </Button>
             </View>
 
             {/* Key Statistics Section */}
             <View className="px-4 pb-2 pt-2">
-              <Text
-                className={`text-lg font-bold ${isDark ? 'text-slate-100' : 'text-foreground'}`}>
-                Key Statistics
-              </Text>
+              <Text className="text-lg font-bold text-foreground">Key Statistics</Text>
             </View>
 
             {/* Stats Grid */}
@@ -191,51 +227,44 @@ export default function AdminDashboard() {
                   <StatCard stat={statCards[3]} />
                 </View>
                 {/* Reviews Stat - Full Width */}
-                <View
-                  className={`rounded-xl border p-6 shadow-sm ${isDark ? 'border-slate-700 bg-slate-900' : 'border-border bg-card'}`}>
+                <View className="mt-3 rounded-xl border border-border bg-card p-6 shadow-sm">
                   <View className="flex-row items-center justify-between">
                     <View className="flex-1">
-                      <View
-                        className={`mb-3 flex h-10 w-10 items-center justify-center rounded-lg ${isDark ? 'bg-yellow-900/20' : 'bg-yellow-50'}`}>
-                        <Text className="text-lg">⭐</Text>
+                      <View className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                        <Icon as={Star} size={24} className="text-primary" />
                       </View>
-                      <Text
-                        className={`text-2xl font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+                      <Text className="text-2xl font-bold text-foreground">
                         {stats.totalReviews.toLocaleString()}
                       </Text>
-                      <Text
-                        className={`mt-1 text-xs font-medium uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                      <Text className="mt-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
                         Customer Reviews
                       </Text>
                     </View>
-                    <View className="flex-row gap-2">
-                      <View
-                        className={`h-8 w-8 rounded-full ${isDark ? 'bg-slate-700' : 'bg-slate-200'}`}
-                      />
-                      <View
-                        className={`h-8 w-8 rounded-full ${isDark ? 'bg-slate-600' : 'bg-slate-300'}`}
-                      />
-                      <View
-                        className={`h-8 w-8 items-center justify-center rounded-full text-[10px] font-bold ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
-                        <Text className="text-[10px] font-bold">+5</Text>
+                    {topProducts?.[0] ? (
+                      <View className="flex-1 items-end">
+                        <Text className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          Top Product
+                        </Text>
+                        <Text className="mt-1 text-sm font-bold text-foreground" numberOfLines={1}>
+                          {topProducts[0]?.name}
+                        </Text>
                       </View>
-                    </View>
+                    ) : null}
                   </View>
                 </View>
               </View>
             </View>
 
             {/* Latest Trends Chart Placeholder */}
-            <View
-              className={`mx-4 mb-6 overflow-hidden rounded-xl p-4 ${isDark ? 'bg-slate-900' : 'bg-secondary'}`}>
+            <View className="mx-4 mb-6 overflow-hidden rounded-xl bg-secondary p-4">
               <View className="mb-4 flex-row items-center justify-between">
-                <Text className={`font-bold ${isDark ? 'text-slate-100' : 'text-foreground'}`}>
+                <Text className="font-bold text-foreground">
                   Latest Trends
                 </Text>
                 <Text className="text-xs font-bold text-primary">See All</Text>
               </View>
               <View className="mb-6 h-32 flex-row items-end justify-center gap-2 rounded-lg bg-primary/10 p-4">
-                {[50, 65, 30, 100, 80, 50].map((height, index) => (
+                {trendBars.slice(-6).map((height, index) => (
                   <View
                     key={index}
                     className="flex-1 rounded-t bg-primary"
@@ -249,27 +278,7 @@ export default function AdminDashboard() {
       </ScrollView>
 
       {/* Bottom Navigation */}
-      <View
-        className={`absolute bottom-0 left-0 right-0 flex-row items-center justify-between border-t px-4 pb-6 pt-3 ${isDark ? 'border-slate-800 bg-slate-950' : 'border-border bg-card'}`}>
-        {navItems.map((item, index) => (
-          <Pressable
-            key={index}
-            onPress={() => item.route && router.push(item.route as any)}
-            className="flex-1 flex-col items-center gap-1"
-            style={{ cursor: 'pointer' }}>
-            <Text
-              className={`text-2xl ${item.active ? 'text-primary' : isDark ? 'text-slate-400' : 'text-muted-foreground'}`}>
-              {item.icon}
-            </Text>
-            <Text
-              className={`text-[10px] font-bold uppercase ${
-                item.active ? 'text-primary' : isDark ? 'text-slate-400' : 'text-muted-foreground'
-              }`}>
-              {item.label}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+      <AdminBottomNav navItems={navItems} />
     </SafeAreaView>
   );
 }

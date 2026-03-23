@@ -1,27 +1,42 @@
-import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, ScrollView, Pressable, ActivityIndicator, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemeStore } from '@/src/features/theme';
 import { useAllOwners } from '@/src/features/admin/hooks';
-import { ChevronLeft, Search, Sun, Moon, CheckCircle, Eye } from 'lucide-react-native';
+import {
+  ChevronLeft,
+  Search,
+  Sun,
+  Moon,
+  CheckCircle,
+  Eye,
+  BarChart,
+  Users,
+  CreditCard,
+  UserCircle,
+  MapPin,
+  Building2,
+} from 'lucide-react-native';
+import { AdminBottomNav } from '../components/AdminBottomNav';
+import { Button } from '@/components/ui/button';
+import { Text } from '@/components/ui/text';
+import { Icon } from '@/components/ui/icon';
 
 interface VerificationOwner {
-  id: string;
-  name: string;
-  location: string;
-  image: string;
-  status: 'pending' | 'verified';
+  _id: string;
+  companyName?: string;
+  companyImage?: string;
+  location?: string;
+  companyVerified?: boolean;
 }
 
-const mockVerifications: VerificationOwner[] = [];
-
 const navItems = [
-  { label: 'Dashboard', icon: '📊', route: '/(admin)/dashboard' },
-  { label: 'Users', icon: '👥', route: '/(admin)/users' },
-  { label: 'Transactions', icon: '💳', route: '/(admin)/transactions' },
-  { label: 'Verification', icon: '✓', route: '/(admin)/verification', active: true },
-  { label: 'Profile', icon: '👨‍💼', route: '/(admin)/profile' },
+  { label: 'Dashboard', icon: BarChart, route: '/(admin)/dashboard' },
+  { label: 'Users', icon: Users, route: '/(admin)/users' },
+  { label: 'Transactions', icon: CreditCard, route: '/(admin)/transactions' },
+  { label: 'Verification', icon: CheckCircle, route: '/(admin)/verification', active: true },
+  { label: 'Profile', icon: UserCircle, route: '/(admin)/profile' },
 ];
 
 export default function VerificationHub() {
@@ -35,13 +50,13 @@ export default function VerificationHub() {
   }, [ownersData]);
 
   const pendingCount = useMemo(() => {
-    return verifications.filter((v) => v.status === 'pending').length;
+    return verifications.filter((v: any) => !v.companyVerified).length;
   }, [verifications]);
 
   if (isLoading) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator size="large" color="#ec5b13" />
+        <ActivityIndicator size="large" color="#f97015" />
       </SafeAreaView>
     );
   }
@@ -55,57 +70,61 @@ export default function VerificationHub() {
   }
 
   const VerificationCard = ({ owner }: { owner: VerificationOwner }) => (
-    <Pressable
-      onPress={() => router.push(`/(admin)/verification/${owner.id}`)}
-      className="mb-4 overflow-hidden rounded-xl border border-border bg-card p-4 shadow-sm"
-      style={{ cursor: 'pointer' }}>
+    <View className="mb-4 overflow-hidden rounded-xl border border-border bg-card p-4 shadow-sm">
       <View className="flex-row gap-4">
         <View className="h-20 w-20 items-center justify-center rounded-lg bg-muted-foreground/20">
-          <Text className="text-3xl">{owner.image || '🏢'}</Text>
+          {owner.companyImage ? (
+            <Image
+              source={{ uri: owner.companyImage }}
+              className="h-20 w-20 rounded-lg"
+              resizeMode="cover"
+            />
+          ) : (
+            <Icon as={Building2} size={34} className="text-primary" />
+          )}
         </View>
         <View className="flex-1">
           <View className="flex-row items-start justify-between">
             <View className="flex-1">
-              <Text className="text-base font-bold text-foreground">{owner.name}</Text>
+              <Text className="text-base font-bold text-foreground">
+                {owner.companyName || 'Company'}
+              </Text>
               <View className="mt-1 flex-row items-center gap-1">
-                <Text className="text-sm">📍</Text>
-                <Text className="text-sm text-muted-foreground">{owner.location}</Text>
+                <Icon as={MapPin} size={14} className="text-muted-foreground" />
+                <Text className="text-sm text-muted-foreground">{owner.location || 'N/A'}</Text>
               </View>
             </View>
             <View
               className={`rounded px-2 py-0.5 ${
-                owner.status === 'pending' ? 'bg-amber-100' : 'bg-green-100'
+                owner.companyVerified ? 'bg-primary/10' : 'bg-muted/30'
               }`}>
               <Text
                 className={`text-[10px] font-bold uppercase tracking-wider ${
-                  owner.status === 'pending' ? 'text-amber-700' : 'text-green-700'
+                  owner.companyVerified ? 'text-primary' : 'text-muted-foreground'
                 }`}>
-                {owner.status === 'pending' ? 'Pending' : 'Verified ✓'}
+                {owner.companyVerified ? 'Verified' : 'Pending'}
               </Text>
             </View>
           </View>
-          <Pressable
-            style={{ cursor: 'pointer' }}
-            className={`mt-4 flex-row items-center justify-center gap-2 rounded-lg py-2 ${
-              owner.status === 'pending'
-                ? 'bg-primary'
-                : 'border border-border bg-muted-foreground/10'
-            }`}>
-            {owner.status === 'pending' ? (
-              <>
-                <CheckCircle size={16} color="white" />
-                <Text className="text-sm font-bold text-white">Verify Now</Text>
-              </>
-            ) : (
-              <>
-                <Eye size={16} color="#ec5b13" />
-                <Text className="text-sm font-bold text-foreground">View Details</Text>
-              </>
-            )}
-          </Pressable>
+          <Button
+            variant={owner.companyVerified ? 'secondary' : 'default'}
+            className="mt-4 rounded-lg"
+            onPress={() => router.push(`/(admin)/verification/${owner._id}`)}
+          >
+            <Icon
+              as={owner.companyVerified ? Eye : CheckCircle}
+              size={16}
+              className={
+                owner.companyVerified ? 'text-secondary-foreground' : 'text-primary-foreground'
+              }
+            />
+            <Text className="text-sm font-bold">
+              {owner.companyVerified ? 'View Details' : 'Verify Now'}
+            </Text>
+          </Button>
         </View>
       </View>
-    </Pressable>
+    </View>
   );
 
   return (
@@ -117,7 +136,7 @@ export default function VerificationHub() {
             onPress={() => router.back()}
             style={{ cursor: 'pointer' }}
             className="flex h-10 w-10 items-center justify-center rounded-full">
-            <ChevronLeft size={24} color="#ec5b13" />
+            <Icon as={ChevronLeft} size={24} className="text-primary" />
           </Pressable>
           <Text className="flex-1 text-center text-lg font-bold text-foreground">
             Owner Verification Hub
@@ -125,13 +144,17 @@ export default function VerificationHub() {
           <Pressable
             style={{ cursor: 'pointer' }}
             className="flex h-10 w-10 items-center justify-center rounded-full">
-            <Search size={20} color="#ec5b13" />
+            <Icon as={Search} size={20} className="text-primary" />
           </Pressable>
           <Pressable
             onPress={toggleTheme}
             style={{ cursor: 'pointer' }}
             className="ml-2 flex h-10 w-10 items-center justify-center rounded-full">
-            {isDark ? <Moon size={20} color="#ec5b13" /> : <Sun size={20} color="#ec5b13" />}
+            {isDark ? (
+              <Icon as={Moon} size={20} className="text-primary" />
+            ) : (
+              <Icon as={Sun} size={20} className="text-primary" />
+            )}
           </Pressable>
         </View>
 
@@ -150,8 +173,8 @@ export default function VerificationHub() {
         {/* Verification Cards */}
         <View className="px-4 py-4">
           {verifications.length > 0 ? (
-            verifications.map((owner) => (
-              <VerificationCard key={owner.id || owner._id} owner={owner} />
+            verifications.map((owner: any) => (
+              <VerificationCard key={owner._id} owner={owner} />
             ))
           ) : (
             <View className="items-center justify-center py-8">
@@ -162,25 +185,7 @@ export default function VerificationHub() {
       </ScrollView>
 
       {/* Bottom Navigation */}
-      <View className="absolute bottom-0 left-0 right-0 flex-row items-center justify-around border-t border-border bg-card px-4 pb-6 pt-2">
-        {navItems.map((item, index) => (
-          <Pressable
-            key={index}
-            onPress={() => item.route && router.push(item.route as any)}
-            style={{ cursor: 'pointer' }}
-            className="flex-1 flex-col items-center gap-1">
-            <Text className={`text-2xl ${item.active ? 'text-primary' : 'text-muted-foreground'}`}>
-              {item.icon}
-            </Text>
-            <Text
-              className={`text-[10px] font-bold uppercase ${
-                item.active ? 'text-primary' : 'text-muted-foreground'
-              }`}>
-              {item.label.slice(0, 3)}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+      <AdminBottomNav navItems={navItems} isDark={isDark} />
     </SafeAreaView>
   );
 }

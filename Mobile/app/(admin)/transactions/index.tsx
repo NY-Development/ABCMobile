@@ -1,21 +1,14 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
-import { useRouter } from 'expo-router';
+import { View, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { useThemeStore } from '@/src/features/theme';
 import { useAllPayments } from '@/src/features/admin/hooks';
-import { ChevronLeft, Search, Sun, Moon } from 'lucide-react-native';
-
-interface Transaction {
-  id: string;
-  customerName: string;
-  amount: number;
-  description: string;
-  timestamp: string;
-  status: 'paid' | 'unpaid';
-}
-
-const mockTransactions: Transaction[] = [];
+import { ChevronLeft, Search, Sun, Moon, User, BarChart, Users, CreditCard, CheckCircle, UserCircle } from 'lucide-react-native';
+import { AdminBottomNav } from '../components/AdminBottomNav';
+import { Text } from '@/components/ui/text';
+import { Icon } from '@/components/ui/icon';
+import { Button } from '@/components/ui/button';
 
 const tabs = [
   { id: 'all', label: 'All Activity' },
@@ -24,11 +17,11 @@ const tabs = [
 ];
 
 const navItems = [
-  { label: 'Dashboard', icon: '📊', route: '/(admin)/dashboard' },
-  { label: 'Users', icon: '👥', route: '/(admin)/users' },
-  { label: 'Transactions', icon: '💳', route: '/(admin)/transactions', active: true },
-  { label: 'Verification', icon: '✓', route: '/(admin)/verification' },
-  { label: 'Profile', icon: '👨‍💼', route: '/(admin)/profile' },
+  { label: 'Dashboard', icon: BarChart, route: '/(admin)/dashboard' },
+  { label: 'Users', icon: Users, route: '/(admin)/users' },
+  { label: 'Transactions', icon: CreditCard, route: '/(admin)/transactions', active: true },
+  { label: 'Verification', icon: CheckCircle, route: '/(admin)/verification' },
+  { label: 'Profile', icon: UserCircle, route: '/(admin)/profile' },
 ];
 
 export default function TransactionLogs() {
@@ -37,25 +30,32 @@ export default function TransactionLogs() {
   const [activeTab, setActiveTab] = useState('all');
   const { data: paymentsData, isLoading, error } = useAllPayments();
 
-  // Format transactions
+  const payments = paymentsData?.payments ?? [];
+
+  // Format/filter transactions (backend returns paid orders + orderStatus)
   const filteredTransactions = useMemo(() => {
-    if (!paymentsData) return [];
-    if (activeTab === 'all') return paymentsData;
-    return paymentsData.filter((t) => {
-      if (activeTab === 'pending') return t.status === 'unpaid';
-      if (activeTab === 'payouts') return t.status === 'paid';
+    if (!payments?.length) return [];
+    if (activeTab === 'all') return payments;
+
+    return payments.filter((t: any) => {
+      const status = t?.orderStatus;
+      if (activeTab === 'pending') return status === 'pending' || status === 'in-progress';
+      if (activeTab === 'payouts') return status === 'delivered';
       return true;
     });
-  }, [paymentsData, activeTab]);
+  }, [payments, activeTab]);
 
   const totalRevenue = useMemo(() => {
-    return filteredTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
+    return filteredTransactions.reduce(
+      (sum: number, t: any) => sum + (Number(t.totalPrice ?? t.amount) || 0),
+      0
+    );
   }, [filteredTransactions]);
 
   if (isLoading) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator size="large" color="#ec5b13" />
+        <ActivityIndicator size="large" color="#f97015" />
       </SafeAreaView>
     );
   }
@@ -68,34 +68,47 @@ export default function TransactionLogs() {
     );
   }
 
-  const TransactionRow = ({ transaction }: { transaction: Transaction }) => (
+  const TransactionRow = ({ transaction }: { transaction: any }) => (
+    (() => {
+      const status = transaction?.orderStatus;
+      const avatarBgClass =
+        status === 'delivered' ? 'bg-primary/10' : status === 'cancelled' ? 'bg-destructive/10' : 'bg-muted';
+      const dotBgClass =
+        status === 'delivered'
+          ? 'bg-primary shadow-lg shadow-primary/50'
+          : status === 'cancelled'
+            ? 'bg-destructive'
+            : 'bg-muted-foreground';
+
+      return (
     <View className="mb-2 flex-row items-center gap-4 rounded-xl border border-border bg-card p-3 shadow-sm">
       <View
-        className={`h-12 w-12 items-center justify-center rounded-full ${
-          transaction.status === 'paid' ? 'bg-primary/10' : 'bg-muted-foreground/20'
-        }`}>
-        <Text className="text-lg text-primary">👤</Text>
+        className={`h-12 w-12 items-center justify-center rounded-full ${avatarBgClass}`}>
+        <Icon as={User} size={24} className="text-primary" />
       </View>
       <View className="flex-1">
         <View className="flex-row items-baseline justify-between">
           <Text className="font-bold text-foreground">{transaction.customerName}</Text>
-          <Text className="font-bold text-foreground">${transaction.amount.toFixed(2)}</Text>
+          <Text className="font-bold text-foreground">
+            ETB{' '}
+            {Number(transaction.totalPrice ?? transaction.amount ?? 0).toLocaleString()}
+          </Text>
         </View>
         <View className="flex-row items-center justify-between">
-          <Text className="text-xs text-muted-foreground">{transaction.description}</Text>
+          <Text className="text-xs text-muted-foreground">
+            {transaction.productName ? `${transaction.productName} • Qty ${transaction.quantity ?? 1}` : status}
+          </Text>
           <Text className="text-[10px] font-medium text-muted-foreground">
-            {transaction.timestamp}
+            {transaction.paidAt || transaction.timestamp}
           </Text>
         </View>
       </View>
       <View
-        className={`h-2 w-2 rounded-full ${
-          transaction.status === 'paid'
-            ? 'bg-green-500 shadow-lg shadow-green-500/50'
-            : 'bg-muted-foreground'
-        }`}
+        className={`h-2 w-2 rounded-full ${dotBgClass}`}
       />
     </View>
+      );
+    })()
   );
 
   return (
@@ -107,20 +120,22 @@ export default function TransactionLogs() {
             onPress={() => router.back()}
             style={{ cursor: 'pointer' }}
             className="flex h-10 w-10 items-center justify-center rounded-full">
-            <ChevronLeft size={24} color="#ec5b13" />
+            <Icon as={ChevronLeft} size={24} className="text-primary" />
           </Pressable>
           <Text className="flex-1 text-center text-lg font-bold text-foreground">Transactions</Text>
           <Pressable
             style={{ cursor: 'pointer' }}
             className="flex h-10 w-10 items-center justify-center rounded-full">
-            <Search size={20} color="#ec5b13" />
+            <Icon as={Search} size={20} className="text-primary" />
           </Pressable>
-          <Pressable
+          <Button
+            variant="secondary"
+            size="icon"
             onPress={toggleTheme}
-            style={{ cursor: 'pointer' }}
-            className="ml-2 flex h-10 w-10 items-center justify-center rounded-full">
-            {isDark ? <Moon size={20} color="#ec5b13" /> : <Sun size={20} color="#ec5b13" />}
-          </Pressable>
+            className="ml-2 rounded-full"
+          >
+            {isDark ? <Icon as={Moon} size={20} className="text-primary" /> : <Icon as={Sun} size={20} className="text-primary" />}
+          </Button>
         </View>
 
         {/* Tabs */}
@@ -147,16 +162,13 @@ export default function TransactionLogs() {
 
         {/* Summary Card */}
         <View className="mx-4 my-4 overflow-hidden rounded-xl bg-primary p-6 shadow-lg">
-          <Text className="text-xs font-medium uppercase tracking-widest text-primary/60">
-            Total Revenue
+          <Text className="text-xs font-medium uppercase tracking-widest text-primary-foreground/60">Total Revenue</Text>
+          <Text className="mt-3 text-3xl font-bold text-primary-foreground">
+            ETB {totalRevenue.toLocaleString()}
           </Text>
-          <Text className="mt-3 text-3xl font-bold text-white">${totalRevenue.toFixed(2)}</Text>
-          <View className="mt-4 flex-row items-center gap-2">
-            <View className="rounded-full bg-white/20 px-2.5 py-0.5">
-              <Text className="text-xs font-bold text-white">📈 +12.5%</Text>
-            </View>
-            <Text className="text-xs text-white/60">vs last month</Text>
-          </View>
+          <Text className="mt-2 text-sm text-primary-foreground/60">
+            Paid Orders: {filteredTransactions.length}
+          </Text>
         </View>
 
         {/* Transactions List */}
@@ -165,7 +177,7 @@ export default function TransactionLogs() {
             Recent Transactions
           </Text>
           {filteredTransactions.length > 0 ? (
-            filteredTransactions.map((transaction) => (
+            filteredTransactions.map((transaction: any) => (
               <TransactionRow key={transaction.id || transaction._id} transaction={transaction} />
             ))
           ) : (
@@ -177,25 +189,7 @@ export default function TransactionLogs() {
       </ScrollView>
 
       {/* Bottom Navigation */}
-      <View className="absolute bottom-0 left-0 right-0 flex-row items-center justify-around border-t border-border bg-card px-4 pb-6 pt-3">
-        {navItems.map((item, index) => (
-          <Pressable
-            key={index}
-            onPress={() => item.route && router.push(item.route as any)}
-            style={{ cursor: 'pointer' }}
-            className="flex-1 flex-col items-center gap-1">
-            <Text className={`text-2xl ${item.active ? 'text-primary' : 'text-muted-foreground'}`}>
-              {item.icon}
-            </Text>
-            <Text
-              className={`text-[10px] font-bold uppercase ${
-                item.active ? 'text-primary' : 'text-muted-foreground'
-              }`}>
-              {item.label.slice(0, 3)}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+      <AdminBottomNav navItems={navItems} isDark={isDark} />
     </SafeAreaView>
   );
 }
