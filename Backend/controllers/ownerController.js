@@ -104,11 +104,47 @@ export const addProduct = async (req, res) => {
 };
 
 // Update product (owner can edit image, quantity, etc.) 
+// export const updateProduct = async (req, res) => {
+//   try {
+//     const { productId } = req.params;
+//     const ownerId = req.user._id
+//     const { category, image, availableQuantity, name, size, color, shape, price, description } = req.body;
+
+//     const product = await Product.findById(productId);
+//     if (!product) return res.status(404).json({ message: "Product not found." });
+
+//     // Verify owner
+//     if (String(product.owner) !== ownerId) {
+//       return res.status(403).json({ message: "You are not authorized to edit this product." });
+//     }
+
+//     // Update fields
+//     const imageUrl = await uploadToImageKit(req.file);
+//     if (image) product.image = imageUrl;
+//     if (availableQuantity !== undefined) product.availableQuantity = availableQuantity;
+//     if (name) product.name = name;
+//     if (size) product.size = size;
+//     if (category) product.category = category;
+//     if (color) product.color = color;
+//     if (shape) product.shape = shape;
+//     if (price) product.price = price;
+//     if (description) product.description = description;
+
+//     // Automatically hide product if stock = 0
+//     product.isActive = product.availableQuantity > 0;
+
+//     await product.save();
+//     res.status(200).json({ message: "Product updated successfully.", product });
+//   } catch (error) {
+//     console.error("Error updating product:", error);
+//     res.status(500).json({ message: "Server error.", error: error.message });
+//   }
+// };
 export const updateProduct = async (req, res) => {
   try {
     const { productId } = req.params;
     const ownerId = req.user._id
-    const { category, image, availableQuantity, name, size, color, shape, price, description } = req.body;
+    const { category, availableQuantity, name, size, color, shape, price, description } = req.body;
 
     const product = await Product.findById(productId);
     if (!product) return res.status(404).json({ message: "Product not found." });
@@ -120,7 +156,7 @@ export const updateProduct = async (req, res) => {
 
     // Update fields
     const imageUrl = await uploadToImageKit(req.file);
-    if (image) product.image = imageUrl;
+    if (req.file && imageUrl) product.image = imageUrl;
     if (availableQuantity !== undefined) product.availableQuantity = availableQuantity;
     if (name) product.name = name;
     if (size) product.size = size;
@@ -140,7 +176,6 @@ export const updateProduct = async (req, res) => {
     res.status(500).json({ message: "Server error.", error: error.message });
   }
 };
-
 
 /** Reduce stock when customer orders */
 export const reduceStockOnOrder = async (req, res) => {

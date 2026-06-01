@@ -1,8 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { restaurantsAPI } from './restaurants.api';
-import { CompleteVerificationData, VerificationResponse } from './restaurants.types';
-import { useAuthStore } from '../auth/auth.store';
-import { useVerificationStore } from './restaurants.store';
+import { CompleteVerificationData } from './restaurants.types';
 
 const RESTAURANTS_KEYS = {
   verificationStatus: ['restaurants', 'verificationStatus'] as const,
@@ -13,36 +11,8 @@ const RESTAURANTS_KEYS = {
  * Hook to submit owner verification (all 5 steps)
  */
 export const useSubmitVerificationMutation = () => {
-  const queryClient = useQueryClient();
-  const { user } = useAuthStore();
-  const { clearVerification } = useVerificationStore();
-
   return useMutation({
     mutationFn: (data: CompleteVerificationData) => restaurantsAPI.submitVerification(data),
-    onSuccess: (data: VerificationResponse) => {
-      if (data.success) {
-        // Clear persisted verification data after successful submission
-        clearVerification();
-
-        // Invalidate and refetch verification status
-        queryClient.invalidateQueries({
-          queryKey: RESTAURANTS_KEYS.verificationStatus,
-        });
-
-        // Update auth user with new verification status if available
-        if (data.owner && user) {
-          useAuthStore.setState({
-            user: {
-              ...user,
-              verificationStatus: data.owner.verificationStatus || 'pending',
-            },
-          });
-        }
-      }
-    },
-    onError: (error: any) => {
-      console.error('Verification submission failed:', error);
-    },
   });
 };
 

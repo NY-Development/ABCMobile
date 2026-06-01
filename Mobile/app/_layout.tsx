@@ -14,6 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { queryClient } from '@/src/config/queryClient';
 import { useAuthStore } from '@/src/features/auth';
+import * as SecureStore from 'expo-secure-store';
 import { useThemeStore } from '@/src/store/themeStore';
 
 export {
@@ -24,7 +25,7 @@ export {
 export default function RootLayout() {
   const router = useRouter();
   const { colorScheme, setColorScheme } = useColorScheme();
-  const { initializeAuth, token } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
   const { isDark } = useThemeStore();
   const pathname = usePathname();
   const segments = useSegments();
@@ -40,24 +41,27 @@ export default function RootLayout() {
   // Protected route guard: if no token, send user to login (except public routes).
   useEffect(() => {
     if (!authBootstrapped) return;
-    if (!token && isProtectedGroup) {
+    if (!isAuthenticated && isProtectedGroup) {
       AsyncStorage.setItem('lastRoute', pathname || '/(global)/landing').catch(() => {});
       router.replace('/(global)/login');
     }
-  }, [authBootstrapped, token, isProtectedGroup, pathname, router]);
+  }, [authBootstrapped, isAuthenticated, isProtectedGroup, pathname, router]);
 
   // Persist last visited route (so splash can "resume" on reload).
   useEffect(() => {
     if (!authBootstrapped) return;
-    if (!token) return;
+    if (!isAuthenticated) return;
     if (!pathname) return;
     if (!isProtectedGroup) return;
     AsyncStorage.setItem('lastRoute', pathname).catch(() => {});
-  }, [authBootstrapped, token, pathname, isProtectedGroup]);
+  }, [authBootstrapped, isAuthenticated, pathname, isProtectedGroup]);
 
   useEffect(() => {
     (async () => {
-      await initializeAuth();
+      // Rehydrate logic check could go here if needed.
+      // But since Zustand uses Async/Secure Store, it automatically hydrates.
+      // We just ensure we render after initial checks.
+      const hasToken = await SecureStore.getItemAsync('token');
       setAuthBootstrapped(true);
     })();
   }, []);

@@ -45,7 +45,7 @@ export default function OwnerVerificationStep5Screen() {
     },
   });
 
-  const onSubmit = async (data: Step5FormData) => {
+  const onSubmit = (data: Step5FormData) => {
     if (!step1 || !step2 || !step3 || !step4) {
       setBanner({
         visible: true,
@@ -57,45 +57,52 @@ export default function OwnerVerificationStep5Screen() {
     }
 
     setIsLoading(true);
-    try {
-      setStep5(data);
+    setStep5(data);
 
-      const completeData: CompleteVerificationData = {
-        bakeryName: step1.bakeryName,
-        businessEmail: step1.businessEmail,
-        businessPhone: step1.businessPhone,
-        formattedAddress: step2.formattedAddress,
-        city: step2.city,
-        country: step2.country,
-        latitude: step2.latitude,
-        longitude: step2.longitude,
-        street: step2.street,
-        building: step2.building,
-        postalCode: step2.postalCode,
-        // Pass the file descriptors (uri + filename) so the API can upload them correctly.
-        companyImage: step3.companyImage,
-        tradingLicense: step4.tradingLicense,
-        termsAccepted: data.termsAccepted,
-      };
+    const completeData: CompleteVerificationData = {
+      bakeryName: step1.bakeryName,
+      businessEmail: step1.businessEmail,
+      businessPhone: step1.businessPhone,
+      formattedAddress: step2.formattedAddress,
+      city: step2.city,
+      country: step2.country,
+      latitude: step2.latitude,
+      longitude: step2.longitude,
+      street: step2.street,
+      building: step2.building,
+      postalCode: step2.postalCode,
+      companyImage: step3.companyImage,
+      tradingLicense: step4.tradingLicense,
+      termsAccepted: data.termsAccepted,
+    };
 
-      await submitMutation.mutateAsync(completeData);
-      setBanner({
-        visible: true,
-        type: 'success',
-        title: 'Submitted',
-        message: 'Application submitted successfully!',
-      });
-      router.push('/(vendor)/verification/success');
-    } catch (error: any) {
-      setBanner({
-        visible: true,
-        type: 'error',
-        title: 'Submission failed',
-        message: error.message || 'Failed to submit verification',
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    submitMutation.mutate(completeData, {
+      onSuccess: (res: any) => {
+        setIsLoading(false);
+        if (res.success) {
+          const { clearVerification } = useVerificationStore.getState();
+          clearVerification();
+
+          // Invalidate queries here if needed, or rely on layout refetch
+          setBanner({
+            visible: true,
+            type: 'success',
+            title: 'Submitted',
+            message: 'Application submitted successfully!',
+          });
+          router.push('/(vendor)/verification/success');
+        }
+      },
+      onError: (error: any) => {
+        setIsLoading(false);
+        setBanner({
+          visible: true,
+          type: 'error',
+          title: 'Submission failed',
+          message: error.message || 'Failed to submit verification',
+        });
+      }
+    });
   };
 
   return (

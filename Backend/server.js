@@ -58,7 +58,66 @@ app.use("/api/advert", advertRoutes);
 app.use("/api/delivery", deliveryRoutes);
 
 app.get("/", (req, res) => {
-  res.send("API is running...");
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>ABC - Adama Bakery and Cake</title>
+        <style>
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                margin: 0;
+                padding: 0;
+                background-color: #fcf8f2;
+                color: #4a3728;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                text-align: center;
+            }
+            .container {
+                max-width: 600px;
+                padding: 40px;
+                background: white;
+                border-radius: 15px;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+                border: 1px solid #f3e5d8;
+            }
+            h1 {
+                color: #d2691e;
+                margin-bottom: 10px;
+                font-size: 2.5rem;
+            }
+            p {
+                font-size: 1.1rem;
+                line-height: 1.6;
+                color: #6d5440;
+            }
+            .status-badge {
+                display: inline-block;
+                background-color: #e8f5e9;
+                color: #2e7d32;
+                padding: 6px 16px;
+                border-radius: 20px;
+                font-weight: bold;
+                font-size: 0.9rem;
+                margin-top: 20px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🍰 Adama Bakery and Cake (ABC)</h1>
+            <p>Welcome to the backbone of ABC! Our backend API is up, running, and fresh out of the oven. Ready to serve sweet data and delicious requests.</p>
+            <div class="status-badge">● API Status: Healthy & Active</div>
+        </div>
+    </body>
+    </html>
+  `);
 });
 
 const PORT = process.env.PORT || 5000;

@@ -1,8 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, ScrollView, Pressable, Switch, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useLogoutMutation } from '@/src/hooks/useAuth';
+import { useLogoutMutation } from '@/src/features/auth';
 import { useAuthStore } from '@/src/features/auth';
+import { useQueryClient } from '@tanstack/react-query';
+import * as SecureStore from 'expo-secure-store';
 import {
   Bell,
   Clock,
@@ -20,8 +22,9 @@ import { vendorAPI } from '@/src/services/vendor';
 
 export default function VendorSettingsScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { mutate: logout, isPending: isLoggingOut } = useLogoutMutation();
-  const { user } = useAuthStore();
+  const { user, clearAuth } = useAuthStore();
 
   const ownerId = (user as any)?._id ?? (user as any)?.id;
 
@@ -62,8 +65,18 @@ export default function VendorSettingsScreen() {
       {
         text: 'Logout',
         onPress: () => {
-          logout();
-          router.replace('/(global)/landing');
+          logout(undefined, {
+            onSuccess: async () => {
+              await SecureStore.deleteItemAsync('token');
+              clearAuth();
+              queryClient.clear();
+              router.replace('/(global)/landing');
+            },
+            onError: (error) => {
+              console.error('Logout failed:', error);
+              Alert.alert('Error', 'Failed to log out correctly.');
+            }
+          });
         },
       },
     ]);

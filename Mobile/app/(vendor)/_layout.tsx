@@ -16,13 +16,13 @@ import { Icon as UiIcon } from '@/components/ui/icon';
 export default function VendorLayout() {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, token } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
 
   useEffect(() => {
-    if (!user || !token) {
+    if (!user || !isAuthenticated) {
       router.replace('/(global)/login');
     }
-  }, [user, token, router]);
+  }, [user, isAuthenticated, router]);
 
   // Check if user is in verification flow
   const isInVerification = pathname.startsWith('/(vendor)/verification');

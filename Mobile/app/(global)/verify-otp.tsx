@@ -3,7 +3,10 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Text, View, ScrollView, Alert, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemeStore } from '@/src/features/theme';
-import { useVerifyOTPMutation, useResendOTPMutation } from '@/src/features/auth';
+import { useVerifyOTPMutation, useResendOTPMutation, AUTH_KEYS } from '@/src/features/auth';
+import { useAuthStore } from '@/src/features/auth/auth.store';
+import { useQueryClient } from '@tanstack/react-query';
+import * as SecureStore from 'expo-secure-store';
 import { ScreenLayout } from '@/src/components/ScreenLayout';
 import { PrimaryButton } from '@/src/components/FormComponents';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -17,6 +20,8 @@ export default function VerifyOtpScreen() {
   const [canResend, setCanResend] = useState(false);
   const textClass = isDark ? 'text-slate-400' : 'text-slate-600';
 
+  const { setAuth } = useAuthStore();
+  const queryClient = useQueryClient();
   const verifyMutation = useVerifyOTPMutation();
   const resendMutation = useResendOTPMutation();
 
@@ -29,67 +34,6 @@ export default function VerifyOtpScreen() {
     }
   }, [resendTimer]);
 
-  useEffect(() => {
-    if (verifyMutation.isSuccess) {
-      const user = verifyMutation.data?.user as any;
-
-      // Determine destination based on role
-      let destination: any = '/(customer)/home'; // default
-
-      if (user?.role === 'owner') {
-        destination =
-          user?.firstLogin === true ? '/(vendor)/verification/step1' : '/(vendor)/dashboard';
-      } else if (user?.role === 'admin') {
-        destination = '/(admin)/dashboard';
-      }
-
-      // Resume last route if the user got redirected here due to missing/expired token.
-      (async () => {
-        const lastRoute = await AsyncStorage.getItem('lastRoute');
-        if (lastRoute) {
-          const role = user?.role;
-          const firstLogin = user?.firstLogin === true;
-          const ownerInfo = user?.ownerInfo as any;
-          const companyVerified = ownerInfo?.companyVerified === true;
-
-          const isAllowed =
-            !lastRoute.startsWith('/(global)/') &&
-            ((role === 'owner' &&
-              lastRoute.startsWith('/(vendor)') &&
-              (firstLogin
-                ? lastRoute.includes('/(vendor)/verification/step1')
-                : !companyVerified
-                  ? lastRoute.includes('/(vendor)/verification/')
-                  : true)) ||
-              (role === 'admin' && lastRoute.startsWith('/(admin)/')) ||
-              (role === 'customer' && lastRoute.startsWith('/(customer)/')));
-
-          if (isAllowed) {
-            await AsyncStorage.removeItem('lastRoute').catch(() => {});
-            destination = lastRoute;
-          }
-        }
-
-        Alert.alert('Success', 'Email verified successfully!', [
-          {
-            text: 'OK',
-            onPress: () => router.replace(destination),
-          },
-        ]);
-      })();
-    }
-  }, [verifyMutation.isSuccess, verifyMutation.data]);
-
-  useEffect(() => {
-    if (verifyMutation.isError) {
-      const errorMsg =
-        (verifyMutation.error as any)?.response?.data?.message ||
-        (verifyMutation.error as any)?.message ||
-        'Invalid OTP';
-      Alert.alert('Verification Failed', errorMsg);
-    }
-  }, [verifyMutation.isError]);
-
   const handleOtpChange = (text: string) => {
     // Only allow digits and limit to 6
     if (/^\d{0,6}$/.test(text)) {
@@ -97,7 +41,7 @@ export default function VerifyOtpScreen() {
     }
   };
 
-  const onVerify = async () => {
+  const onVerify = () => {
     if (otp.length !== 6) {
       Alert.alert('Error', 'Please enter a valid 6-digit OTP');
       return;
@@ -108,28 +52,92 @@ export default function VerifyOtpScreen() {
       return;
     }
 
-    await verifyMutation.mutateAsync({
-      email: email,
-      otp,
+    verifyMutation.mutate({ email, otp }, {
+      onSuccess: async (data) => {
+        try {
+          const user = data?.user as any;
+          const token = data?.token;
+          
+          // Ensure token is a string before saving
+          const tokenString = typeof token === 'string' ? token : JSON.stringify(token);
+          await SecureStore.setItemAsync('token', tokenString);
+          setAuth(user, tokenString);
+          queryClient.invalidateQueries({ queryKey: AUTH_KEYS.profile });
+
+          // Determine destination based on role
+          let destination: any = '/(customer)/home'; // default
+
+          if (user?.role === 'owner') {
+            destination =
+              user?.firstLogin === true ? '/(vendor)/verification/step1' : '/(vendor)/dashboard';
+          } else if (user?.role === 'admin') {
+            destination = '/(admin)/dashboard';
+          } else if (user?.role === 'driver') {
+            destination = '/(driver)/dashboard';
+          }
+
+          // Resume last route if the user got redirected here due to missing/expired token.
+          const lastRoute = await AsyncStorage.getItem('lastRoute');
+          if (lastRoute) {
+            const role = user?.role;
+            const firstLogin = user?.firstLogin === true;
+            const ownerInfo = user?.ownerInfo as any;
+            const companyVerified = ownerInfo?.companyVerified === true;
+
+            const isAllowed =
+              !lastRoute.startsWith('/(global)/') &&
+              ((role === 'owner' &&
+                lastRoute.startsWith('/(vendor)') &&
+                (firstLogin
+                  ? lastRoute.includes('/(vendor)/verification/step1')
+                  : !companyVerified
+                    ? lastRoute.includes('/(vendor)/verification/')
+                    : true)) ||
+                (role === 'admin' && lastRoute.startsWith('/(admin)/')) ||
+                (role === 'customer' && lastRoute.startsWith('/(customer)/')));
+
+            if (isAllowed) {
+              await AsyncStorage.removeItem('lastRoute').catch(() => {});
+              destination = lastRoute;
+            }
+          }
+
+          Alert.alert('Success', 'Email verified successfully!', [
+            {
+              text: 'OK',
+              onPress: () => router.replace(destination),
+            },
+          ]);
+        } catch (error) {
+          console.error('Error in verification onSuccess:', error);
+          Alert.alert('Verification Error', 'An unexpected error occurred during verification.');
+        }
+      },
+      onError: (error: any) => {
+        const errorMsg = error?.response?.data?.message || error?.message || 'Invalid OTP';
+        Alert.alert('Verification Failed', errorMsg);
+      }
     });
   };
 
-  const onResend = async () => {
+  const onResend = () => {
     if (!email) {
       Alert.alert('Error', 'Email is missing');
       return;
     }
 
-    try {
-      await resendMutation.mutateAsync(email);
-      setOtp('');
-      setResendTimer(60);
-      setCanResend(false);
-      Alert.alert('Success', 'OTP sent to your email');
-    } catch (error: any) {
-      const errorMsg = error?.response?.data?.message || error?.message || 'Failed to resend OTP';
-      Alert.alert('Error', errorMsg);
-    }
+    resendMutation.mutate(email, {
+      onSuccess: () => {
+        setOtp('');
+        setResendTimer(60);
+        setCanResend(false);
+        Alert.alert('Success', 'OTP sent to your email');
+      },
+      onError: (error: any) => {
+        const errorMsg = error?.response?.data?.message || error?.message || 'Failed to resend OTP';
+        Alert.alert('Error', errorMsg);
+      }
+    });
   };
 
   return (

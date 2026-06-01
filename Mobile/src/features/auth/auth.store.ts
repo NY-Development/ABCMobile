@@ -57,13 +57,16 @@ export const useAuthStore = create<AuthState>()(
       },
 
       initializeAuth: async () => {
+        set({ isLoading: true });
         try {
-          const storedToken = await SecureStore.getItemAsync('token');
-          if (storedToken) {
-            set({ token: storedToken });
+          const token = await SecureStore.getItemAsync('token');
+          if (token) {
+            set({ token, isAuthenticated: true });
           }
         } catch (error) {
           console.error('Error initializing auth:', error);
+        } finally {
+          set({ isLoading: false });
         }
       },
     }),
@@ -92,3 +95,4 @@ export const useAuthStore = create<AuthState>()(
     }
   )
 );
+

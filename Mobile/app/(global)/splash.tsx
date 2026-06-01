@@ -1,45 +1,51 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text } from 'react-native';
-import { router } from 'expo-router';
-import { useThemeStore } from '@/src/features/theme';
+import { useRouter } from 'expo-router';
+import { useThemeStore } from '@/src/store/themeStore'; // Adjusted to match your store tree path
 import { useAuthStore } from '@/src/features/auth';
 import { UtensilsCrossed } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 
 export default function SplashScreen() {
+  const router = useRouter();
   const { isDark } = useThemeStore();
-  const { user, token, initializeAuth } = useAuthStore();
+  const { user } = useAuthStore();
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
+    let isMounted = true;
+
+    // Simulate loading progress
+    const progressInterval = setInterval(() => {
+      if (!isMounted) return;
+      setProgress((prev) => {
+        const next = prev + Math.random() * 30;
+        return next > 80 ? 80 : next;
+      });
+    }, 150); // Speed up progress intervals slightly for seamless UX
+
     const bootstrap = async () => {
-      // Simulate loading progress
-      const progressInterval = setInterval(() => {
-        setProgress((prev) => {
-          const next = prev + Math.random() * 30;
-          return next > 80 ? 80 : next;
-        });
-      }, 3000);
+      try {
+        const token = await SecureStore.getItemAsync('token');
 
-      await initializeAuth();
+        if (!isMounted) return;
+        clearInterval(progressInterval);
+        setProgress(100);
 
-      // Complete progress
-      clearInterval(progressInterval);
-      setProgress(100);
+        // Allow layout animation to settle before pushing routes
+        setTimeout(async () => {
+          if (!isMounted) return;
 
-      // Navigate based on auth state
-      setTimeout(() => {
-        if (user || token) {
-          (async () => {
+          if (user || token) {
             const lastRoute = await AsyncStorage.getItem('lastRoute');
             if (lastRoute && !lastRoute.startsWith('/(global)/')) {
-              // Resume the last route even if `user` hasn't rehydrated yet.
               await AsyncStorage.removeItem('lastRoute').catch(() => {});
-              router.replace(lastRoute);
+              router.replace(lastRoute as any);
               return;
             }
 
-            // Fallback to role-based landing (only if we have user info).
+            // Role-based landing fallbacks
             if (user) {
               if (user.role === 'owner') {
                 router.replace('/(vendor)/dashboard');
@@ -52,14 +58,23 @@ export default function SplashScreen() {
             }
 
             router.replace('/(global)/landing');
-          })();
-        } else {
-          router.replace('/(global)/landing');
-        }
-      }, 500);
+          } else {
+            router.replace('/(global)/landing');
+          }
+        }, 500);
+
+      } catch (error) {
+        console.error("Bootstrap error: ", error);
+        if (isMounted) router.replace('/(global)/landing');
+      }
     };
 
     bootstrap();
+
+    return () => {
+      isMounted = false;
+      clearInterval(progressInterval);
+    };
   }, [user]);
 
   return (

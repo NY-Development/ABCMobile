@@ -1,10 +1,12 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import * as SecureStore from 'expo-secure-store';
-import { useAuthStore } from '@/src/features/auth';
+import { useAuthStore } from '@/src/features/auth/auth.store';
+
+// const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://abc-mobile-indol.vercel.app/api';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 const API: AxiosInstance = axios.create({
-  baseURL: 'https://abc-mobile-indol.vercel.app/api',
-  // baseURL: 'http://192.168.1.12:5000/api',
+  baseURL: API_BASE_URL,
   withCredentials: true,
   timeout: 30000,
 });
@@ -35,18 +37,17 @@ API.interceptors.response.use(
     if (error.response?.status === 401) {
       if (!hasShownUnauthorizedToast) {
         hasShownUnauthorizedToast = true;
-        // Clear auth store on unauthorized
+        // Import store only when needed to avoid circular dependency
+        const { useAuthStore } = require('@/src/features/auth/auth.store');
         const { clearAuth } = useAuthStore.getState?.() || {};
         if (clearAuth) {
           await clearAuth();
         }
-        // Navigate to login
-        console.log('Unauthorized - should navigate to login');
+        console.log('Unauthorized - cleared auth state');
       }
       return Promise.reject(error);
     }
 
-    // Reset flag for other errors
     if (error.response?.status !== 401) {
       hasShownUnauthorizedToast = false;
     }
