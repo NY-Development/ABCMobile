@@ -1,17 +1,20 @@
-export interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  image: string;
-  quantity?: number;
-}
-
-export interface CartItem extends Product {
+export interface CartItem {
+  product: {
+    _id: string;
+    name: string;
+    price: number;
+    image: string;
+    availableQuantity: number;
+    description?: string;
+  };
   quantity: number;
+  addedAt?: string;
+  _id?: string;
 }
 
-export interface CartState {
+export interface CartResponse {
+  _id: string;
+  customer: string;
   items: CartItem[];
-  total: number;
+  totalPrice: number;
 }

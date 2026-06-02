@@ -64,19 +64,17 @@ export default function VendorSettingsScreen() {
       { text: 'Cancel', onPress: () => {} },
       {
         text: 'Logout',
-        onPress: () => {
-          logout(undefined, {
-            onSuccess: async () => {
-              await SecureStore.deleteItemAsync('token');
-              clearAuth();
-              queryClient.clear();
-              router.replace('/(global)/landing');
-            },
-            onError: (error) => {
-              console.error('Logout failed:', error);
-              Alert.alert('Error', 'Failed to log out correctly.');
-            }
-          });
+        onPress: async () => {
+          try {
+            await logout(undefined);
+            await SecureStore.deleteItemAsync('token');
+            clearAuth();
+            queryClient.clear();
+            router.replace('/(global)/landing');
+          } catch (error) {
+            console.error('Logout failed:', error);
+            Alert.alert('Error', 'Failed to log out correctly.');
+          }
         },
       },
     ]);

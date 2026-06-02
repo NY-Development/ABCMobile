@@ -82,4 +82,25 @@ export const restaurantsAPI = {
     const response = await API.get(`/owners/${ownerId}`);
     return response.data;
   },
+  // ===========================
+  // Customer Discovery APIs
+  // ===========================
+
+  /**
+   * Get all products (populated with owner info) for customer home/discovery
+   * GET /api/owners/all
+   */
+  getAllProducts: async () => {
+    const response = await API.get('/owners/all');
+    return response.data;
+  },
+
+  /**
+   * Get all products for a specific owner/bakery
+   * GET /api/owners/my/:ownerId
+   */
+  getOwnerProducts: async (ownerId: string) => {
+    const response = await API.get(`/owners/my/${ownerId}`);
+    return response.data;
+  },
 };

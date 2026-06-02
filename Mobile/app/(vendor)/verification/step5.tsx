@@ -45,7 +45,7 @@ export default function OwnerVerificationStep5Screen() {
     },
   });
 
-  const onSubmit = (data: Step5FormData) => {
+  const onSubmit = async (data: Step5FormData) => {
     if (!step1 || !step2 || !step3 || !step4) {
       setBanner({
         visible: true,
@@ -76,33 +76,31 @@ export default function OwnerVerificationStep5Screen() {
       termsAccepted: data.termsAccepted,
     };
 
-    submitMutation.mutate(completeData, {
-      onSuccess: (res: any) => {
-        setIsLoading(false);
-        if (res.success) {
-          const { clearVerification } = useVerificationStore.getState();
-          clearVerification();
+    try {
+      const res: any = await submitMutation.mutateAsync(completeData);
+      setIsLoading(false);
+      if (res.success) {
+        const { clearVerification } = useVerificationStore.getState();
+        clearVerification();
 
-          // Invalidate queries here if needed, or rely on layout refetch
-          setBanner({
-            visible: true,
-            type: 'success',
-            title: 'Submitted',
-            message: 'Application submitted successfully!',
-          });
-          router.push('/(vendor)/verification/success');
-        }
-      },
-      onError: (error: any) => {
-        setIsLoading(false);
+        // Invalidate queries here if needed, or rely on layout refetch
         setBanner({
           visible: true,
-          type: 'error',
-          title: 'Submission failed',
-          message: error.message || 'Failed to submit verification',
+          type: 'success',
+          title: 'Submitted',
+          message: 'Application submitted successfully!',
         });
+        router.push('/(vendor)/verification/success');
       }
-    });
+    } catch (error: any) {
+      setIsLoading(false);
+      setBanner({
+        visible: true,
+        type: 'error',
+        title: 'Submission failed',
+        message: error.message || 'Failed to submit verification',
+      });
+    }
   };
 
   return (

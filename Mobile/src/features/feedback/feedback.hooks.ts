@@ -1,11 +1,10 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { authAPI } from './auth.api';
+import { useMutation } from '@tanstack/react-query';
+import { authAPI } from './feedback.api';
 import {
   LoginFormData,
   RegisterFormData,
   OTPFormData,
-  ProfileResponse,
-} from './auth.types';
+} from './feedback.types';
 
 export const AUTH_KEYS = {
   login: ['auth', 'login'] as const,
@@ -57,24 +56,5 @@ export const useResetPasswordMutation = () => {
 export const useLogoutMutation = () => {
   return useMutation({
     mutationFn: () => authAPI.logout(),
-  });
-};
-
-export const useUpdateProfileMutation = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (data: { name?: string; phone?: string; image?: any }) =>
-      authAPI.updateProfile(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: AUTH_KEYS.profile });
-    },
-  });
-};
-
-export const useMeQuery = () => {
-  return useQuery<ProfileResponse>({
-    queryKey: AUTH_KEYS.profile,
-    queryFn: () => authAPI.getProfile(),
-    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };

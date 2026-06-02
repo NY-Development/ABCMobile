@@ -3,7 +3,9 @@ import * as SecureStore from 'expo-secure-store';
 import { useAuthStore } from '@/src/features/auth/auth.store';
 
 // const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://abc-mobile-indol.vercel.app/api';
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000/api';
+// Use 10.0.2.2 for Android emulator if localhost is used
+const DEFAULT_URL = 'http://localhost:5000/api';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || DEFAULT_URL;
 
 const API: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,

@@ -21,8 +21,6 @@ export interface AuthResponse {
   user: User;
 }
 
-export type ProfileResponse = User;
-
 // Validation Schemas
 export const loginSchema = z.object({
   email: z.string().email('Invalid email address'),

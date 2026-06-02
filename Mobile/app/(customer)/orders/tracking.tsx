@@ -1,235 +1,201 @@
+import React from 'react';
+import { View, Text, ScrollView, Pressable, ActivityIndicator, Image as RnImage } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { View, Text, ScrollView, Pressable, Image } from 'react-native';
-import { useThemeStore } from '@/src/features/theme/theme.store';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { 
+  ChevronLeft, 
+  MapPin, 
+  Package, 
+  Clock, 
+  CheckCircle2, 
+  Timer, 
+  Truck, 
+  Home as HomeIcon,
+  ShoppingBag,
+  Navigation2,
+  Flame,
+  ClipboardList
+} from 'lucide-react-native';
+import { useThemeStore } from '@/src/features/theme/theme.store';
+import { useOrderByIdQuery } from '@/src/features/orders/orders.hooks';
+import { Product } from '@/src/features/restaurants/restaurants.types';
+import { Icon as UiIcon } from '@/components/ui/icon';
 
 export default function TrackOrderScreen() {
   const isDark = useThemeStore((state) => state.isDark);
   const { orderId } = useLocalSearchParams();
+  const { data: order, isLoading } = useOrderByIdQuery(orderId as string);
 
-  const steps = [
-    { title: 'Order Received', time: '14:35 Today', icon: '✓', active: true },
-    { title: 'In the Oven', time: '14:42 Today', icon: '🔥', active: true },
-    { title: 'Ready & Picked Up', time: '15:05 Today', icon: '✓', active: true },
-    { title: 'On the Way', time: 'Est. 15:20', icon: '🏍️', active: true },
-    { title: 'Delivered', time: 'Est. 15:30', icon: '🏠', active: false },
-  ];
-
-  const driver = {
-    name: 'Dawit Kebede',
-    rating: 4.9,
-    reviews: '230+',
-    image: require('@/assets/images/placeholder.png'),
-    vehicle: 'Red Honda - LK2024',
+  const getOwnerName = (owner: any) => {
+    if (typeof owner === 'string') return 'Bakery';
+    return owner?.businessName || owner?.name || 'Bakery';
   };
 
+  const statusMap = {
+    'pending': { index: 0, label: 'Order Confirmed', icon: ClipboardList, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+    'accepted': { index: 1, label: 'Preparing', icon: Flame, color: 'text-orange-500', bg: 'bg-orange-500/10' },
+    'ready': { index: 2, label: 'Ready for Pickup', icon: ShoppingBag, color: 'text-primary', bg: 'bg-primary/10' },
+    'on-the-way': { index: 3, label: 'Out for Delivery', icon: Truck, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+    'delivered': { index: 4, label: 'Delivered', icon: HomeIcon, color: 'text-green-500', bg: 'bg-green-500/10' },
+    'cancelled': { index: -1, label: 'Cancelled', icon: Package, color: 'text-red-500', bg: 'bg-red-500/10' },
+  };
+
+  const currentStatus = statusMap[order?.status as keyof typeof statusMap] || statusMap.pending;
+  const statusIdx = currentStatus.index;
+
+  const steps = [
+    { title: 'Order Confirmed', description: 'Your order has been received', icon: ClipboardList, active: statusIdx >= 0 },
+    { title: 'Preparing', description: 'Chef is preparing your meal', icon: Flame, active: statusIdx >= 1 },
+    { title: 'Ready', description: 'Order is packed and ready', icon: ShoppingBag, active: statusIdx >= 2 },
+    { title: 'On the Way', description: 'Rider is heading to you', icon: Truck, active: statusIdx >= 3 },
+    { title: 'Arrived', description: 'Enjoy your meal!', icon: CheckCircle2, active: statusIdx >= 4 },
+  ];
+
+  if (isLoading) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center bg-background">
+        <ActivityIndicator size="large" color="#f97015" />
+      </SafeAreaView>
+    );
+  }
+
+  if (!order) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center bg-background p-6">
+        <Text className="text-lg font-bold text-foreground">Order not found</Text>
+        <Pressable onPress={() => router.back()} className="mt-4 bg-primary px-6 py-2.5 rounded-xl">
+          <Text className="text-white font-bold">Go Back</Text>
+        </Pressable>
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <SafeAreaView
-      className={`max-w-md flex-1 ${isDark ? 'bg-background-dark' : 'bg-background-light'}`}>
+    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       {/* Header */}
-      <View
-        className={`border-b ${isDark ? 'border-slate-800' : 'border-slate-200'} bg-background-light dark:bg-background-dark flex-row items-center gap-3 px-4 py-4`}>
-        <Pressable onPress={() => router.back()}>
-          <Text className="text-2xl">←</Text>
+      <View className="flex-row items-center border-b border-border bg-card px-4 py-4">
+        <Pressable onPress={() => router.back()} className="h-10 w-10 items-center justify-center rounded-xl bg-muted">
+          <UiIcon as={ChevronLeft} size={20} className="text-primary" />
         </Pressable>
-        <View className="flex-1">
-          <Text className={`text-lg font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-            Order #{orderId || '2026-1043'}
-          </Text>
-          <Text className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-            Track delivery status
-          </Text>
+        <View className="flex-1 px-4">
+          <Text className="text-lg font-black text-foreground tracking-tight">Track Order</Text>
+          <Text className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Order #{order._id.slice(-6).toUpperCase()}</Text>
         </View>
-        <Pressable className="flex size-10 items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-800">
-          <Text className="text-xl">📞</Text>
-        </Pressable>
+        <View className="h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+          <UiIcon as={Clock} size={18} className="text-primary" />
+        </View>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} className="flex-1 pb-24">
-        {/* Map Area Placeholder */}
-        <View className={`relative h-64 ${isDark ? 'bg-slate-800' : 'bg-slate-200'}`}>
-          <View className="absolute inset-0 flex items-center justify-center">
-            <Text className="text-6xl">🗺️</Text>
-          </View>
-          <View
-            className={`absolute inset-x-0 bottom-0 flex-row items-center justify-between rounded-t-2xl px-4 py-3 ${isDark ? 'bg-slate-900/80' : 'bg-white/80'} backdrop-blur-md`}>
-            <View>
-              <Text className="text-sm font-bold text-primary">Estimated Delivery</Text>
-              <Text
-                className={`text-2xl font-black ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-                15:20 - 15:30
-              </Text>
-            </View>
-            <Pressable className="flex-row items-center gap-2 rounded-lg bg-primary px-3 py-2">
-              <Text className="text-white">📍</Text>
-              <Text className="text-sm font-bold text-white">View Map</Text>
-            </Pressable>
-          </View>
-        </View>
-
-        {/* Order Summary Mini Card */}
-        <View className="px-4 pb-4 pt-6">
-          <View
-            className={`flex-row gap-4 rounded-xl border p-3 shadow-sm ${isDark ? 'border-slate-800 bg-slate-800/50' : 'border-slate-100 bg-white'}`}>
-            <Image source={driver.image} className="size-16 rounded-lg bg-slate-200" />
-            <View className="flex-1 justify-between">
-              <View>
-                <Text className={`font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-                  Your Order
-                </Text>
-                <Text className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                  Chocolate Cake x1, Croissants x2
-                </Text>
+      <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
+        {/* Visual Map/Status Area */}
+        <View className="h-48 relative overflow-hidden bg-primary/5">
+          {/* Animated Background Decoration */}
+          <View className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-primary/10 blur-3xl" />
+          <View className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-background to-transparent" />
+          
+          <View className="flex-1 items-center justify-center">
+            <View className="relative">
+              <View className="h-24 w-24 rounded-[32px] bg-primary items-center justify-center shadow-xl shadow-primary/40">
+                <UiIcon as={currentStatus.icon} size={32} className="text-white" />
               </View>
-              <Text className="font-bold text-primary">$28.50</Text>
+              <View className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full bg-background items-center justify-center border-2 border-white">
+                <View className="h-5 w-5 rounded-full bg-green-500 animate-pulse" />
+              </View>
             </View>
+            <Text className="mt-4 text-2xl font-black text-foreground tracking-tight uppercase">
+              {currentStatus.label}
+            </Text>
           </View>
         </View>
 
-        {/* Delivery Timeline */}
-        <View className="px-4 py-4">
-          <Text
-            className={`mb-4 text-lg font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-            Delivery Progress
-          </Text>
-          <View className="gap-0">
-            {steps.map((step, index) => (
-              <View key={step.title} className="flex-row gap-4">
-                {/* Timeline Line and Dot */}
-                <View className="flex-col items-center gap-1">
-                  <View
-                    className={`flex h-10 w-10 items-center justify-center rounded-full ${
-                      step.active ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-700'
-                    } shadow-sm`}>
-                    <Text className={`text-lg ${step.active ? 'text-white' : 'text-slate-600'}`}>
-                      {step.icon}
-                    </Text>
-                  </View>
-                  {index < steps.length - 1 && (
-                    <View
-                      className={`h-12 w-0.5 ${
-                        step.active ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-700'
-                      }`}
-                    />
+        {/* Order Info Card */}
+        <View className="px-6 -mt-6">
+          <View className="bg-card rounded-3xl border border-border p-6 shadow-sm">
+            <View className="flex-row items-center justify-between mb-6">
+              <View className="flex-row items-center gap-3">
+                <View className="h-12 w-12 rounded-2xl bg-muted items-center justify-center overflow-hidden">
+                  {order.owner ? (
+                    <RnImage source={{ uri: order.owner.image }} className="h-full w-full" />
+                  ) : (
+                    <UiIcon as={ShoppingBag} size={20} className="text-muted-foreground" />
                   )}
                 </View>
-                {/* Step Content */}
-                <View className="flex-1 justify-center pb-2">
-                  <Text
-                    className={`font-bold ${step.active ? 'text-primary' : isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                    {step.title}
-                  </Text>
-                  <Text
-                    className={`text-sm ${
-                      step.active ? 'text-primary' : isDark ? 'text-slate-500' : 'text-slate-400'
-                    }`}>
-                    {step.time}
-                  </Text>
-                </View>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        {/* Driver Info Card */}
-        <View className="px-4 py-4">
-          <Text
-            className={`mb-3 text-base font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-            Delivery Partner
-          </Text>
-          <View
-            className={`flex-col gap-4 rounded-2xl border p-4 shadow-sm ${isDark ? 'border-slate-800 bg-slate-800/50' : 'border-slate-100 bg-white'}`}>
-            {/* Driver Header */}
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center gap-3">
-                <Image
-                  source={driver.image}
-                  className="size-14 rounded-full border-2 border-primary"
-                />
-                <View className="flex-1">
-                  <Text className={`font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-                    {driver.name}
-                  </Text>
-                  <View className="mt-1 flex-row items-center gap-1">
-                    <Text className="text-amber-500">⭐</Text>
-                    <Text
-                      className={`text-sm font-semibold ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                      {driver.rating} • {driver.reviews} deliveries
-                    </Text>
+                <View>
+                  <Text className="text-sm font-black text-foreground">{getOwnerName(order.owner)}</Text>
+                  <View className="flex-row items-center gap-1">
+                     <UiIcon as={Navigation2} size={10} className="text-primary" />
+                     <Text className="text-[10px] font-bold text-muted-foreground">Arriving in 25-30 mins</Text>
                   </View>
                 </View>
               </View>
-              <Pressable className="flex size-10 items-center justify-center rounded-full border border-primary/20 bg-primary/10 hover:bg-primary/20">
-                <Text className="text-xl">⭐</Text>
-              </Pressable>
+              <View className="items-end">
+                <Text className="text-xl font-black text-primary">ETB {order.totalPrice}</Text>
+                <Text className="text-[10px] font-bold text-muted-foreground uppercase">{order.payment?.isPaid || 'Paid'}</Text>
+              </View>
             </View>
 
-            {/* Vehicle Info */}
-            <View
-              className={`rounded-lg border-t ${isDark ? 'border-slate-700 pt-4' : 'border-slate-200 pt-4'}`}>
-              <Text className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                Vehicle
-              </Text>
-              <Text
-                className={`mt-1 font-semibold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-                {driver.vehicle}
-              </Text>
-            </View>
+            <View className="h-px bg-border w-full mb-6" />
 
-            {/* Action Buttons */}
-            <View className="flex-row gap-3 pt-2">
-              <Pressable className="flex-1 flex-row items-center justify-center gap-2 rounded-lg border border-primary/30 bg-primary/5 py-2.5 hover:bg-primary/10">
-                <Text className="text-lg">📞</Text>
-                <Text className="text-sm font-bold text-primary">Call</Text>
-              </Pressable>
-              <Pressable className="flex-1 flex-row items-center justify-center gap-2 rounded-lg border border-primary/30 bg-primary/5 py-2.5 hover:bg-primary/10">
-                <Text className="text-lg">💬</Text>
-                <Text className="text-sm font-bold text-primary">Chat</Text>
-              </Pressable>
+            <View className="flex-row items-center gap-4">
+              <View className="h-10 w-10 rounded-xl bg-primary/5 items-center justify-center">
+                <UiIcon as={Package} size={20} className="text-primary" />
+              </View>
+              <View className="flex-1">
+                <Text className="text-xs font-bold text-muted-foreground">Package Content</Text>
+                <Text className="text-sm font-black text-foreground">
+                  {(order.product as Product)?.name || 'Order Item'} x {order.quantity}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* Timeline */}
+        <View className="px-6 py-8">
+          <Text className="text-xs font-black text-muted-foreground uppercase tracking-[2px] mb-6 px-2">Delivery Timeline</Text>
+          
+          <View className="px-4">
+            {steps.map((step, index) => {
+              const Icon = step.icon;
+              return (
+                <View key={step.title} className="flex-row gap-6 mb-2">
+                  <View className="items-center">
+                    <View className={`h-11 w-11 rounded-2xl border-4 border-background items-center justify-center z-10 ${
+                      step.active ? 'bg-primary shadow-lg shadow-primary/20' : 'bg-muted opacity-50'
+                    }`}>
+                      <UiIcon as={Icon} size={16} className={step.active ? 'text-white' : 'text-muted-foreground'} />
+                    </View>
+                    {index < steps.length - 1 && (
+                      <View className={`w-0.5 h-16 -mt-2 -mb-2 ${
+                        step.active && steps[index + 1].active ? 'bg-primary' : 'bg-muted'
+                      }`} />
+                    )}
+                  </View>
+                  <View className={`flex-1 justify-center pb-8 ${step.active ? '' : 'opacity-40'}`}>
+                    <Text className={`font-black text-base ${step.active ? 'text-foreground' : 'text-muted-foreground'}`}>{step.title}</Text>
+                    <Text className="text-xs font-bold text-muted-foreground mt-0.5">{step.description}</Text>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Address Card */}
+        <View className="px-6 mb-32">
+          <View className="bg-muted rounded-2xl p-4 flex-row items-center gap-4 border border-border/50">
+            <View className="h-10 w-10 rounded-xl bg-background items-center justify-center">
+              <UiIcon as={MapPin} size={20} className="text-primary" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Delivery Address</Text>
+              <Text className="text-xs font-bold text-foreground mt-0.5" numberOfLines={1}>
+                {order.pickupLocation || 'Bole, Addis Ababa, Ethiopia'}
+              </Text>
             </View>
           </View>
         </View>
       </ScrollView>
-
-      {/* Bottom Navigation */}
-      <View
-        className={`fixed bottom-0 left-0 right-0 mx-auto max-w-md border-t ${isDark ? 'border-slate-800 bg-slate-900' : 'border-slate-200 bg-white'} px-4 pb-6 pt-2`}>
-        <View className="flex-row items-center justify-around">
-          <Pressable
-            onPress={() => router.push('/(customer)/home')}
-            className="flex-col items-center gap-1">
-            <Text className="text-2xl">🏠</Text>
-            <Text className="text-xs font-medium uppercase tracking-tighter text-primary">
-              Home
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => router.push('/(customer)/restaurants/products')}
-            className="flex-col items-center gap-1">
-            <Text className="text-2xl">📋</Text>
-            <Text
-              className={`text-xs font-medium uppercase tracking-tighter ${isDark ? 'text-slate-400' : 'text-slate-400'}`}>
-              Menu
-            </Text>
-          </Pressable>
-          <Pressable className="flex-col items-center gap-1">
-            <Text className="text-2xl">📦</Text>
-            <Text
-              className={`text-xs font-medium uppercase tracking-tighter ${isDark ? 'text-slate-400' : 'text-slate-400'}`}>
-              Track
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => router.push('/(customer)/profile')}
-            className="flex-col items-center gap-1">
-            <Text className="text-2xl">👤</Text>
-            <Text
-              className={`text-xs font-medium uppercase tracking-tighter ${isDark ? 'text-slate-400' : 'text-slate-400'}`}>
-              Profile
-            </Text>
-          </Pressable>
-        </View>
-      </View>
     </SafeAreaView>
   );
 }

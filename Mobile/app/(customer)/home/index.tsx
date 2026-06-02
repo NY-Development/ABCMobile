@@ -1,103 +1,110 @@
 import { router } from 'expo-router';
-import { View, Text, ScrollView, FlatList, Pressable, TextInput, Image } from 'react-native';
+import { View, Text, ScrollView, Pressable, TextInput, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemeStore } from '@/src/features/theme/theme.store';
+import { useAllProductsQuery } from '@/src/features/restaurants/restaurants.hooks';
+import { useAddToCartMutation, useGetCartQuery } from '@/src/features/cart/cart.hooks';
+import { Product } from '@/src/features/restaurants/restaurants.types';
+import { 
+  MapPin, 
+  Search as SearchIcon, 
+  ShoppingCart, 
+  Plus,
+  Utensils,
+  Cake as CakeIcon,
+  Cookie,
+  Coffee,
+  IceCream,
+  Croissant
+} from 'lucide-react-native';
+import { Icon as UiIcon } from '@/components/ui/icon';
 
 export default function ExploreBarkeriesScreen() {
   const isDark = useThemeStore((state) => state.isDark);
-  const toggleTheme = useThemeStore((state) => state.toggleTheme);
+  const { data: products, isLoading } = useAllProductsQuery();
+  const { mutate: addToCart } = useAddToCartMutation();
+  const { data: cart } = useGetCartQuery();
 
-  // Mock data for featured bakeries
-  const featuredBakeries = [
-    {
-      id: '1',
-      title: 'Morning Freshness',
-      subtitle: 'Get 20% off all sourdough bread today',
-      image: '../../assets/images/placeholder.png',
-    },
-    {
-      id: '2',
-      title: 'Sweet Delights',
-      subtitle: 'New custom cake flavors now available',
-      image: '../../assets/images/placeholder.png',
-    },
-  ];
+  const cartCount = cart?.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
 
-  // Product categories
   const categories = [
-    { id: '1', name: 'Bread', icon: 'bakery_dining' },
-    { id: '2', name: 'Cakes', icon: 'cake' },
-    { id: '3', name: 'Pastries', icon: 'cookie' },
-    { id: '4', name: 'Desserts', icon: 'icecream' },
-    { id: '5', name: 'Coffee', icon: 'coffee' },
+    { id: 'Bread', name: 'Bread', icon: Croissant },
+    { id: 'Cake', name: 'Cakes', icon: CakeIcon },
+    { id: 'Pastries', name: 'Pastries', icon: Cookie },
+    { id: 'Snacks', name: 'Snacks', icon: IceCream },
+    { id: 'Coffee', name: 'Coffee', icon: Coffee },
   ];
 
-  // Signature cakes
-  const signatureCakes = [
-    { id: '1', name: 'Red Velvet Bliss', price: '$4.50', bakery: 'Adama Bakery' },
-    { id: '2', name: 'Strawberry Dream', price: '$22.00', bakery: 'Sweet Corner' },
-    { id: '3', name: 'Fudge Fantasy', price: '$5.20', bakery: 'Chocolate House' },
-  ];
+  if (isLoading) {
+    return (
+      <SafeAreaView className={`flex-1 items-center justify-center ${isDark ? 'bg-background-dark' : 'bg-background-light'}`}>
+        <ActivityIndicator size="large" color="#f97015" />
+      </SafeAreaView>
+    );
+  }
 
-  // Popular products
-  const popularProducts = [
-    { id: '1', name: 'Butter Croissant', location: 'The French Corner', price: '$3.25' },
-    { id: '2', name: 'Macaron Box (6pcs)', location: 'Petite Patisserie', price: '$12.00' },
-    { id: '3', name: 'Artisan Baguette', location: 'Old Town Bakery', price: '$2.80' },
-    { id: '4', name: 'Giant Cinnamon Roll', location: 'Sugar & Spice', price: '$4.95' },
-  ];
+  const signatureCakes = products?.filter(p => p.category === 'Cake').slice(0, 5) || [];
+  const popularProducts = products?.slice(0, 10) || [];
+  
+  const featuredBanners = products?.slice(0, 2).map((p, idx) => ({
+    id: p._id,
+    title: idx === 0 ? 'Morning Freshness' : 'Sweet Delights',
+    subtitle: idx === 0 ? `Get 20% off ${p.name}` : `New flavor: ${p.name}`,
+    image: p.image,
+  })) || [];
 
   return (
     <SafeAreaView className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-background-light'}`}>
       {/* Header */}
       <View
-        className={`flex-row items-center ${isDark ? 'bg-background-dark' : 'bg-background-light'} sticky top-0 z-10 justify-between border-b border-primary/10 px-4 pb-2`}>
-        <View className="flex h-10 w-10 items-center justify-center text-primary">
-          {/* Location Icon */}
-          <Text className="text-2xl text-primary">📍</Text>
+        className={`flex-row items-center border-b border-border bg-card px-4 py-3 justify-between`}>
+        <View className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+          <UiIcon as={MapPin} size={18} className="text-primary" />
         </View>
-        <Text
-          className={`flex-1 text-center text-lg font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-          Adama Bakery & Cake
-        </Text>
+        <View className="flex-1 px-3">
+          <Text className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Delivering to</Text>
+          <Text className="text-sm font-bold text-foreground">Adama, Ethiopia</Text>
+        </View>
         <Pressable
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10"
+          className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-muted"
           onPress={() => router.push('/(customer)/cart')}>
-          <Text className="text-2xl text-primary">🛒</Text>
+          <UiIcon as={ShoppingCart} size={18} className="text-primary" />
+          {cartCount > 0 && (
+            <View className="absolute -top-1 -right-1 h-5 w-5 items-center justify-center rounded-full bg-primary border-2 border-background">
+              <Text className="text-[10px] font-bold text-white">{cartCount}</Text>
+            </View>
+          )}
         </Pressable>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
         {/* Search Bar */}
-        <View className={`px-4 py-3 ${isDark ? 'bg-background-dark' : 'bg-background-light'}`}>
-          <View className="h-12 flex-row items-center rounded-xl bg-primary/5 shadow-sm">
-            <View className="flex items-center justify-center pl-4">
-              <Text className="text-xl text-primary">🔍</Text>
-            </View>
+        <View className="px-4 py-4">
+          <View className="h-14 flex-row items-center rounded-2xl bg-muted/50 px-4 border border-border">
+            <UiIcon as={SearchIcon} size={20} className="text-muted-foreground" />
             <TextInput
-              className={`flex-1 ${isDark ? 'text-slate-100' : 'text-slate-900'} px-2 text-base placeholder:text-slate-400`}
+              className={`flex-1 text-foreground px-3 text-base font-medium`}
               placeholder="Search for bread, cakes or bakeries"
-              placeholderTextColor={isDark ? '#94a3b8' : '#cbd5e1'}
+              placeholderTextColor="#94a3b8"
             />
           </View>
         </View>
 
-        {/* Hero Carousel: Featured Bakeries */}
+        {/* Hero Carousel */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          scrollEventThrottle={16}
           className="flex-1">
-          <View className="flex-row gap-4 p-4">
-            {featuredBakeries.map((item) => (
+          <View className="flex-row gap-4 px-4 pb-4">
+            {featuredBanners.map((item) => (
               <Pressable
                 key={item.id}
-                className="relative h-40 min-w-[300px] flex-1 flex-col gap-3 overflow-hidden rounded-xl"
-                onPress={() => router.push('/(customer)/restaurants')}>
-                <Image source={item.image} className="h-40 w-full rounded-xl" />
-                <View className="absolute inset-0 flex-col justify-end rounded-xl bg-black/50 p-4">
-                  <Text className="text-lg font-bold text-white">{item.title}</Text>
-                  <Text className="text-sm font-medium text-white/80">{item.subtitle}</Text>
+                className="relative h-44 w-[320px] overflow-hidden rounded-3xl"
+                onPress={() => router.push(`/(customer)/restaurants/product/${item.id}`)}>
+                <Image source={{ uri: item.image }} className="h-44 w-full" />
+                <View className="absolute inset-0 bg-black/40 p-6 justify-end">
+                  <Text className="text-2xl font-black text-white leading-tight">{item.title}</Text>
+                  <Text className="text-sm font-bold text-white/90 mt-1">{item.subtitle}</Text>
                 </View>
               </Pressable>
             ))}
@@ -105,93 +112,74 @@ export default function ExploreBarkeriesScreen() {
         </ScrollView>
 
         {/* Categories */}
-        <View className="py-4">
-          <Text
-            className={`mb-4 px-4 text-lg font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-            Categories
-          </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="pb-2">
-            <View className="flex-row gap-4 px-4">
+        <View className="py-6">
+          <Text className="mb-4 px-4 text-lg font-bold text-foreground">Categories</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4">
+            <View className="flex-row gap-6">
               {categories.map((cat) => (
-                <View key={cat.id} className="min-w-[70px] flex-col items-center gap-2">
-                  <View
-                    className={`size-16 rounded-full ${cat.id === '1' ? 'bg-primary' : 'bg-primary/20'} flex items-center justify-center`}>
-                    <Text
-                      className={cat.id === '1' ? 'text-2xl text-white' : 'text-2xl text-primary'}>
-                      {cat.icon === 'bakery_dining' && '🥖'}
-                      {cat.icon === 'cake' && '🎂'}
-                      {cat.icon === 'cookie' && '🍪'}
-                      {cat.icon === 'icecream' && '🍦'}
-                      {cat.icon === 'coffee' && '☕'}
-                    </Text>
+                <View key={cat.id} className="items-center gap-2">
+                  <View className={`h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/5`}>
+                    <UiIcon as={cat.icon} size={28} className="text-primary" />
                   </View>
-                  <Text
-                    className={`text-xs font-semibold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-                    {cat.name}
-                  </Text>
+                  <Text className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{cat.name}</Text>
                 </View>
               ))}
             </View>
           </ScrollView>
         </View>
 
-        {/* Signature Cakes */}
-        <View className={`py-4 ${isDark ? 'bg-primary/5' : 'bg-primary/5'}`}>
+        {/* Signature Products Section */}
+        <View className="bg-muted/30 py-6">
           <View className="mb-4 flex-row items-center justify-between px-4">
-            <Text className={`text-lg font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-              Signature Cakes
-            </Text>
+            <Text className="text-lg font-bold text-foreground">Signature Cakes</Text>
             <Pressable onPress={() => router.push('/(customer)/restaurants/products')}>
-              <Text className="text-sm font-bold text-primary">View all</Text>
+              <Text className="text-sm font-bold text-primary">Explore All</Text>
             </Pressable>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="pb-4">
-            <View className="flex-row gap-4 px-4">
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4">
+            <View className="flex-row gap-4 pb-2">
               {signatureCakes.map((cake) => (
                 <Pressable
-                  key={cake.id}
-                  className={`min-w-[160px] ${isDark ? 'bg-background-dark' : 'bg-background-light'} rounded-xl border border-primary/10 p-3 shadow-sm`}
-                  onPress={() => router.push(`/(customer)/restaurants/product/${cake.id}`)}>
-                  <View className="mb-3 aspect-square w-full rounded-lg bg-gray-300" />
-                  <Text
-                    className={`text-sm font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-                    {cake.name}
-                  </Text>
-                  <Text className="mt-1 text-sm font-bold text-primary">{cake.price}</Text>
+                  key={cake._id}
+                  className="w-44 bg-card rounded-3xl border border-border p-3 shadow-sm"
+                  onPress={() => router.push(`/(customer)/restaurants/product/${cake._id}`)}>
+                  <Image source={{ uri: cake.image }} className="aspect-square w-full rounded-2xl bg-muted" />
+                  <View className="mt-3">
+                    <Text numberOfLines={1} className="text-sm font-bold text-foreground">{cake.name}</Text>
+                    <View className="mt-1 flex-row items-center justify-between">
+                      <Text className="text-sm font-black text-primary">ETB {cake.price}</Text>
+                      <View className="h-6 w-6 rounded-lg bg-primary/10 items-center justify-center">
+                        <Plus size={14} className="text-primary" />
+                      </View>
+                    </View>
+                  </View>
                 </Pressable>
               ))}
             </View>
           </ScrollView>
         </View>
 
-        {/* Popular Products */}
-        <View className={`p-4 pb-24 ${isDark ? 'bg-background-dark' : 'bg-background-light'}`}>
-          <Text
-            className={`mb-4 text-lg font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-            Popular Near You
-          </Text>
-          <View className="flex-row flex-wrap gap-4">
-            {popularProducts.map((product, idx) => (
-              <View
-                key={product.id}
-                className={`min-w-[45%] flex-1 ${idx % 2 === 1 ? 'ml-auto' : ''}`}>
+        {/* Popular Near You */}
+        <View className="p-4 pb-32">
+          <Text className="mb-4 text-lg font-bold text-foreground">Popular Near You</Text>
+          <View className="flex-row flex-wrap justify-between gap-y-4">
+            {popularProducts.map((product) => (
+              <View key={product._id} className="w-[48%]">
                 <Pressable
-                  className="flex-col gap-2"
-                  onPress={() => router.push(`/(customer)/restaurants/product/${product.id}`)}>
-                  <View className="aspect-square w-full rounded-xl bg-gray-300" />
-                  <View>
-                    <Text
-                      className={`text-sm font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-                      {product.name}
+                  className="bg-card rounded-3xl border border-border p-3 shadow-sm"
+                  onPress={() => router.push(`/(customer)/restaurants/product/${product._id}`)}>
+                  <Image source={{ uri: product.image }} className="aspect-square w-full rounded-2xl bg-muted" />
+                  <View className="mt-3">
+                    <Text numberOfLines={1} className="text-sm font-bold text-foreground">{product.name}</Text>
+                    <Text numberOfLines={1} className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">
+                      {typeof product.owner === 'string' ? 'Bakery' : product.owner?.companyName || 'Bakery'}
                     </Text>
-                    <Text
-                      className={`text-xs italic ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                      {product.location}
-                    </Text>
-                    <View className="mt-1 flex-row items-center justify-between">
-                      <Text className="font-bold text-primary">{product.price}</Text>
-                      <Pressable className="rounded-full bg-primary p-1">
-                        <Text className="text-white">+</Text>
+                    <View className="mt-2 flex-row items-center justify-between">
+                      <Text className="text-sm font-black text-primary">ETB {product.price}</Text>
+                      <Pressable 
+                        className="h-8 w-8 rounded-full bg-primary items-center justify-center shadow-lg shadow-primary/40"
+                        onPress={() => addToCart({ productId: product._id, quantity: 1 })}>
+                        <Plus size={16} color="white" />
                       </Pressable>
                     </View>
                   </View>
@@ -201,43 +189,6 @@ export default function ExploreBarkeriesScreen() {
           </View>
         </View>
       </ScrollView>
-
-      {/* Bottom Navigation */}
-      <View
-        className={`absolute bottom-0 left-0 right-0 ${isDark ? 'bg-background-dark' : 'bg-background-light'} border-t border-primary/10 px-4 pb-3 pt-2`}>
-        <View className="flex-row justify-between gap-2">
-          <Pressable
-            className="flex flex-1 flex-col items-center justify-center gap-1"
-            onPress={() => router.push('/(customer)/home')}>
-            <Text className="text-xl text-slate-400">🏠</Text>
-            <Text className={`text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-400'}`}>
-              Home
-            </Text>
-          </Pressable>
-          <Pressable
-            className="flex flex-1 flex-col items-center justify-center gap-1"
-            onPress={() => router.push('/(customer)/restaurants')}>
-            <Text className="text-xl text-primary">🔍</Text>
-            <Text className="text-xs font-medium text-primary">Explore</Text>
-          </Pressable>
-          <Pressable
-            className="flex flex-1 flex-col items-center justify-center gap-1"
-            onPress={() => router.push('/(customer)/orders/history')}>
-            <Text className="text-xl text-slate-400">📋</Text>
-            <Text className={`text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-400'}`}>
-              Orders
-            </Text>
-          </Pressable>
-          <Pressable
-            className="flex flex-1 flex-col items-center justify-center gap-1"
-            onPress={() => router.push('/(customer)/profile')}>
-            <Text className="text-xl text-slate-400">👤</Text>
-            <Text className={`text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-400'}`}>
-              Profile
-            </Text>
-          </Pressable>
-        </View>
-      </View>
     </SafeAreaView>
   );
 }

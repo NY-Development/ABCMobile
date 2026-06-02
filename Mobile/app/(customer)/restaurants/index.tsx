@@ -1,214 +1,175 @@
 import { router } from 'expo-router';
-import { View, Text, ScrollView, Pressable, Image, FlatList } from 'react-native';
+import { View, Text, ScrollView, Pressable, Image, FlatList, ActivityIndicator } from 'react-native';
 import { useThemeStore } from '@/src/features/theme/theme.store';
-import { useState } from 'react';
-import {SafeAreaView} from 'react-native-safe-area-context'
+import { useState, useMemo } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAllProductsQuery } from '@/src/features/restaurants/restaurants.hooks';
+import { Owner, Product } from '@/src/features/restaurants/restaurants.types';
+import { 
+  ChevronLeft, 
+  Search, 
+  Star, 
+  MapPin, 
+  Clock,
+  ArrowRight,
+  Navigation,
+  SlidersHorizontal
+} from 'lucide-react-native';
+import { Icon as UiIcon } from '@/components/ui/icon';
 
 export default function AllBakeriesScreen() {
   const isDark = useThemeStore((state) => state.isDark);
   const [selectedFilter, setSelectedFilter] = useState('nearby');
+  const { data: products, isLoading } = useAllProductsQuery();
 
-  // Mock bakery data
-  const bakeries = [
-    {
-      id: '1',
-      name: 'Golden Crust Bakery',
-      rating: 4.8,
-      distance: '1.2 km away',
+  const bakeries = useMemo(() => {
+    if (!products) return [];
+    
+    // Group products by owner to get unique bakeries
+    const ownerMap = new Map<string, Owner>();
+    products.forEach((p: Product) => {
+      if (typeof p.owner !== 'string') {
+        ownerMap.set(p.owner._id, p.owner);
+      }
+    });
+
+    return Array.from(ownerMap.values()).map(owner => ({
+      id: owner._id,
+      name: owner.companyName || owner.name || 'Bakery',
+      rating: 4.8, 
+      distance: '1.2 km',
       location: 'Downtown District',
-      description:
-        'Artisan bakery famous for traditional sourdough, flaky croissants, and seasonal pastries.',
+      description: `Artisan bakery famous for traditional sourdough, flaky croissants, and seasonal pastries.`,
       status: 'Open Until 8:00 PM',
       isOpen: true,
-      image: '../../assets/images/placeholder.png',
-    },
-    {
-      id: '2',
-      name: 'Sweet Treats Patisserie',
-      rating: 4.5,
-      distance: '0.8 km away',
-      location: 'Central Mall',
-      description:
-        'Specializing in custom celebration cakes, designer cupcakes, and delicate french macarons.',
-      status: 'Open Now',
-      isOpen: true,
-      image: '../../assets/images/placeholder.png',
-    },
-    {
-      id: '3',
-      name: 'The Oven Door',
-      rating: 4.2,
-      distance: '2.5 km away',
-      location: 'West Garden',
-      description: 'Authentic brick oven baking for crusty breads and savory breakfast rolls.',
-      status: 'Opens at 6:00 AM',
-      isOpen: false,
-      image: '../../assets/images/placeholder.png',
-    },
-  ];
+      image: owner.companyImage || 'https://lh3.googleusercontent.com/aida-public/AB6AXuAUPR5hsfobriGXeLVBsCapVz1M7TU7UxaHWAYchcUX7oFsq58zhFp00IcPY6VGDQbaEMqATUHyADHvniiVhHCfZQFdiYYfE3Y_jEwI1MS6fXtqmwXfv41-9kVWRX64tLRARHasgGcj_LidbDzIwSuvAHB7uGPTwukv9F5urVH94f8B0NajK8bNkOFFZ5tknwusEG_R8FTs0HGI7EQXLM4zJ3l1-VjZfdK2Ok7ocmfvNi79vQ3LnT6UWb4p4RwLE4gUXYTKqqHF3MU',
+    }));
+  }, [products]);
 
   const filters = [
-    { id: 'nearby', label: 'Nearby', icon: 'near_me' },
-    { id: 'toprated', label: 'Top Rated', icon: 'star' },
-    { id: 'opennow', label: 'Open Now', icon: 'schedule' },
+    { id: 'nearby', label: 'Nearby', icon: Navigation },
+    { id: 'toprated', label: 'Top Rated', icon: Star },
+    { id: 'opennow', label: 'Open Now', icon: Clock },
   ];
 
-  const renderBakeryCard = ({ item }) => (
-    <View
-      className={`flex-col rounded-2xl ${isDark ? 'bg-slate-900' : 'bg-white'} border shadow-sm ${isDark ? 'border-slate-800' : 'border-slate-100'} mb-6 overflow-hidden`}>
-      {/* Image Section */}
-      <View className="relative aspect-[16/9] w-full bg-slate-200">
-        <Image source={item.image} className="h-full w-full" />
+  if (isLoading) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center bg-background">
+        <ActivityIndicator size="large" color="#ec5b13" />
+      </SafeAreaView>
+    );
+  }
+
+  const renderBakeryCard = ({ item }: { item: any }) => (
+    <Pressable
+      onPress={() => router.push(`/customer/restaurants/${item.id}` as any)}
+      className="bg-card rounded-[24px] border border-slate-100 dark:border-slate-800 mb-6 overflow-hidden shadow-sm active:scale-[0.98]">
+      <View className="relative aspect-[16/9] w-full bg-muted">
+        <Image source={{ uri: item.image }} className="h-full w-full" resizeMode="cover" />
         {!item.isOpen && (
-          <View className="absolute inset-0 flex items-center justify-center bg-black/40">
-            <Text className="text-lg font-bold text-white">Closed</Text>
+          <View className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <Text className="text-xl font-black text-white uppercase tracking-[4px]">Closed</Text>
           </View>
         )}
-        {/* Rating Badge */}
-        <View className="absolute right-3 top-3 flex-row items-center gap-1 rounded-lg bg-white/90 px-2 py-1 dark:bg-slate-900/90">
-          <Text className="text-xs font-bold text-primary">⭐ {item.rating}</Text>
+        <View className="absolute right-3 top-3 flex-row items-center gap-1 rounded-xl bg-white/90 dark:bg-slate-900/90 px-2.5 py-1.5 shadow-sm">
+          <UiIcon as={Star} size={12} className="text-[#ec5b13] fill-[#ec5b13]" />
+          <Text className="text-[10px] font-black text-foreground">{item.rating}</Text>
         </View>
       </View>
 
-      {/* Content Section */}
-      <View className={`flex-col gap-3 p-4 ${!item.isOpen ? 'opacity-60' : ''}`}>
-        <View>
-          <Text className={`text-lg font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-            {item.name}
-          </Text>
-          <View className="mt-1 flex-row items-center gap-1">
-            <Text className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-              📍 {item.distance} • {item.location}
-            </Text>
+      <View className="p-4">
+        <View className="flex-row justify-between items-start">
+          <View className="flex-1">
+            <Text className="text-lg font-black text-foreground tracking-tight">{item.name}</Text>
+            <View className="mt-1 flex-row items-center gap-1">
+              <UiIcon as={MapPin} size={12} className="text-slate-500" />
+              <Text className="text-xs font-bold text-slate-500">
+                {item.distance} • {item.location}
+              </Text>
+            </View>
           </View>
         </View>
 
-        <Text className={`line-clamp-2 text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+        <Text numberOfLines={2} className="mt-3 text-sm font-medium text-slate-600 dark:text-slate-400 leading-relaxed">
           {item.description}
         </Text>
 
-        {/* Footer */}
-        <View
-          className={`flex-row items-center justify-between border-t pt-2 ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
-          <Text
-            className={`text-xs font-bold uppercase tracking-wider ${item.isOpen ? 'text-primary' : 'text-slate-400'}`}>
+        <View className="mt-4 flex-row items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-3">
+          <Text className="text-[10px] font-black text-[#ec5b13] uppercase tracking-widest">
             {item.status}
           </Text>
-          <Pressable
-            className={`rounded-xl px-4 py-2 ${item.isOpen ? 'bg-primary' : 'bg-slate-200'}`}
-            disabled={!item.isOpen}
-            onPress={() => router.push(`/(customer)/restaurants/${item.id}`)}>
-            <Text className={`text-sm font-bold ${item.isOpen ? 'text-white' : 'text-slate-400'}`}>
-              View Details
-            </Text>
+          <Pressable 
+            onPress={() => router.push(`/customer/restaurants/${item.id}` as any)}
+            className="bg-[#ec5b13] px-5 py-2.5 rounded-xl shadow-md shadow-[#ec5b13]/20">
+            <Text className="text-white text-xs font-black uppercase tracking-widest">View Details</Text>
           </Pressable>
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 
   return (
-    <SafeAreaView className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-background-light'}`}>
+    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       {/* Header */}
-      <View
-        className={`flex-row items-center justify-between ${isDark ? 'bg-background-dark/80' : 'bg-background-light/80'} border-b p-4 ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>
-        <View className="flex-row items-center gap-3">
-          <Pressable
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10"
-            onPress={() => router.goBack()}>
-            <Text className="text-xl text-primary">←</Text>
-          </Pressable>
-          <Text className={`text-lg font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-            Adama Bakeries
-          </Text>
-        </View>
-        <Pressable>
-          <Text className="text-xl">🔍</Text>
+      <View className="flex-row items-center bg-background/80 backdrop-blur-md px-4 py-4 border-b border-slate-200 dark:border-slate-800">
+        <Pressable onPress={() => router.back()} className="h-10 w-10 items-center justify-center rounded-full bg-[#ec5b13]/10">
+          <UiIcon as={ChevronLeft} size={20} className="text-[#ec5b13]" />
+        </Pressable>
+        <Text className="flex-1 px-4 text-lg font-black text-foreground tracking-tight">Adama Bakeries</Text>
+        <Pressable className="h-10 w-10 items-center justify-center rounded-full active:bg-muted">
+          <UiIcon as={Search} size={18} className="text-slate-700 dark:text-slate-300" />
         </Pressable>
       </View>
 
-      {/* Filter Chips */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        className="flex-row gap-3 p-4 py-4">
-        {filters.map((filter) => (
-          <Pressable
-            key={filter.id}
-            className={`h-10 flex-row items-center justify-center gap-2 rounded-xl px-4 ${
-              selectedFilter === filter.id
-                ? 'bg-primary shadow-lg'
-                : `${isDark ? 'border border-slate-700 bg-slate-800' : 'border border-slate-200 bg-white'}`
-            }`}
-            onPress={() => setSelectedFilter(filter.id)}>
-            <Text
-              className={
-                selectedFilter === filter.id
-                  ? 'text-lg text-white'
-                  : 'text-lg text-slate-700 dark:text-slate-200'
-              }>
-              {filter.icon === 'near_me' && '📍'}
-              {filter.icon === 'star' && '⭐'}
-              {filter.icon === 'schedule' && '⏰'}
-            </Text>
-            <Text
-              className={`text-sm font-${selectedFilter === filter.id ? 'bold' : 'medium'} ${selectedFilter === filter.id ? 'text-white' : isDark ? 'text-slate-200' : 'text-slate-700'}`}>
-              {filter.label}
-            </Text>
-            <Text
-              className={`text-lg ${selectedFilter === filter.id ? 'text-white' : isDark ? 'text-slate-200' : 'text-slate-700'}`}>
-              ▼
-            </Text>
-          </Pressable>
-        ))}
-      </ScrollView>
+      <ScrollView stickyHeaderIndices={[1]} showsVerticalScrollIndicator={false}>
+        {/* Adama Header Intro (Optional visual space) */}
+        <View className="h-2" />
 
-      {/* Bakery List */}
-      <FlatList
-        data={bakeries}
-        renderItem={renderBakeryCard}
-        keyExtractor={(item) => item.id}
-        scrollEnabled={true}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
-        showsVerticalScrollIndicator={false}
-      />
-
-      {/* Bottom Navigation */}
-      <View
-        className={`absolute bottom-0 left-0 right-0 ${isDark ? 'bg-background-dark' : 'bg-background-light'} border-t ${isDark ? 'border-slate-800' : 'border-slate-200'} px-4 pb-6 pt-2`}>
-        <View className="flex-row justify-between gap-2">
-          <Pressable
-            className="flex flex-1 flex-col items-center justify-center gap-1"
-            onPress={() => router.push('/(customer)/home')}>
-            <Text className="text-xl text-slate-400">🏠</Text>
-            <Text className={`text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-400'}`}>
-              Home
-            </Text>
-          </Pressable>
-          <Pressable
-            className="flex flex-1 flex-col items-center justify-center gap-1"
-            onPress={() => router.push('/(customer)/restaurants')}>
-            <Text className="text-xl text-primary">🥖</Text>
-            <Text className="text-xs font-bold text-primary">Bakeries</Text>
-          </Pressable>
-          <Pressable
-            className="flex flex-1 flex-col items-center justify-center gap-1"
-            onPress={() => router.push('/(customer)/orders/history')}>
-            <Text className="text-xl text-slate-400">📋</Text>
-            <Text className={`text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-400'}`}>
-              Orders
-            </Text>
-          </Pressable>
-          <Pressable
-            className="flex flex-1 flex-col items-center justify-center gap-1"
-            onPress={() => router.push('/(customer)/profile')}>
-            <Text className="text-xl text-slate-400">👤</Text>
-            <Text className={`text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-400'}`}>
-              Profile
-            </Text>
-          </Pressable>
+        {/* Filter Chips Container */}
+        <View className="bg-background/95 backdrop-blur-md py-4">
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4">
+            <View className="flex-row gap-3">
+              {filters.map((filter) => (
+                <Pressable
+                  key={filter.id}
+                  onPress={() => setSelectedFilter(filter.id)}
+                  className={`h-11 flex-row items-center px-5 rounded-xl ${
+                    selectedFilter === filter.id
+                      ? 'bg-[#ec5b13] shadow-lg shadow-[#ec5b13]/20'
+                      : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700'
+                  }`}>
+                  <UiIcon 
+                    as={filter.icon} 
+                    size={14} 
+                    className={selectedFilter === filter.id ? 'text-white' : 'text-slate-700 dark:text-slate-200'} 
+                  />
+                  <Text className={`ml-2 text-sm font-black ${
+                    selectedFilter === filter.id ? 'text-white' : 'text-slate-700 dark:text-slate-200'
+                  }`}>
+                    {filter.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </ScrollView>
         </View>
-      </View>
+
+        {/* Bakery List */}
+        <View className="p-4 pb-32">
+          {bakeries.length === 0 ? (
+            <View className="items-center justify-center py-20 p-6 bg-card rounded-3xl border border-dashed border-border">
+              <UiIcon as={Search} size={48} className="text-muted-foreground opacity-20 mb-4" />
+              <Text className="text-muted-foreground font-black uppercase tracking-widest text-center">No bakeries found in this area</Text>
+            </View>
+          ) : (
+            bakeries.map((bakery) => (
+              <View key={bakery.id}>
+                {renderBakeryCard({ item: bakery })}
+              </View>
+            ))
+          )}
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

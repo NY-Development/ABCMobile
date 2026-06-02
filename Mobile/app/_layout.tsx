@@ -42,6 +42,7 @@ export default function RootLayout() {
   useEffect(() => {
     if (!authBootstrapped) return;
     if (!isAuthenticated && isProtectedGroup) {
+    // if(true){
       AsyncStorage.setItem('lastRoute', pathname || '/(global)/landing').catch(() => {});
       router.replace('/(global)/login');
     }

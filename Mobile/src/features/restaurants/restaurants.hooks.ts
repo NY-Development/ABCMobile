@@ -1,10 +1,13 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { restaurantsAPI } from './restaurants.api';
-import { CompleteVerificationData } from './restaurants.types';
+import { CompleteVerificationData, Product } from './restaurants.types';
 
 const RESTAURANTS_KEYS = {
   verificationStatus: ['restaurants', 'verificationStatus'] as const,
   ownerProfile: ['restaurants', 'ownerProfile'] as const,
+  allProducts: ['products', 'all'] as const,
+  productDetail: (id: string) => ['products', 'detail', id] as const,
+  ownerProducts: (id: string) => ['products', 'owner', id] as const,
 };
 
 /**
@@ -46,9 +49,55 @@ export const useOwnerProfileQuery = (ownerId: string | null) => {
   });
 };
 
+// ===========================
+// Customer Discovery Hooks
+// ===========================
+
+/**
+ * Hook to fetch all products for customer discovery
+ */
+export const useAllProductsQuery = () => {
+  return useQuery<Product[]>({
+    queryKey: RESTAURANTS_KEYS.allProducts,
+    queryFn: () => restaurantsAPI.getAllProducts(),
+  });
+};
+
+/**
+ * Hook to fetch a single product by ID
+ */
+export const useProductByIdQuery = (productId: string) => {
+  return useQuery<Product>({
+    queryKey: RESTAURANTS_KEYS.productDetail(productId),
+    queryFn: async () => {
+      // In a real app, we'd have a getProductById endpoint. 
+      // For now, we fetch all and filter to keep it simple with existing backend.
+      const all = await restaurantsAPI.getAllProducts();
+      const found = all.find((p: Product) => p._id === productId);
+      if (!found) throw new Error('Product not found');
+      return found;
+    },
+    enabled: !!productId,
+  });
+};
+
+/**
+ * Hook to fetch all products for a specific bakery
+ */
+export const useOwnerProductsQuery = (ownerId: string) => {
+  return useQuery<Product[]>({
+    queryKey: RESTAURANTS_KEYS.ownerProducts(ownerId),
+    queryFn: () => restaurantsAPI.getOwnerProducts(ownerId),
+    enabled: !!ownerId,
+  });
+};
+
 // Export all hooks
 export const restaurantsHooks = {
   useSubmitVerificationMutation,
   useVerificationStatusQuery,
   useOwnerProfileQuery,
+  useAllProductsQuery,
+  useProductByIdQuery,
+  useOwnerProductsQuery,
 };

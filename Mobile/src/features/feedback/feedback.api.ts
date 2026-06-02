@@ -6,8 +6,7 @@ import {
   ForgotPasswordFormData,
   ResetPasswordFormData,
   AuthResponse,
-  ProfileResponse,
-} from './auth.types';
+} from './feedback.types';
 
 export const authAPI = {
   register: async (data: RegisterFormData): Promise<AuthResponse> => {
@@ -59,8 +58,8 @@ export const authAPI = {
     return response.data;
   },
 
-  getProfile: async (): Promise<ProfileResponse> => {
-    const response = await API.get<ProfileResponse>('/auth/profile');
+  getProfile: async (): Promise<AuthResponse> => {
+    const response = await API.get<AuthResponse>('/auth/profile');
     return response.data;
   },
 

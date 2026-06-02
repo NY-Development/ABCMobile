@@ -30,9 +30,6 @@ export default function OwnerDetailsScreen() {
 
   const verifyMutation = useMutation({
     mutationFn: () => adminService.verifyCompany(ownerIdStr),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['admin', 'owner', ownerIdStr] });
-    },
   });
 
   const isVerified = Boolean(owner?.companyVerified);
@@ -195,7 +192,16 @@ export default function OwnerDetailsScreen() {
                     <Button
                       variant="default"
                       disabled={verifyMutation.isPending || isVerified}
-                      onPress={() => verifyMutation.mutate()}
+                      onPress={async () => {
+                        try {
+                          await verifyMutation.mutateAsync();
+                          await queryClient.invalidateQueries({
+                            queryKey: ['admin', 'owner', ownerIdStr],
+                          });
+                        } catch (error) {
+                          console.error('Verification failed:', error);
+                        }
+                      }}
                       className="mb-2 rounded-xl"
                     >
                       <Icon as={CheckCircle} size={18} className="text-primary-foreground" />

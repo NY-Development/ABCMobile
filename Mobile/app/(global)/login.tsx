@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 import {
   Text,
   View,
@@ -9,12 +9,11 @@ import {
   Alert,
   TextInput,
   Image,
-  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLoginMutation, type LoginFormData, loginSchema } from '@/src/features/auth';
-import { useThemeStore } from '@/src/features/theme';
+import { useThemeStore } from '@/src/store/themeStore'; // Realigned to match global store location
 import { useAuthStore } from '@/src/features/auth/auth.store';
 import { AUTH_KEYS } from '@/src/features/auth/auth.hooks';
 import { useQueryClient } from '@tanstack/react-query';
@@ -25,13 +24,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { GlobalBottomNav } from '@/src/components/GlobalBottomNav';
 
 const icon = require('@/assets/images/icon.png');
-// Removing local API_BASE_URL
 
 export default function LoginScreen() {
+  const router = useRouter();
   const { isDark } = useThemeStore();
   const { setAuth } = useAuthStore();
   const queryClient = useQueryClient();
-  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const textClass = isDark ? 'text-slate-400' : 'text-slate-500';
@@ -45,109 +43,108 @@ export default function LoginScreen() {
     defaultValues: { email: '', password: '' },
   });
 
-  const { mutate: login, isPending: isLoggingIn } = useLoginMutation();
+  const { mutateAsync: login, isPending: isLoggingIn } = useLoginMutation();
 
   const onSubmit = async (data: LoginFormData) => {
-    login(data, {
-      onSuccess: async (res) => {
-        const loggedInUser = res?.user;
-        const token = res?.token;
-        const ownerInfo = loggedInUser?.ownerInfo as any;
+    try {
+      const res = await login(data);
+      const loggedInUser = res?.user;
+      const token = res?.token;
+      const ownerInfo = loggedInUser?.ownerInfo as any;
 
-        if (!loggedInUser || !loggedInUser.role) {
-          Alert.alert('Login Failed', 'Invalid user credentials - missing role in response');
+      if (!loggedInUser || !loggedInUser.role) {
+        Alert.alert('Login Failed', 'Invalid user credentials - missing role in response');
+        return;
+      }
+
+      // Secure token persistence configuration
+      const tokenString = typeof token === 'string' ? token : JSON.stringify(token);
+      await SecureStore.setItemAsync('token', tokenString);
+      setAuth(loggedInUser, tokenString);
+      queryClient.invalidateQueries({ queryKey: AUTH_KEYS.profile });
+
+      // Link resumption handler for customers
+      if (loggedInUser.role === 'customer') {
+        const homeOrderLink = await AsyncStorage.getItem('homeOrderLink');
+        if (homeOrderLink) {
+          Alert.alert('Welcome', `Welcome back, ${loggedInUser.name || 'User'}!`);
+          router.replace(homeOrderLink as any);
+          await AsyncStorage.removeItem('homeOrderLink');
           return;
         }
+      }
 
-        // Ensure token is a string before saving
-        const tokenString = typeof token === 'string' ? token : JSON.stringify(token);
-        await SecureStore.setItemAsync('token', tokenString);
-        setAuth(loggedInUser, tokenString);
-        queryClient.invalidateQueries({ queryKey: AUTH_KEYS.profile });
+      // Deep-link route recovery logic for interrupted sessions
+      const lastRoute = await AsyncStorage.getItem('lastRoute');
+      if (lastRoute) {
+        const role = loggedInUser.role;
+        const firstLogin = loggedInUser.firstLogin === true;
+        const companyVerified = ownerInfo?.companyVerified === true;
 
-        if (loggedInUser.role === 'customer') {
-          const homeOrderLink = await AsyncStorage.getItem('homeOrderLink');
-          if (homeOrderLink) {
-            Alert.alert('Welcome', `Welcome back, ${loggedInUser.name || 'User'}!`);
-            router.replace(homeOrderLink as any);
-            await AsyncStorage.removeItem('homeOrderLink');
-            return;
-          }
+        const isAllowed =
+          !lastRoute.startsWith('/(global)/') &&
+          ((role === 'owner' &&
+            lastRoute.startsWith('/(vendor)') &&
+            (firstLogin
+              ? lastRoute.includes('/(vendor)/verification/step1')
+              : !companyVerified
+                ? lastRoute.includes('/(vendor)/verification/')
+                : true)) ||
+            (role === 'admin' && lastRoute.startsWith('/(admin)/')) ||
+            (role === 'driver' && lastRoute.startsWith('/(driver)/')) ||
+            (role === 'customer' && lastRoute.startsWith('/(customer)/')));
+
+        if (isAllowed) {
+          await AsyncStorage.removeItem('lastRoute').catch(() => {});
+          Alert.alert('Welcome', `Welcome back, ${loggedInUser.name || 'User'}!`);
+          router.replace(lastRoute as any);
+          return;
         }
+      }
 
-        // Resume last route if the user got redirected here due to missing/expired token.
-        const lastRoute = await AsyncStorage.getItem('lastRoute');
-        if (lastRoute) {
-          const role = loggedInUser.role;
-          const firstLogin = loggedInUser.firstLogin === true;
-          const companyVerified = ownerInfo?.companyVerified === true;
-
-          const isAllowed =
-            // Never resume into public auth screens.
-            !lastRoute.startsWith('/(global)/') &&
-            ((role === 'owner' &&
-              lastRoute.startsWith('/(vendor)') &&
-              (firstLogin
-                ? lastRoute.includes('/(vendor)/verification/step1')
-                : !companyVerified
-                  ? lastRoute.includes('/(vendor)/verification/')
-                  : true)) ||
-              (role === 'admin' && lastRoute.startsWith('/(admin)/')) ||
-              (role === 'customer' && lastRoute.startsWith('/(customer)/')));
-
-          if (isAllowed) {
-            await AsyncStorage.removeItem('lastRoute').catch(() => {});
-            router.replace(lastRoute as any);
-            return;
-          }
-        }
-
-        let destination: string;
-        if (loggedInUser.role === 'owner') {
-          const isCompanyVerified = ownerInfo?.companyVerified === true;
-          if (loggedInUser.firstLogin === true) {
-            destination = '/(vendor)/verification/step1';
-          } else if (!isCompanyVerified) {
-            destination = '/(vendor)/verification/success';
-          } else {
-            destination = '/(vendor)/dashboard';
-          }
-        } else if (loggedInUser.role === 'admin') {
-          destination = '/(admin)/dashboard';
-        } else if (loggedInUser.role === 'driver') {
-          destination = '/(driver)/dashboard';
+      // Role-based destination matrix fallbacks
+      let destination: string;
+      if (loggedInUser.role === 'owner') {
+        const isCompanyVerified = ownerInfo?.companyVerified === true;
+        if (loggedInUser.firstLogin === true) {
+          destination = '/(vendor)/verification/step1';
+        } else if (!isCompanyVerified) {
+          destination = '/(vendor)/verification/success';
         } else {
-          destination = '/(customer)/home';
+          destination = '/(vendor)/dashboard';
         }
+      } else if (loggedInUser.role === 'admin') {
+        destination = '/(admin)/dashboard';
+      } else if (loggedInUser.role === 'driver') {
+        destination = '/(driver)/dashboard';
+      } else {
+        destination = '/(customer)/home';
+      }
 
-        Alert.alert('Welcome', `Welcome back, ${loggedInUser.name || 'User'}!`);
-        router.replace(destination as any);
-      },
-      onError: (error: any) => {
-        console.error('Error in login onSubmit:', error);
-        const errorMsg = error.response?.data?.message || 'An error occurred during login';
-        Alert.alert('Login Failed', errorMsg);
-      },
-    });
+      Alert.alert('Welcome', `Welcome back, ${loggedInUser.name || 'User'}!`);
+      router.replace(destination as any);
+    } catch (error: any) {
+      console.error('Error in login onSubmit:', error);
+      const errorMsg = error.response?.data?.message || 'An error occurred during login';
+      Alert.alert('Login Failed', errorMsg);
+    }
   };
 
-  const googleLogoUrl =
-    'https://lh3.googleusercontent.com/aida-public/AB6AXuA4MpKmLarlk_36i96K370pO3fBwbr1rYBgptWzTopijCPZT-xYeVgyuAbeoNjZzmELRnxC8lQi9hApPdHkKpV4rDjrj5znSEAB1U7FFnpbIcLRr_LCWUCHlpX6EyOasuKIsWFkR2kJNCwmEbqXqwooSzPhrV92TGr7efgee4bp1OgV2ns7Orn6WSq6XI4aRvylHVXHGuXJZA5RFasiiTxF1cDMkw6w9aymTHFS-zuUimK40NJ-piDVUPs0meo9h5rfV_7MxZ5BgxY';
-  const facebookLogoUrl =
-    'https://lh3.googleusercontent.com/aida-public/AB6AXuCr9cPRCATBh1hNmyXiBXAHUL1oJidkqM8a1IANdr-sI0yIZ4dLczrDTfQVW8JBIkCmoGam24sViMh8K5RosnRht4j_-WeEXKAIoeEsndQrG5gTdULi72TE-QJn5I0EBZQwLCHrxj1JVEWnfaJHm87WEgBwHOLjjEw7KixEqemXOj-l280Ef2sAUb5_eA2dltfgbJ5eGxaQr2WZ9lSq3M6Qx3cHd4GOp_lTpkSD5JD_Vi-4Wu4H9xpKT5rEVYPTtrCfBrJ7_kx89EM';
+  const googleLogoUrl = 'https://lh3.googleusercontent.com/aida-public/AB6AXuA4MpKmLarlk_36i96K370pO3fBwbr1rYBgptWzTopijCPZT-xYeVgyuAbeoNjZzmELRnxC8lQi9hApPdHkKpV4rDjrj5znSEAB1U7FFnpbIcLRr_LCWUCHlpX6EyOasuKIsWFkR2kJNCwmEbqXqwooSzPhrV92TGr7efgee4bp1OgV2ns7Orn6WSq6XI4aRvylHVXHGuXJZA5RFasiiTxF1cDMkw6w9aymTHFS-zuUimK40NJ-piDVUPs0meo9h5rfV_7MxZ5BgxY';
+  const facebookLogoUrl = 'https://lh3.googleusercontent.com/aida-public/AB6AXuCr9cPRCATBh1hNmyXiBXAHUL1oJidkqM8a1IANdr-sI0yIZ4dLczrDTfQVW8JBIkCmoGam24sViMh8K5RosnRht4j_-WeEXKAIoeEsndQrG5gTdULi72TE-QJn5I0EBZQwLCHrxj1JVEWnfaJHm87WEgBwHOLjjEw7KixEqemXOj-l280Ef2sAUb5_eA2dltfgbJ5eGxaQr2WZ9lSq3M6Qx3cHd4GOp_lTpkSD5JD_Vi-4Wu4H9xpKT5rEVYPTtrCfBrJ7_kx89EM';
 
   return (
     <SafeAreaView className="flex-1 bg-background dark:bg-background" edges={['top', 'bottom']}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
         <View className="mx-4 my-6 overflow-hidden rounded-3xl bg-card shadow-2xl shadow-black/10">
-          {/* BEAUTIFIED HEADER: Full Image Fill */}
+          
+          {/* HEADER SECTION */}
           <View className="relative h-60 w-full bg-primary/10">
             <Image
               source={icon}
               className="absolute inset-0 h-full w-full"
               style={{ resizeMode: 'cover' }}
             />
-            {/* Solid Overlay for Text Contrast (No Gradient) */}
             <View className="absolute inset-0 justify-end bg-black/40 p-8">
               <Text className="text-3xl font-black tracking-tight text-white">Welcome Back</Text>
               <Text className="mt-1 text-sm font-medium text-white/80">Adama Bakery & Cake</Text>
@@ -164,7 +161,8 @@ export default function LoginScreen() {
 
             {/* FORM FIELDS */}
             <View className="gap-6">
-              {/* Email Field */}
+              
+              {/* Email Address Input */}
               <View>
                 <Text
                   className={`mb-2 ml-1 text-sm font-bold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
@@ -198,7 +196,7 @@ export default function LoginScreen() {
                 )}
               </View>
 
-              {/* Password Field */}
+              {/* Password Input */}
               <View>
                 <View className="mb-2 flex-row items-center justify-between px-1">
                   <Text
@@ -243,6 +241,7 @@ export default function LoginScreen() {
                 )}
               </View>
 
+              {/* Action Button */}
               <View className="mt-2">
                 <PrimaryButton
                   label="Login"
@@ -252,7 +251,7 @@ export default function LoginScreen() {
               </View>
             </View>
 
-            {/* Social Divider */}
+            {/* Social Authentication Splitter */}
             <View className="my-10 flex-row items-center gap-4">
               <View className={`h-px flex-1 ${isDark ? 'bg-slate-800' : 'bg-slate-200'}`} />
               <Text className="text-[10px] font-black uppercase tracking-widest text-slate-400">
@@ -261,7 +260,7 @@ export default function LoginScreen() {
               <View className={`h-px flex-1 ${isDark ? 'bg-slate-800' : 'bg-slate-200'}`} />
             </View>
 
-            {/* Social Buttons */}
+            {/* OAuth Actions */}
             <View className="flex-row gap-4">
               <Pressable
                 className={`flex-1 flex-row items-center justify-center gap-3 rounded-2xl border-2 py-4 ${
@@ -286,7 +285,7 @@ export default function LoginScreen() {
               </Pressable>
             </View>
 
-            {/* Register Link */}
+            {/* Alternate Registration Route */}
             <Pressable
               onPress={() => router.push('/(global)/register')}
               className="mt-12 flex-row items-center justify-center">
@@ -299,7 +298,8 @@ export default function LoginScreen() {
           </View>
         </View>
       </ScrollView>
-      {/* Bottom Navigation */}
+
+      {/* Persistent Navigation */}
       <GlobalBottomNav />
     </SafeAreaView>
   );

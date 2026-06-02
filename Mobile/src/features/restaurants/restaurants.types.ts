@@ -114,3 +114,33 @@ export interface VerificationState {
   isSubmitting: boolean;
   error: string | null;
 }
+
+// ===========================
+// Product & Owner Types
+// ===========================
+
+export interface Owner {
+  _id: string;
+  name: string;
+  email: string;
+  companyName?: string;
+  companyImage?: string;
+  location?: string;
+  companyVerified?: boolean;
+}
+
+export interface Product {
+  _id: string;
+  owner: Owner | string;
+  name: string;
+  image: string;
+  category: 'Cookies' | 'Waffles' | 'Macarons' | 'Snacks' | 'Beverages' | 'Cake';
+  size?: string;
+  color?: string;
+  shape?: string;
+  availableQuantity: number;
+  price: number;
+  description?: string;
+  isActive: boolean;
+  createdAt: string;
+}

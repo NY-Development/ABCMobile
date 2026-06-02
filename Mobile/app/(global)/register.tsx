@@ -53,25 +53,20 @@ export default function RegisterScreen() {
     defaultValues: { name: '', email: '', phone: '', password: '', role: 'customer' },
   });
 
-  const { mutate: register, isPending: isRegistering } = useRegisterMutation();
+  const { mutateAsync: register, isPending: isRegistering } = useRegisterMutation();
 
   const onSubmit = async (data: RegisterFormData) => {
     const fullPhoneNumber = getFullPhoneNumber();
     if (!fullPhoneNumber) return setPhoneError('Please enter a valid phone number');
     setPhoneError('');
 
-    register(
-      { ...data, phone: fullPhoneNumber },
-      {
-        onSuccess: () => {
-          Alert.alert('Success', 'Check your email for the OTP.');
-          router.push({ pathname: '/(global)/verify-otp', params: { email: data.email } });
-        },
-        onError: (error: any) => {
-          Alert.alert('Error', error.response?.data?.message || 'Registration failed !!');
-        },
-      }
-    );
+    try {
+      await register({ ...data, phone: fullPhoneNumber });
+      Alert.alert('Success', 'Check your email for the OTP.');
+      router.push({ pathname: '/(global)/verify-otp', params: { email: data.email } });
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.message || 'Registration failed !!');
+    }
   };
 
   return (

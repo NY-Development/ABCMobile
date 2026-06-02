@@ -8,6 +8,7 @@ module.exports = function (api) {
     plugins: [
       // This forces Babel to inline environment variables early in the build pipeline
       'transform-inline-environment-variables',
+      'react-native-reanimated/plugin',
     ],
   };
 };

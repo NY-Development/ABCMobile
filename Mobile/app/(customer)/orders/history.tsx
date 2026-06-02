@@ -1,238 +1,183 @@
 import { router } from 'expo-router';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable, ActivityIndicator, Image as RnImage } from 'react-native';
 import { useThemeStore } from '@/src/features/theme/theme.store';
 import { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useOrdersQuery } from '@/src/features/orders/orders.hooks';
+import { Order } from '@/src/features/orders/orders.types';
+import { 
+  ChevronLeft, 
+  Package, 
+  PackageCheck, 
+  PackageX, 
+  Clock, 
+  ChevronRight,
+  ShoppingBag,
+  History,
+  Timer
+} from 'lucide-react-native';
+import { Icon as UiIcon } from '@/components/ui/icon';
 
 export default function OrderHistoryScreen() {
   const isDark = useThemeStore((state) => state.isDark);
-  const [activeTab, setActiveTab] = useState('active');
+  const [activeTab, setActiveTab] = useState<'active' | 'past'>('active');
 
-  const activeOrders = [
-    {
-      id: '2026-1325',
-      bakery: 'Adama Bakery & Cake',
-      date: 'Today • 14:30',
-      amount: '$45.00',
-      status: 'On the Way',
-      items: 'Chocolate Cake x1, Croissants x3',
-    },
-  ];
+  const { data: response, isLoading } = useOrdersQuery();
+  const orders = response?.orders || [];
 
-  const pastOrders = [
-    {
-      id: '2026-1043',
-      bakery: 'Sweet Dreams Patisserie',
-      date: 'Mar 8, 2026',
-      amount: '$32.50',
-      status: 'Delivered',
-    },
-    {
-      id: '2026-0982',
-      bakery: 'Adama Bakery & Cake',
-      date: 'Mar 2, 2026',
-      amount: '$18.75',
-      status: 'Delivered',
-    },
-    {
-      id: '2026-0915',
-      bakery: 'Artisan Bakers',
-      date: 'Feb 24, 2026',
-      amount: '$28.00',
-      status: 'Cancelled',
-    },
-  ];
+  const getOwnerName = (owner: string | any) => {
+    if (typeof owner === 'string') return 'Bakery';
+    return owner?.businessName || owner?.name || 'Bakery';
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+  };
+
+  const activeOrders = orders.filter((o: Order) => ['pending', 'in-progress', 'accepted', 'ready', 'on-the-way'].includes(o.status));
+  const pastOrders = orders.filter((o: Order) => ['delivered', 'cancelled', 'rejected'].includes(o.status));
+
+  const displayOrders = activeTab === 'active' ? activeOrders : pastOrders;
+
+  const StatusBadge = ({ status }: { status: string }) => {
+    const config = {
+      pending: { color: 'text-amber-600', bg: 'bg-amber-50', icon: Clock },
+      accepted: { color: 'text-orange-600', bg: 'bg-orange-50', icon: Timer },
+      ready: { color: 'text-primary', bg: 'bg-primary/5', icon: ShoppingBag },
+      'on-the-way': { color: 'text-blue-600', bg: 'bg-blue-50', icon: History },
+      delivered: { color: 'text-green-600', bg: 'bg-green-50', icon: PackageCheck },
+      cancelled: { color: 'text-red-600', bg: 'bg-red-50', icon: PackageX },
+      rejected: { color: 'text-red-600', bg: 'bg-red-50', icon: PackageX },
+    }[status] || { color: 'text-slate-600', bg: 'bg-slate-50', icon: Package };
+
+    return (
+      <View className={`flex-row items-center gap-1.5 rounded-full px-2.5 py-1 ${config.bg} border border-${config.color.split('-')[1]}-100`}>
+        <UiIcon as={config.icon} size={10} className={config.color} />
+        <Text className={`text-[10px] font-black uppercase tracking-widest ${config.color}`}>
+          {status}
+        </Text>
+      </View>
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center bg-background">
+        <ActivityIndicator size="large" color="#f97015" />
+      </SafeAreaView>
+    );
+  }
 
   return (
-    <SafeAreaView
-      className={`max-w-md flex-1 ${isDark ? 'bg-background-dark' : 'bg-background-light'}`}>
+    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       {/* Header */}
-      <View
-        className={`flex-row items-center justify-between border-b ${isDark ? 'bg-background-dark border-slate-800' : 'bg-background-light border-slate-200'} px-4 py-4`}>
-        <Pressable
-          className="flex size-10 items-center justify-center"
-          onPress={() => router.back()}>
-          <Text className="text-2xl">←</Text>
+      <View className="flex-row items-center border-b border-border bg-card px-4 py-4">
+        <Pressable onPress={() => router.back()} className="h-10 w-10 items-center justify-center rounded-xl bg-muted">
+          <UiIcon as={ChevronLeft} size={20} className="text-primary" />
         </Pressable>
-        <Text
-          className={`flex-1 text-center text-lg font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-          Order History
-        </Text>
-        <View className="size-10" />
+        <Text className="flex-1 text-center text-lg font-black text-foreground tracking-tight">Order History</Text>
+        <View className="h-10 w-10" />
       </View>
 
-      {/* Tab Navigation */}
-      <View
-        className={`flex-row border-b ${isDark ? 'border-slate-800 bg-slate-900/50' : 'border-slate-200 bg-slate-50'}`}>
+      {/* Modern Tabs */}
+      <View className="flex-row gap-2 bg-card p-4 border-b border-border">
         <Pressable
           onPress={() => setActiveTab('active')}
-          className={`flex-1 border-b-4 py-3 transition-colors ${
-            activeTab === 'active'
-              ? 'border-primary'
-              : isDark
-                ? 'border-transparent'
-                : 'border-transparent'
+          className={`flex-1 h-12 flex-row items-center justify-center gap-2 rounded-2xl ${
+            activeTab === 'active' ? 'bg-primary shadow-lg shadow-primary/20' : 'bg-muted/50 border border-border/50'
           }`}>
-          <Text
-            className={`text-center text-sm font-bold uppercase tracking-wider ${
-              activeTab === 'active' ? 'text-primary' : isDark ? 'text-slate-400' : 'text-slate-500'
-            }`}>
-            Active
+          <UiIcon as={ShoppingBag} size={16} className={activeTab === 'active' ? 'text-white' : 'text-muted-foreground'} />
+          <Text className={`text-xs font-black uppercase tracking-widest ${activeTab === 'active' ? 'text-white' : 'text-muted-foreground'}`}>
+            Active ({activeOrders.length})
           </Text>
         </Pressable>
         <Pressable
           onPress={() => setActiveTab('past')}
-          className={`flex-1 border-b-4 py-3 transition-colors ${
-            activeTab === 'past'
-              ? 'border-primary'
-              : isDark
-                ? 'border-transparent'
-                : 'border-transparent'
+          className={`flex-1 h-12 flex-row items-center justify-center gap-2 rounded-2xl ${
+            activeTab === 'past' ? 'bg-primary shadow-lg shadow-primary/20' : 'bg-muted/50 border border-border/50'
           }`}>
-          <Text
-            className={`text-center text-sm font-bold uppercase tracking-wider ${
-              activeTab === 'past' ? 'text-primary' : isDark ? 'text-slate-400' : 'text-slate-500'
-            }`}>
-            Past
+          <UiIcon as={History} size={16} className={activeTab === 'past' ? 'text-white' : 'text-muted-foreground'} />
+          <Text className={`text-xs font-black uppercase tracking-widest ${activeTab === 'past' ? 'text-white' : 'text-muted-foreground'}`}>
+            Past ({pastOrders.length})
           </Text>
         </Pressable>
       </View>
 
-      {/* Content */}
-      <ScrollView showsVerticalScrollIndicator={false} className="flex-1 pb-24">
-        {activeTab === 'active' ? (
-          <View className="space-y-4 p-4">
-            {activeOrders.map((order) => (
+      <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
+        <View className="p-4 gap-4">
+          {displayOrders.length === 0 ? (
+            <View className="mt-20 items-center justify-center p-10 gap-4">
+              <View className="h-20 w-20 rounded-[32px] bg-primary/5 items-center justify-center">
+                <UiIcon as={Package} size={40} className="text-primary/20" />
+              </View>
+              <View className="items-center">
+                <Text className="text-lg font-black text-foreground tracking-tight">No {activeTab} orders</Text>
+                <Text className="text-xs font-bold text-muted-foreground text-center mt-1">
+                  You haven't placed any orders that match this category yet.
+                </Text>
+              </View>
+              <Pressable 
+                onPress={() => router.push('/(customer)/restaurants')}
+                className="mt-2 bg-primary px-6 py-3 rounded-2xl shadow-lg shadow-primary/20">
+                <Text className="text-white font-black uppercase tracking-widest text-xs">Explore Menu</Text>
+              </Pressable>
+            </View>
+          ) : (
+            displayOrders.map((order) => (
               <Pressable
-                key={order.id}
-                onPress={() => router.push(`/(customer)/orders/tracking?orderId=${order.id}`)}
-                className={`flex-col gap-4 rounded-2xl border p-4 shadow-sm ${
-                  isDark ? 'border-slate-800 bg-slate-800/50' : 'border-slate-100 bg-white'
-                }`}>
-                <View className="flex-row items-start justify-between">
-                  <View className="flex-1">
-                    <Text className={`font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-                      {order.bakery}
-                    </Text>
-                    <Text
-                      className={`mt-1 text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                      {order.date}
-                    </Text>
+                key={order._id}
+                onPress={() => router.push(`/(customer)/orders/tracking?orderId=${order._id}` as any)}
+                className="bg-card rounded-3xl border border-border overflow-hidden shadow-sm active:border-primary/50">
+                <View className="p-5">
+                  <View className="flex-row items-start justify-between mb-4">
+                    <View className="flex-row items-center gap-3">
+                      <View className="h-12 w-12 rounded-2xl bg-muted items-center justify-center overflow-hidden">
+                        {order.owner?.image ? (
+                          <RnImage source={{ uri: order.owner.image }} className="h-full w-full" />
+                        ) : (
+                          <UiIcon as={ShoppingBag} size={20} className="text-muted-foreground" />
+                        )}
+                      </View>
+                      <View>
+                        <Text className="text-sm font-black text-foreground truncate max-w-[150px]" numberOfLines={1}>
+                          {getOwnerName(order.owner)}
+                        </Text>
+                        <Text className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                          {formatDate(order.createdAt)} • Order #{order._id.slice(-6).toUpperCase()}
+                        </Text>
+                      </View>
+                    </View>
+                    <StatusBadge status={order.status} />
                   </View>
-                  <View className="inline-flex flex-row items-center gap-1 rounded-full bg-blue-100 px-2 py-1 dark:bg-blue-900/30">
-                    <Text className="text-sm font-bold text-blue-700 dark:text-blue-400">
-                      {order.status}
-                    </Text>
-                  </View>
-                </View>
-                <View className="border-t border-slate-800/20 pt-3 dark:border-slate-700">
-                  <Text className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                    {order.items}
-                  </Text>
-                  <View className="mt-3 flex-row items-center justify-between">
-                    <Text className="font-bold text-primary">{order.amount}</Text>
-                    <Pressable className="flex-row items-center gap-1 rounded-lg bg-primary/10 px-3 py-1.5 hover:bg-primary/20">
-                      <Text className="text-sm font-bold text-primary">Track Order</Text>
-                      <Text className="text-primary">→</Text>
+
+                  <View className="h-px bg-border/50 w-full mb-4" />
+
+                  <View className="flex-row items-center justify-between">
+                    <View>
+                      <Text className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Amount Paid</Text>
+                      <Text className="text-lg font-black text-primary tracking-tight">ETB {order.totalPrice}</Text>
+                    </View>
+                    <Pressable 
+                      onPress={() => router.push(`/(customer)/orders/tracking?orderId=${order._id}` as any)}
+                      className="h-10 flex-row items-center gap-2 bg-primary/10 px-4 rounded-xl active:bg-primary/20">
+                      <Text className="text-xs font-black text-primary uppercase tracking-widest">Track</Text>
+                      <UiIcon as={ChevronRight} size={14} className="text-primary" />
                     </Pressable>
                   </View>
                 </View>
-              </Pressable>
-            ))}
-          </View>
-        ) : (
-          <View className="space-y-3 p-4">
-            {pastOrders.map((order) => (
-              <Pressable
-                key={order.id}
-                className={`flex-col gap-3 rounded-xl border p-4 shadow-sm ${
-                  isDark ? 'border-slate-800 bg-slate-800/50' : 'border-slate-100 bg-white'
-                }`}>
-                <View className="flex-row items-start justify-between">
-                  <View className="flex-1">
-                    <View className="flex-row items-center gap-2">
-                      <Text
-                        className={`font-semibold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-                        Order #{order.id}
-                      </Text>
-                      {order.status === 'Delivered' && (
-                        <View className="inline-flex rounded-full bg-green-100 px-2 py-0.5 dark:bg-green-900/30">
-                          <Text className="text-[10px] font-bold uppercase tracking-wider text-green-700 dark:text-green-400">
-                            ✓ Delivered
-                          </Text>
-                        </View>
-                      )}
-                      {order.status === 'Cancelled' && (
-                        <View className="inline-flex rounded-full bg-red-100 px-2 py-0.5 dark:bg-red-900/30">
-                          <Text className="text-[10px] font-bold uppercase tracking-wider text-red-700 dark:text-red-400">
-                            Cancelled
-                          </Text>
-                        </View>
-                      )}
-                    </View>
-                    <Text
-                      className={`mt-1 text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                      {order.bakery} • {order.date}
-                    </Text>
+                
+                {/* Progress Bar Mini */}
+                {activeTab === 'active' && (
+                  <View className="h-1 bg-muted">
+                    <View className="h-full bg-primary" style={{ width: '40%' }} />
                   </View>
-                  <Text className="font-bold text-primary">{order.amount}</Text>
-                </View>
-                <View className="flex-row gap-2">
-                  <Pressable className="flex-1 rounded-lg border border-primary/30 py-2 hover:bg-primary/5">
-                    <Text className="text-center text-sm font-bold text-primary">Reorder</Text>
-                  </Pressable>
-                  <Pressable className="flex-1 rounded-lg border border-slate-300 py-2 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800">
-                    <Text
-                      className={`text-center text-sm font-bold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                      Details
-                    </Text>
-                  </Pressable>
-                </View>
+                )}
               </Pressable>
-            ))}
-          </View>
-        )}
-      </ScrollView>
-
-      {/* Bottom Navigation */}
-      <View
-        className={`fixed bottom-0 left-0 right-0 mx-auto max-w-md border-t ${isDark ? 'border-slate-800 bg-slate-900' : 'border-slate-200 bg-white'} px-4 pb-6 pt-2`}>
-        <View className="flex-row items-center justify-around">
-          <Pressable
-            onPress={() => router.push('/(customer)/home')}
-            className="flex-col items-center gap-1">
-            <Text className="text-2xl">🏠</Text>
-            <Text className="text-xs font-medium uppercase tracking-tighter text-primary">
-              Home
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => router.push('/(customer)/restaurants/products')}
-            className="flex-col items-center gap-1">
-            <Text className="text-2xl">📋</Text>
-            <Text
-              className={`text-xs font-medium uppercase tracking-tighter ${isDark ? 'text-slate-400' : 'text-slate-400'}`}>
-              Menu
-            </Text>
-          </Pressable>
-          <Pressable className="flex-col items-center gap-1">
-            <Text className="text-2xl">📦</Text>
-            <Text
-              className={`text-xs font-medium uppercase tracking-tighter ${isDark ? 'text-slate-400' : 'text-slate-400'}`}>
-              Orders
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => router.push('/(customer)/profile')}
-            className="flex-col items-center gap-1">
-            <Text className="text-2xl">👤</Text>
-            <Text
-              className={`text-xs font-medium uppercase tracking-tighter ${isDark ? 'text-slate-400' : 'text-slate-400'}`}>
-              Profile
-            </Text>
-          </Pressable>
+            ))
+          )}
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

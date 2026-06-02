@@ -1,221 +1,192 @@
 import { router } from 'expo-router';
-import { View, Text, ScrollView, Pressable, Image } from 'react-native';
+import { View, Text, ScrollView, Pressable, ActivityIndicator, Image as RnImage } from 'react-native';
 import { useThemeStore } from '@/src/features/theme/theme.store';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLogoutMutation } from '@/src/features/auth/auth.hooks';
+import { useMeQuery, useLogoutMutation } from '@/src/features/auth/auth.hooks';
 import {
   ChevronLeft,
   Bell,
-  Home,
-  ShoppingBag,
-  Users,
-  MoreVertical,
   Sun,
   Moon,
   LogOut,
+  ChevronRight,
+  Package,
+  MapPin,
+  CreditCard,
+  Settings,
+  HelpCircle,
+  Mail,
+  Phone,
+  Crown,
+  Camera
 } from 'lucide-react-native';
+import { Icon as UiIcon } from '@/components/ui/icon';
 
 export default function CustomerProfileScreen() {
   const isDark = useThemeStore((state) => state.isDark);
   const { toggleTheme } = useThemeStore();
   const { mutate: logout } = useLogoutMutation();
+  const { data: profileResponse, isLoading, error } = useMeQuery();
+
+  // The backend returns the user object directly for /auth/profile
+  const user = profileResponse;
 
   const handleLogout = () => {
     logout();
-    router.push('/login');
+    router.replace('/(global)/login');
   };
 
+  if (isLoading) {
+    return (
+      <SafeAreaView className={`flex-1 items-center justify-center ${isDark ? 'bg-background-dark' : 'bg-background-light'}`}>
+        <ActivityIndicator size="large" color="#f97015" />
+      </SafeAreaView>
+    );
+  }
+
+  if (error || !user) {
+     return (
+      <SafeAreaView className={`flex-1 items-center justify-center p-6 ${isDark ? 'bg-background-dark' : 'bg-background-light'}`}>
+        <Text className={`text-lg font-bold mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+          Failed to load profile
+        </Text>
+        <Pressable 
+          onPress={() => router.replace('/(global)/login')}
+          className="bg-primary px-6 py-3 rounded-xl"
+        >
+          <Text className="text-white font-bold">Go to Login</Text>
+        </Pressable>
+      </SafeAreaView>
+    );
+  }
+
   const menuItems = [
-    { icon: '📦', label: 'Order History', route: '/(customer)/orders/history' },
-    { icon: '📍', label: 'My Addresses', route: '#' },
-    { icon: '💳', label: 'Payment Methods', route: '#' },
-    { icon: '⚙️', label: 'Settings', route: '#' },
-    { icon: '❓', label: 'Help Center', route: '#' },
+    { icon: Package, label: 'Order History', route: '/(customer)/orders/history' },
+    { icon: MapPin, label: 'My Addresses', route: '#' },
+    { icon: CreditCard, label: 'Payment Methods', route: '#' },
+    { icon: Settings, label: 'Account Settings', route: '#' },
+    { icon: HelpCircle, label: 'Help Center', route: '#' },
   ];
 
   return (
-    <SafeAreaView
-      className={`max-w-md flex-1 ${isDark ? 'bg-background-dark' : 'bg-background-light'}`}>
-      {/* Header with Notification Bell */}
-      <View className="flex-row items-center justify-between border-b border-border bg-card px-4 py-4">
-        <Pressable
-          onPress={() => router.back()}
-          style={{ cursor: 'pointer' }}
-          className="flex size-10 items-center justify-center">
-          <ChevronLeft size={24} color="#ec5b13" />
+    <SafeAreaView className="flex-1 bg-background">
+      {/* Header */}
+      <View className="flex-row items-center border-b border-border bg-card px-4 py-4">
+        <Pressable onPress={() => router.back()} className="h-10 w-10 items-center justify-center rounded-xl bg-muted">
+          <UiIcon as={ChevronLeft} size={20} className="text-primary" />
         </Pressable>
         <Text className="flex-1 text-center text-lg font-bold text-foreground">My Profile</Text>
-        <Pressable
-          style={{ cursor: 'pointer' }}
-          className="relative flex size-10 items-center justify-center rounded-full">
-          <Bell size={24} color="#ec5b13" />
-          <View className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-red-500" />
+        <Pressable className="relative h-10 w-10 items-center justify-center rounded-xl bg-muted">
+          <UiIcon as={Bell} size={20} className="text-primary" />
+          <View className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-primary border-2 border-background" />
         </Pressable>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} className="flex-1 pb-24">
-        {/* Profile Section */}
-        <View className="border-b border-border bg-card p-6">
-          <View className="flex-row items-end gap-4">
-            {/* Avatar */}
+      <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
+        {/* Profile Info */}
+        <View className="bg-card p-6 border-b border-border">
+          <View className="flex-row items-center gap-5">
             <View className="relative">
-              <Image
-                source={require('@/assets/images/placeholder.png')}
-                className="size-20 rounded-full border-4 border-primary bg-primary/10"
-              />
-              <Pressable
-                style={{ cursor: 'pointer' }}
-                className="absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full border-2 border-card bg-primary">
-                <Text className="text-lg">✎</Text>
+              <View className="h-24 w-24 rounded-[32px] border-4 border-primary/20 bg-primary/5 items-center justify-center overflow-hidden">
+                {user.avatar || user.image ? (
+                   <RnImage source={{ uri: user.avatar || user.image }} className="h-full w-full" />
+                ) : (
+                  <Text className="text-4xl font-black text-primary">
+                    {(user.firstname || user.name)?.charAt(0) || 'U'}
+                  </Text>
+                )}
+              </View>
+              <Pressable className="absolute -bottom-1 -right-1 h-8 w-8 items-center justify-center rounded-2xl bg-foreground border-4 border-background">
+                <UiIcon as={Camera} size={14} className="text-background" />
               </Pressable>
             </View>
-            {/* User Info */}
-            <View className="flex-1 pb-1">
-              <Text className="text-2xl font-bold text-foreground">Liya Tadesse</Text>
-              <View className="mt-1 inline-flex flex-row items-center gap-1 rounded-full bg-yellow-100 px-2 py-0.5">
-                <Text className="text-sm">👑</Text>
-                <Text className="text-xs font-bold uppercase tracking-widest text-yellow-700">
-                  Gold Member
+            <View className="flex-1">
+              <View className="flex-row items-center justify-between">
+                <Text className="text-2xl font-black text-foreground tracking-tight">
+                  {user.firstname || user.name || 'Customer'}
+                </Text>
+                <Pressable 
+                  onPress={() => router.push('/(customer)/profile/edit')}
+                  className="rounded-lg bg-primary/10 px-3 py-1.5 active:bg-primary/20"
+                >
+                  <Text className="text-xs font-bold text-primary">Edit</Text>
+                </Pressable>
+              </View>
+              <View className="mt-1.5 flex-row items-center gap-1.5 bg-amber-50 self-start px-2.5 py-1 rounded-full border border-amber-100">
+                <UiIcon as={Crown} size={12} className="text-amber-600 fill-amber-600" />
+                <Text className="text-[10px] font-black uppercase tracking-widest text-amber-700">
+                  {user.role || 'Member'}
                 </Text>
               </View>
             </View>
           </View>
         </View>
 
-        {/* Contact Info Section */}
-        <View className="border-b border-border bg-background p-6">
-          <Text className="mb-4 text-lg font-bold text-foreground">Contact Info</Text>
-          <View className="space-y-3">
-            <View className="flex-row items-center gap-3">
-              <View className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
-                <Text className="text-lg">📧</Text>
+        {/* Contact Info */}
+        <View className="p-6 bg-card border-b border-border">
+          <Text className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-4">Contact Information</Text>
+          <View className="gap-5">
+            <View className="flex-row items-center gap-4">
+              <View className="h-10 w-10 rounded-xl bg-muted items-center justify-center">
+                <UiIcon as={Mail} size={18} className="text-primary" />
               </View>
               <View>
-                <Text className="text-xs uppercase tracking-wider text-muted-foreground">
-                  Email
-                </Text>
-                <Text className="font-semibold text-foreground">liya.tadesse@email.com</Text>
+                <Text className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Email</Text>
+                <Text className="text-sm font-black text-foreground">{user.email || 'N/A'}</Text>
               </View>
             </View>
-            <View className="flex-row items-center gap-3">
-              <View className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
-                <Text className="text-lg">📱</Text>
+            <View className="flex-row items-center gap-4">
+              <View className="h-10 w-10 rounded-xl bg-muted items-center justify-center">
+                <UiIcon as={Phone} size={18} className="text-primary" />
               </View>
               <View>
-                <Text className="text-xs uppercase tracking-wider text-muted-foreground">
-                  Phone
-                </Text>
-                <Text className="font-semibold text-foreground">+251 91 123 4567</Text>
-              </View>
-            </View>
-            <View className="flex-row items-center gap-3">
-              <View className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
-                <Text className="text-lg">📍</Text>
-              </View>
-              <View>
-                <Text className="text-xs uppercase tracking-wider text-muted-foreground">
-                  Address
-                </Text>
-                <Text className="font-semibold text-foreground">Addis Ababa, Ethiopia</Text>
+                <Text className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Phone</Text>
+                <Text className="text-sm font-black text-foreground">{user.phone || 'Not provided'}</Text>
               </View>
             </View>
           </View>
         </View>
 
-        {/* Account Settings Menu */}
-        <View className="bg-background p-4">
-          <Text className="mb-3 text-lg font-bold text-foreground">Account Settings</Text>
-          <View className="space-y-2">
-            {menuItems.map((item) => (
-              <Pressable
-                key={item.label}
-                onPress={() => item.route !== '#' && router.push(item.route as any)}
-                style={{ cursor: 'pointer' }}
-                className="flex-row items-center gap-3 rounded-lg border-0 bg-card px-4 py-3">
-                <Text className="text-xl">{item.icon}</Text>
-                <View className="flex-1">
-                  <Text className="font-medium text-foreground">{item.label}</Text>
-                </View>
-                <Text className={item.route !== '#' ? 'text-primary' : 'text-muted-foreground'}>
-                  →
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
-
-        {/* Theme Toggle */}
-        <View className="border-t border-border bg-background p-4">
+        {/* Menu Items */}
+        <View className="p-4 gap-2">
+          <Text className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-2 px-2">Account Settings</Text>
+          {menuItems.map((item) => (
+            <Pressable
+              key={item.label}
+              onPress={() => item.route !== '#' && router.push(item.route as any)}
+              className="flex-row items-center gap-4 bg-card px-4 py-4 rounded-2xl border border-transparent active:bg-muted/50 active:border-border">
+              <View className="h-10 w-10 rounded-xl bg-primary/5 items-center justify-center">
+                <UiIcon as={item.icon} size={20} className="text-primary" />
+              </View>
+              <Text className="flex-1 font-bold text-foreground">{item.label}</Text>
+              <UiIcon as={ChevronRight} size={16} className="text-muted-foreground" />
+            </Pressable>
+          ))}
+          
+          {/* Theme Toggle */}
           <Pressable
             onPress={toggleTheme}
-            style={{ cursor: 'pointer' }}
-            className="flex-row items-center gap-3 rounded-lg border-0 bg-card px-4 py-3">
-            {isDark ? <Moon size={24} color="#ec5b13" /> : <Sun size={24} color="#ec5b13" />}
-            <View className="flex-1">
-              <Text className="font-medium text-foreground">
-                {isDark ? 'Dark Mode' : 'Light Mode'}
-              </Text>
+            className="flex-row items-center gap-4 bg-card px-4 py-4 rounded-2xl border border-transparent active:bg-muted/50">
+            <View className="h-10 w-10 rounded-xl bg-primary/5 items-center justify-center">
+              <UiIcon as={isDark ? Moon : Sun} size={20} className="text-primary" />
             </View>
-            <View className="h-6 w-11 rounded-full border-2 border-primary bg-primary/20">
-              <View
-                className={`h-4 w-4 rounded-full bg-primary transition-all ${
-                  isDark ? 'translate-x-5' : 'translate-x-1'
-                } mt-0.5`}
-              />
+            <Text className="flex-1 font-bold text-foreground">{isDark ? 'Dark Mode' : 'Light Mode'}</Text>
+            <View className={`h-6 w-11 rounded-full px-1 justify-center ${isDark ? 'bg-primary' : 'bg-muted border border-border'}`}>
+              <View className={`h-4 w-4 rounded-full ${isDark ? 'bg-white self-end' : 'bg-muted-foreground self-start'}`} />
             </View>
           </Pressable>
         </View>
 
-        {/* Logout Button */}
-        <View className="px-4 pb-8 pt-4">
+        {/* Logout */}
+        <View className="px-6 py-8 pb-32">
           <Pressable
             onPress={handleLogout}
-            className="flex-row items-center justify-center gap-2 rounded-lg border border-red-300/30 bg-red-50 py-3.5"
-            style={{ cursor: 'pointer' }}>
-            <LogOut size={20} color="#dc2626" />
-            <Text className="font-bold uppercase tracking-widest text-red-600">Logout</Text>
+            className="h-16 flex-row items-center justify-center gap-3 rounded-2xl border border-red-100 bg-red-50 active:bg-red-100">
+            <UiIcon as={LogOut} size={20} className="text-red-500" />
+            <Text className="text-sm font-black uppercase tracking-[2px] text-red-600">Logout</Text>
           </Pressable>
         </View>
       </ScrollView>
-
-      {/* Bottom Navigation */}
-      <View className="absolute bottom-0 left-0 right-0 border-t border-border bg-card px-4 pb-6 pt-2">
-        <View className="flex-row items-center justify-around">
-          <Pressable
-            onPress={() => router.push('/(customer)/home')}
-            style={{ cursor: 'pointer' }}
-            className="flex-col items-center gap-1">
-            <Home size={24} color="#6b7280" />
-            <Text className="text-xs font-medium uppercase tracking-tighter text-muted-foreground">
-              Home
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => router.push('/(customer)/restaurants/products')}
-            style={{ cursor: 'pointer' }}
-            className="flex-col items-center gap-1">
-            <ShoppingBag size={24} color="#6b7280" />
-            <Text className="text-xs font-medium uppercase tracking-tighter text-muted-foreground">
-              Menu
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => router.push('/(customer)/orders/history')}
-            style={{ cursor: 'pointer' }}
-            className="flex-col items-center gap-1">
-            <Users size={24} color="#6b7280" />
-            <Text className="text-xs font-medium uppercase tracking-tighter text-muted-foreground">
-              Orders
-            </Text>
-          </Pressable>
-          <Pressable className="flex-col items-center gap-1">
-            <Users size={24} color="#ec5b13" />
-            <Text className="text-xs font-medium uppercase tracking-tighter text-primary">
-              Profile
-            </Text>
-          </Pressable>
-        </View>
-      </View>
     </SafeAreaView>
   );
 }

@@ -1,251 +1,242 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { View, Text, ScrollView, Pressable, Image, FlatList } from 'react-native';
+import { View, Text, ScrollView, Pressable, Image, ActivityIndicator } from 'react-native';
 import { useThemeStore } from '@/src/features/theme/theme.store';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useState, useMemo } from 'react';
+import { useOwnerProductsQuery, useAllProductsQuery } from '@/src/features/restaurants/restaurants.hooks';
+import { 
+  ArrowLeft, 
+  Heart, 
+  Share2, 
+  Star, 
+  Clock, 
+  MapPin, 
+  ShoppingBag,
+  Info 
+} from 'lucide-react-native';
+import { Icon as UiIcon } from '@/components/ui/icon';
+import { useGetCartQuery } from '@/src/features/cart/cart.hooks';
 
 export default function BakeryDetailsScreen() {
+  const { bakeryId } = useLocalSearchParams<{ bakeryId: string }>();
   const isDark = useThemeStore((state) => state.isDark);
-  const { bakeryId } = useLocalSearchParams();
+  const [activeTab, setActiveTab] = useState('products');
+  
+  const { data: products, isLoading } = useOwnerProductsQuery(bakeryId as string);
+  const { data: cart } = useGetCartQuery();
 
-  // Mock bakery data
-  const bakeryData = {
-    id: bakeryId || '1',
-    name: 'Adama Bakery & Cake',
-    description: 'Freshly baked artisan breads and custom cakes',
-    rating: 4.8,
-    reviews: '1.2k+',
-    deliveryFee: 'Free',
-    pricing: '$$',
-    about:
-      'Founded in 2012, Adama Bakery specializes in traditional sourdough and contemporary pastry arts. We use organic locally-sourced grains to ensure every bite is a celebration of flavor.',
-    hours: 'Open until 8:00 PM',
-    distance: '1.2 km away',
-    heroImage: require('@/assets/images/placeholder.png'),
-    logo: require('@/assets/images/placeholder.png'),
-  };
+  const cartStats = useMemo(() => {
+    if (!cart) return { count: 0, total: 0 };
+    const count = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+    const total = cart.items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+    return { count, total };
+  }, [cart]);
 
-  const categories = [
-    {
-      id: '1',
-      name: 'Signature Breads',
-      products: [
-        {
-          id: 'b1',
-          name: 'Classic Sourdough',
-          description: 'Natural fermentation, 24h rise',
-          price: '$7.50',
-        },
-        {
-          id: 'b2',
-          name: 'French Baguette',
-          description: 'Crispy crust, soft airy inside',
-          price: '$4.25',
-        },
-      ],
-    },
-    {
-      id: '2',
-      name: 'Custom Cakes',
-      products: [
-        {
-          id: 'c1',
-          name: 'Velvet Dream Chocolate',
-          description: 'Three layers of rich Belgian chocolate with silky ganache.',
-          price: '$45.00',
-        },
-      ],
-    },
-  ];
+  const bakeryInfo = useMemo(() => {
+    if (!products || products.length === 0) return null;
+    const owner = typeof products[0].owner !== 'string' ? products[0].owner : null;
+    return {
+      name: owner?.companyName || 'Adama Bakery & Cake',
+      description: 'Freshly baked artisan breads and custom cakes',
+      rating: 4.8,
+      reviews: '1.2k+',
+      deliveryFee: 'Free',
+      pricing: '$$',
+      about: 'Founded in 2012, Adama Bakery specializes in traditional sourdough and contemporary pastry arts. We use organic locally-sourced grains to ensure every bite is a celebration of flavor.',
+      hours: 'Open until 8:00 PM',
+      distance: '1.2 km away',
+      heroImage: owner?.companyImage || 'https://lh3.googleusercontent.com/aida-public/AB6AXuA4bYDfu1itvo-9Bw6vAhGn9EPhnwJwHiAT3mDICGeUsm1Vwq2Zg-F5w4ibR4458bCWe8sfdKLpVTzs-8WscI3v6BjsVmsDd035tcMz7Gb-ZPtGi4FpskKFmX92mgJOwIHApdR77vD01RIkBgtm_pC7uLI6fj8LXExtKlfPWJr65l2cjcbDeEGOtxzgoOSyPCaIPvpQtQh65N1HgYgaDdWvQB9Pt9C1cdU0ibKq4uzUGPfqmLdfhu5TtfjjI-IYGd0xkOKmCNw9ABQ',
+      logo: owner?.companyImage || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDyxhkqJOWzU3I6hIBZ0J3Siexr6b4FO629OeOdHpGgp_dgLYdZ59MhND-WllJFPF0Ye0Ezl2C1lNEjj-_d_qPp_ug95bjZF87UmwOIK82nJpZPLOCXGolLUUU1O9m9y7VLYZ6Ttwufd_teDuEKqU_FxYNhx65Pc-PzTcJ6jG_Sh2Y2UNWpUg9QspwXvywucdBJ1yu0rVlnLQ8DlLuGFsRohnlju1KEeYbyPv7lnuI9JjwsS0NolMPX_OfuFG_J1jySMlEFdWDWhYE',
+    };
+  }, [products]);
 
-  const cartItems = 2;
-  const cartTotal = 11.75;
+  const categories = useMemo(() => {
+    if (!products) return [];
+    const catMap = new Map();
+    products.forEach(p => {
+      if (!catMap.has(p.category)) catMap.set(p.category, []);
+      catMap.get(p.category).push(p);
+    });
+    return Array.from(catMap.entries()).map(([name, items]) => ({ name, items }));
+  }, [products]);
+
+  if (isLoading) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center bg-background">
+        <ActivityIndicator size="large" color="#ec5b13" />
+      </SafeAreaView>
+    );
+  }
 
   return (
-    <SafeAreaView className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-background-light'}`}>
+    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       {/* Top Navigation Bar */}
-      <View
-        className={`sticky top-0 z-50 flex-row items-center justify-between border-b ${isDark ? 'bg-background-dark/80 border-primary/10' : 'bg-background-light/80 border-primary/10'} px-4 py-3 backdrop-blur-md`}>
+      <View className="flex-row items-center bg-background/80 backdrop-blur-md p-4 justify-between border-b border-[#ec5b13]/10">
         <Pressable
-          className="flex size-10 items-center justify-center rounded-full"
+          className="flex size-10 items-center justify-center rounded-full bg-[#ec5b13]/10"
           onPress={() => router.back()}>
-          <Text className="text-2xl text-primary">←</Text>
+          <UiIcon as={ArrowLeft} size={20} className="text-[#ec5b13]" />
         </Pressable>
-        <View className="flex-row items-center gap-3">
-          <Pressable className="flex size-10 items-center justify-center rounded-full hover:bg-primary/10">
-            <Text className="text-2xl text-primary">❤️</Text>
+        <View className="flex-row items-center gap-2">
+          <Pressable className="flex size-10 items-center justify-center rounded-full active:bg-[#ec5b13]/10">
+            <UiIcon as={Heart} size={20} className="text-[#ec5b13]" />
           </Pressable>
-          <Pressable className="flex size-10 items-center justify-center rounded-full hover:bg-primary/10">
-            <Text className="text-2xl text-primary">📤</Text>
+          <Pressable className="flex size-10 items-center justify-center rounded-full active:bg-[#ec5b13]/10">
+            <UiIcon as={Share2} size={20} className="text-[#ec5b13]" />
           </Pressable>
         </View>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
+      <ScrollView showsVerticalScrollIndicator={false} stickyHeaderIndices={[3]}>
         {/* Hero Section */}
-        <View className="relative">
-          <Image source={bakeryData.heroImage} className="h-64 w-full bg-slate-200" />
+        <View className="relative w-full h-64 p-4">
+          <View className="w-full h-full rounded-3xl overflow-hidden shadow-lg bg-muted">
+            <Image 
+              source={{ uri: bakeryInfo?.heroImage }} 
+              className="w-full h-full" 
+              resizeMode="cover" 
+            />
+          </View>
           {/* Logo Overlay */}
-          <View className="absolute -bottom-12 left-8 flex size-24 items-center justify-center rounded-xl border-2 border-primary/20 bg-white p-1 shadow-xl dark:bg-slate-800">
-            <Image source={bakeryData.logo} className="size-full rounded-lg" />
+          <View className="absolute -bottom-6 left-10">
+            <View className="size-20 rounded-2xl bg-white dark:bg-slate-800 p-1 shadow-xl border-2 border-[#ec5b13]/20">
+              <Image 
+                source={{ uri: bakeryInfo?.logo }} 
+                className="w-full h-full rounded-xl" 
+                resizeMode="cover" 
+              />
+            </View>
           </View>
         </View>
 
         {/* Bakery Info Section */}
-        <View className="px-4 pb-4 pt-16">
-          <View className="flex-row items-start justify-between">
+        <View className="px-4 pt-10 pb-4">
+          <View className="flex-row justify-between items-start">
             <View className="flex-1">
-              <Text
-                className={`text-3xl font-bold tracking-tight ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-                {bakeryData.name}
+              <Text className="text-slate-900 dark:text-slate-100 text-2xl font-black tracking-tight">
+                {bakeryInfo?.name}
               </Text>
-              <Text className="font-medium text-primary">{bakeryData.description}</Text>
+              <Text className="text-[#ec5b13] font-bold mt-0.5">{bakeryInfo?.description}</Text>
             </View>
-            <View className="rounded-full bg-primary/10 px-3 py-1">
-              <Text className="text-sm font-bold text-primary">⭐ {bakeryData.rating}</Text>
+            <View className="bg-[#ec5b13]/10 px-3 py-1.5 rounded-full flex-row items-center gap-1">
+              <UiIcon as={Star} size={14} className="text-[#ec5b13] fill-[#ec5b13]" />
+              <Text className="text-sm font-black text-[#ec5b13]">{bakeryInfo?.rating}</Text>
             </View>
           </View>
-
-          {/* Hours & Distance */}
-          <View className="mt-2 flex-row items-center gap-4">
-            <View className="flex-row items-center gap-1">
-              <Text className="text-base">🕐</Text>
-              <Text className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                {bakeryData.hours}
-              </Text>
+          
+          <View className="flex-row items-center gap-4 mt-3">
+            <View className="flex-row items-center gap-1.5">
+              <UiIcon as={Clock} size={14} className="text-slate-400" />
+              <Text className="text-xs font-bold text-slate-500">{bakeryInfo?.hours}</Text>
             </View>
-            <View className="flex-row items-center gap-1">
-              <Text className="text-base">📍</Text>
-              <Text className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                {bakeryData.distance}
-              </Text>
+            <View className="flex-row items-center gap-1.5">
+              <UiIcon as={MapPin} size={14} className="text-slate-400" />
+              <Text className="text-xs font-bold text-slate-500">{bakeryInfo?.distance}</Text>
             </View>
           </View>
         </View>
 
         {/* Stats Grid */}
-        <View className="flex-row gap-3 px-4 py-2">
-          <View
-            className={`flex-1 rounded-xl border ${isDark ? 'border-primary/20 bg-primary/5' : 'border-primary/20 bg-primary/5'} p-4`}>
-            <Text
-              className={`text-xs font-bold uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-              Reviews
-            </Text>
-            <Text className={`text-xl font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-              {bakeryData.reviews}
-            </Text>
-          </View>
-          <View
-            className={`flex-1 rounded-xl border ${isDark ? 'border-primary/20 bg-primary/5' : 'border-primary/20 bg-primary/5'} p-4`}>
-            <Text
-              className={`text-xs font-bold uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-              Delivery
-            </Text>
-            <Text className="text-xl font-bold text-primary">{bakeryData.deliveryFee}</Text>
-          </View>
-          <View
-            className={`flex-1 rounded-xl border ${isDark ? 'border-primary/20 bg-primary/5' : 'border-primary/20 bg-primary/5'} p-4`}>
-            <Text
-              className={`text-xs font-bold uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-              Pricing
-            </Text>
-            <Text className={`text-xl font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-              {bakeryData.pricing}
-            </Text>
-          </View>
-        </View>
-
-        {/* About Section */}
-        <View className="px-4 py-3">
-          <Text className={`text-lg font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-            About
-          </Text>
-          <Text className={`mt-2 leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-            {bakeryData.about}
-          </Text>
-        </View>
-
-        {/* Tabs Section */}
-        <View
-          className={`sticky top-16 z-40 border-b ${isDark ? 'bg-background-dark border-slate-800' : 'bg-background-light border-slate-200'}`}>
-          <View className="flex-row px-4">
-            <Pressable className="border-b-4 border-primary pb-3 pt-2">
-              <Text className="text-sm font-bold uppercase tracking-widest text-primary">
-                Products
-              </Text>
-            </Pressable>
-            <Pressable className="flex-1 border-b-4 border-transparent pb-3 pl-8 pt-2">
-              <Text
-                className={`text-sm font-bold uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                Reviews
-              </Text>
-            </Pressable>
-            <Pressable className="flex-1 border-b-4 border-transparent pb-3 pl-8 pt-2">
-              <Text
-                className={`text-sm font-bold uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                Info
-              </Text>
-            </Pressable>
-          </View>
-        </View>
-
-        {/* Product Categories */}
-        <View className="space-y-8 p-4 pb-24">
-          {categories.map((category) => (
-            <View key={category.id}>
-              <View className="mb-4 flex-row items-center gap-2">
-                <View className="h-6 w-1 rounded-full bg-primary" />
-                <Text
-                  className={`text-xl font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-                  {category.name}
-                </Text>
-              </View>
-
-              <View className="gap-4">
-                {category.products.map((product) => (
-                  <Pressable
-                    key={product.id}
-                    onPress={() =>
-                      router.push(
-                        `/(customer)/restaurants/product/${product.id}?name=${product.name}&price=${product.price}`
-                      )
-                    }>
-                    <View
-                      className={`flex-row gap-4 rounded-xl border p-3 shadow-sm ${isDark ? 'border-slate-800 bg-slate-800/50' : 'border-slate-100 bg-white'}`}>
-                      <View className="size-20 rounded-lg bg-slate-200" />
-                      <View className="flex-1 justify-between py-1">
-                        <View>
-                          <Text
-                            className={`font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-                            {product.name}
-                          </Text>
-                          <Text
-                            className={`line-clamp-1 text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                            {product.description}
-                          </Text>
-                        </View>
-                        <Text className="font-bold text-primary">{product.price}</Text>
-                      </View>
-                    </View>
-                  </Pressable>
-                ))}
-              </View>
+        <View className="flex-row gap-3 p-4">
+          {[
+            { label: 'Reviews', value: bakeryInfo?.reviews, color: 'text-foreground' },
+            { label: 'Delivery', value: bakeryInfo?.deliveryFee, color: 'text-[#ec5b13]' },
+            { label: 'Pricing', value: bakeryInfo?.pricing, color: 'text-foreground' }
+          ].map((stat, i) => (
+            <View key={i} className="flex-1 bg-[#ec5b13]/5 border border-[#ec5b13]/10 rounded-2xl p-4 gap-1">
+              <Text className="text-slate-500 text-[10px] font-black uppercase tracking-widest">{stat.label}</Text>
+              <Text className={`text-lg font-black ${stat.color}`}>{stat.value}</Text>
             </View>
           ))}
         </View>
+
+        {/* Tabs Section */}
+        <View className="bg-background/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-800">
+          <View className="flex-row px-4 gap-8">
+            {[
+              { id: 'products', label: 'Products' },
+              { id: 'reviews', label: 'Reviews' },
+              { id: 'info', label: 'Info' }
+            ].map((tab) => (
+              <Pressable 
+                key={tab.id}
+                onPress={() => setActiveTab(tab.id)}
+                className={`pb-3 pt-4 border-b-4 ${activeTab === tab.id ? 'border-[#ec5b13]' : 'border-transparent'}`}>
+                <Text className={`text-xs font-black uppercase tracking-[2px] ${activeTab === tab.id ? 'text-[#ec5b13]' : 'text-slate-400'}`}>
+                  {tab.label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+
+        {/* Dynamic Content Based on Tabs */}
+        {activeTab === 'products' && (
+          <View className="p-4 space-y-8 pb-32">
+            {categories.map((cat, idx) => (
+              <View key={idx} className="mb-8">
+                <View className="flex-row items-center gap-2 mb-4">
+                  <View className="w-1 h-6 bg-[#ec5b13] rounded-full" />
+                  <Text className="text-slate-900 dark:text-slate-100 text-xl font-black">{cat.name}</Text>
+                </View>
+                <View className="gap-4">
+                  {cat.items.map((product: any) => (
+                    <Pressable
+                      key={product._id}
+                      onPress={() => router.push(`/customer/restaurants/product/${product._id}` as any)}
+                      className="flex-row gap-4 bg-white dark:bg-slate-800/50 p-3 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm active:scale-[0.98]">
+                      <View className="size-20 rounded-xl bg-slate-100 dark:bg-slate-900/50 overflow-hidden">
+                        <Image source={{ uri: product.image }} className="w-full h-full" resizeMode="cover" />
+                      </View>
+                      <View className="flex-1 justify-between py-1">
+                        <View>
+                          <Text className="font-black text-slate-900 dark:text-slate-100 text-base">{product.name}</Text>
+                          <Text numberOfLines={1} className="text-xs font-medium text-slate-500 mt-0.5">{product.description || 'Natural fermentation, fresh baked'}</Text>
+                        </View>
+                        <Text className="font-black text-[#ec5b13] text-lg">ETB {product.price}</Text>
+                      </View>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {activeTab === 'info' && (
+          <View className="p-4 pt-6 space-y-6 pb-32">
+            <View>
+              <Text className="text-lg font-black text-foreground mb-2">About</Text>
+              <Text className="text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
+                {bakeryInfo?.about}
+              </Text>
+            </View>
+            <View className="bg-muted p-4 rounded-2xl flex-row items-center gap-3">
+              <UiIcon as={Info} size={20} className="text-primary" />
+              <Text className="text-xs font-bold text-muted-foreground flex-1">
+                We use organic locally-sourced grains to ensure every bite is a celebration of flavor.
+              </Text>
+            </View>
+          </View>
+        )}
       </ScrollView>
 
       {/* Floating Action Button: Cart */}
-      <Pressable
-        onPress={() => router.push('/(customer)/cart')}
-        className="absolute bottom-6 right-6 z-50 flex-row items-center gap-3 rounded-full bg-primary px-6 py-4 shadow-2xl active:scale-95">
-        <Text className="text-2xl text-white">🛒</Text>
-        <View>
-          <Text className="font-bold text-white">View Cart ({cartItems})</Text>
-          <View className="rounded bg-white/20 px-2 py-0.5">
-            <Text className="text-sm font-bold text-white">${cartTotal.toFixed(2)}</Text>
-          </View>
+      {cartStats.count > 0 && (activeTab === 'products') && (
+        <View className="absolute bottom-10 left-0 right-0 items-center px-6">
+          <Pressable
+            onPress={() => router.push('/(customer)/cart')}
+            className="w-full flex-row items-center justify-between bg-[#ec5b13] px-6 py-4 rounded-[32px] shadow-2xl active:scale-95">
+            <View className="flex-row items-center gap-3">
+              <UiIcon as={ShoppingBag} size={24} className="text-white" />
+              <Text className="font-black text-white text-lg">View Cart ({cartStats.count})</Text>
+            </View>
+            <View className="bg-white/20 px-3 py-1.5 rounded-xl">
+              <Text className="text-sm font-black text-white">ETB {cartStats.total.toFixed(2)}</Text>
+            </View>
+          </Pressable>
         </View>
-      </Pressable>
+      )}
     </SafeAreaView>
   );
 }

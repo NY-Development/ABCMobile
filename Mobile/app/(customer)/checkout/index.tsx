@@ -1,34 +1,59 @@
 import { router } from 'expo-router';
-import { View, Text, ScrollView, Pressable, Image } from 'react-native';
+import { View, Text, ScrollView, Pressable, Image, ActivityIndicator } from 'react-native';
 import { useThemeStore } from '@/src/features/theme/theme.store';
 import { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useGetCartQuery } from '@/src/features/cart/cart.hooks';
+import { usePlaceOrderMutation } from '@/src/features/orders/orders.hooks';
 
 export default function CheckoutScreen() {
   const isDark = useThemeStore((state) => state.isDark);
   const [deliveryMethod, setDeliveryMethod] = useState('Delivery');
   const [selectedProvider, setSelectedProvider] = useState('swift');
 
+  const { data: cart, isLoading: isCartLoading } = useGetCartQuery();
+  const { mutate: placeOrder, isPending: isPlacingOrder } = usePlaceOrderMutation();
+
   const providers = [
     {
       id: 'swift',
       name: 'Swift Express',
-      fee: '+$2.50',
+      fee: 100,
       rating: 4.9,
       reviews: '120+',
       time: 'Fastest • 15-20 mins',
-      image: require('@/assets/images/placeholder.png'),
     },
     {
       id: 'eco',
       name: 'Eco-Cyclists',
-      fee: '+$1.00',
+      fee: 50,
       rating: 4.7,
       reviews: '80+',
       time: 'Eco Friendly • 25-35 mins',
-      image: require('@/assets/images/placeholder.png'),
     },
   ];
+
+  const subtotal = cart?.totalPrice || 0;
+  const deliveryFee = deliveryMethod === 'Delivery' ? (providers.find(p => p.id === selectedProvider)?.fee || 0) : 0;
+  const total = subtotal + deliveryFee;
+
+  const handlePlaceOrder = () => {
+    if (!cart || cart.items.length === 0) return;
+    const firstItem = cart.items[0];
+    placeOrder({
+      productId: firstItem.product._id,
+      quantity: firstItem.quantity,
+      deliveryOption: deliveryMethod.toLowerCase() as 'pickup' | 'delivery',
+    });
+  };
+
+  if (isCartLoading) {
+    return (
+      <SafeAreaView className={`flex-1 items-center justify-center ${isDark ? 'bg-background-dark' : 'bg-background-light'}`}>
+        <ActivityIndicator size="large" color="#f97015" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView
@@ -54,13 +79,13 @@ export default function CheckoutScreen() {
         {/* Delivery Address Section */}
         <View className="p-4">
           <View className="mb-3 flex-row items-center gap-2">
-            <Text className="text-2xl text-primary">📍</Text>
+            <Text className="text-2xl">📍</Text>
             <Text className="text-base font-bold">Delivery Address</Text>
           </View>
           <View
             className={`flex-row items-center gap-4 rounded-xl border p-4 shadow-sm ${isDark ? 'border-slate-800 bg-slate-800/50' : 'border-slate-200 bg-white'}`}>
             <View
-              className={`flex size-12 items-center justify-center rounded-lg ${isDark ? 'bg-primary/10' : 'bg-primary/10'}`}>
+              className={`flex size-12 items-center justify-center rounded-lg bg-primary/10`}>
               <Text className="text-2xl text-primary">🏠</Text>
             </View>
             <View className="flex-1">
@@ -70,16 +95,9 @@ export default function CheckoutScreen() {
               </Text>
               <Text
                 className={`text-sm leading-normal ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                123 Baker Street, London, NW1 6XE
+                Adama, Ethiopia (Primary)
               </Text>
             </View>
-            <Pressable
-              className={`rounded-xl px-3 py-1.5 ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
-              <Text
-                className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                Edit
-              </Text>
-            </Pressable>
           </View>
         </View>
 
@@ -113,90 +131,81 @@ export default function CheckoutScreen() {
         </View>
 
         {/* Delivery Provider Selection */}
-        <View className="p-4">
-          <View className="mb-3 flex-row items-center gap-2">
-            <Text className="text-2xl text-primary">🛵</Text>
-            <Text className="text-base font-bold">Available Couriers</Text>
+        {deliveryMethod === 'Delivery' && (
+          <View className="p-4">
+            <View className="mb-3 flex-row items-center gap-2">
+              <Text className="text-2xl">🛵</Text>
+              <Text className="text-base font-bold">Available Couriers</Text>
+            </View>
+            <View className="space-y-3">
+              {providers.map((provider) => (
+                <Pressable
+                  key={provider.id}
+                  onPress={() => setSelectedProvider(provider.id)}
+                  className={`flex-row items-center gap-4 rounded-xl border-2 p-4 ${
+                    selectedProvider === provider.id
+                      ? 'border-primary/40'
+                      : isDark
+                        ? 'border-slate-800'
+                        : 'border-slate-200'
+                  } ${isDark ? 'bg-slate-800/50' : 'bg-white'}`}>
+                  <View className="size-12 rounded-full border-2 border-primary bg-primary/10 items-center justify-center">
+                    <Text className="text-2xl">🛵</Text>
+                  </View>
+                  <View className="flex-1">
+                    <View className="flex-row items-start justify-between">
+                      <Text
+                        className={`text-sm font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+                        {provider.name}
+                      </Text>
+                      <Text className="font-bold text-primary">ETB {provider.fee}</Text>
+                    </View>
+                    <View className="mt-1 flex-row items-center gap-1">
+                      <Text className="text-amber-500">⭐</Text>
+                      <Text
+                        className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                        {provider.rating} • {provider.reviews}
+                      </Text>
+                    </View>
+                  </View>
+                  {selectedProvider === provider.id && (
+                    <View className="flex size-6 items-center justify-center rounded-full bg-primary">
+                      <Text className="text-white text-xs">✓</Text>
+                    </View>
+                  )}
+                </Pressable>
+              ))}
+            </View>
           </View>
-          <View className="space-y-3">
-            {providers.map((provider) => (
-              <Pressable
-                key={provider.id}
-                onPress={() => setSelectedProvider(provider.id)}
-                className={`flex-row items-center gap-4 rounded-xl border-2 p-4 ${
-                  selectedProvider === provider.id
-                    ? 'border-primary/40 ring-2 ring-primary/20'
-                    : isDark
-                      ? 'border-slate-800'
-                      : 'border-slate-200'
-                } ${isDark ? 'bg-slate-800/50' : 'bg-white'}`}>
-                <Image
-                  source={provider.image}
-                  className="size-12 rounded-full border-2 border-primary"
-                />
-                <View className="flex-1">
-                  <View className="flex-row items-start justify-between">
-                    <Text
-                      className={`text-sm font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-                      {provider.name}
-                    </Text>
-                    <Text className="font-bold text-primary">{provider.fee}</Text>
-                  </View>
-                  <View className="mt-1 flex-row items-center gap-1">
-                    <Text className="text-amber-500">⭐</Text>
-                    <Text
-                      className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                      {provider.rating} • {provider.reviews} deliveries
-                    </Text>
-                  </View>
-                  <Text
-                    className={`mt-1 text-[10px] font-medium uppercase ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                    {provider.time}
-                  </Text>
-                </View>
-                {selectedProvider === provider.id && (
-                  <View className="flex size-6 items-center justify-center rounded-full bg-primary">
-                    <Text className="text-white">✓</Text>
-                  </View>
-                )}
-              </Pressable>
-            ))}
-          </View>
-        </View>
+        )}
 
         {/* Order Summary */}
         <View
-          className={`mt-2 border-t ${isDark ? 'border-slate-800 bg-slate-800/30' : 'bg-white'} p-4`}>
+          className={`mt-2 border-t ${isDark ? 'border-slate-800 bg-slate-800/30' : 'bg-white'} p-4 pb-32`}>
           <Text
             className={`mb-4 text-base font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
             Order Summary
           </Text>
           <View className="space-y-3">
-            <View className="flex-row items-center justify-between">
-              <Text className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                Chocolate Truffle Cake (x1)
-              </Text>
-              <Text
-                className={`text-sm font-medium ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-                $24.00
-              </Text>
-            </View>
-            <View className="flex-row items-center justify-between">
-              <Text className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                Butter Croissant (x2)
-              </Text>
-              <Text
-                className={`text-sm font-medium ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-                $6.00
-              </Text>
-            </View>
+            {cart?.items.map((item) => (
+              <View key={item.product._id} className="flex-row items-center justify-between">
+                <Text numberOfLines={1} className={`text-sm flex-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                  {item.product.name} (x{item.quantity})
+                </Text>
+                <Text
+                  className={`text-sm font-medium ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+                  ETB {item.product.price * item.quantity}
+                </Text>
+              </View>
+            ))}
+            
             <View className="flex-row items-center justify-between">
               <Text className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                 Delivery Fee
               </Text>
               <Text
                 className={`text-sm font-medium ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-                $2.50
+                ETB {deliveryFee}
               </Text>
             </View>
             <View className={`my-2 h-px ${isDark ? 'border-slate-700' : 'border-slate-200'}`} />
@@ -204,7 +213,7 @@ export default function CheckoutScreen() {
               <Text className={`text-lg font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
                 Total
               </Text>
-              <Text className="text-xl font-extrabold text-primary">$32.50</Text>
+              <Text className="text-xl font-extrabold text-primary">ETB {total}</Text>
             </View>
           </View>
         </View>
@@ -212,20 +221,18 @@ export default function CheckoutScreen() {
 
       {/* Bottom Payment Bar */}
       <View
-        className={`fixed bottom-0 left-0 right-0 mx-auto max-w-md border-t ${isDark ? 'bg-background-dark border-slate-800' : 'border-slate-100 bg-white'} p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]`}>
+        className={`fixed bottom-0 left-0 right-0 max-w-md border-t ${isDark ? 'bg-background-dark border-slate-800' : 'border-slate-100 bg-white'} p-4`}>
         <Pressable
-          onPress={() => router.push('/(customer)/checkout/payment')}
-          className="flex-row items-center justify-center gap-2 rounded-xl bg-primary py-4">
-          <Text className="font-bold text-white">Proceed to Payment</Text>
-          <Text className="text-white">→</Text>
+          onPress={handlePlaceOrder}
+          disabled={isPlacingOrder}
+          className={`flex-row items-center justify-center gap-2 rounded-xl bg-primary py-4 ${isPlacingOrder ? 'opacity-50' : ''}`}>
+          {isPlacingOrder ? <ActivityIndicator color="white" /> : (
+            <>
+              <Text className="font-bold text-white">Place Order</Text>
+              <Text className="text-white">→</Text>
+            </>
+          )}
         </Pressable>
-        <View className="mt-4 flex-row items-center justify-center gap-4">
-          <Text className="text-2xl">🛡️</Text>
-          <Text
-            className={`text-[10px] font-bold uppercase tracking-widest ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
-            Secure Checkout via Stripe
-          </Text>
-        </View>
       </View>
     </SafeAreaView>
   );
