@@ -1,5 +1,6 @@
 import Order from "../models/Order.js";
 import ImageKit from "imagekit";
+import { verifyTelebirrPayment } from "../services/leulVerify.js";
 
 const DELIVERY_FEE_RATE = 0.03;
 
@@ -14,20 +15,20 @@ const getAmountBreakdown = (order) => {
   const deliveryFee =
     order.deliveryOption === "delivery"
       ? Number(
-          (
-            order.delivery?.feeAmount ??
-            Number((productAmount * DELIVERY_FEE_RATE).toFixed(2))
-          ).toFixed(2),
-        )
+        (
+          order.delivery?.feeAmount ??
+          Number((productAmount * DELIVERY_FEE_RATE).toFixed(2))
+        ).toFixed(2),
+      )
       : 0;
   const payableAmount =
     order.deliveryOption === "delivery"
       ? Number(
-          (
-            order.delivery?.totalPayable ??
-            Number((productAmount + deliveryFee).toFixed(2))
-          ).toFixed(2),
-        )
+        (
+          order.delivery?.totalPayable ??
+          Number((productAmount + deliveryFee).toFixed(2))
+        ).toFixed(2),
+      )
       : productAmount;
 
   return { productAmount, deliveryFee, payableAmount };
@@ -37,61 +38,112 @@ const getAmountBreakdown = (order) => {
 export const uploadPaymentScreenshot = async (req, res) => {
   try {
     const { orderId } = req.params;
+
+    const { transactionId, suffix } = req.body;
+
     const file =
-      req.file || req.files?.screenshoot?.[0] || req.files?.screenshot?.[0];
+      req.file ||
+      req.files?.screenshoot?.[0] ||
+      req.files?.screenshot?.[0] ||
+      null;
 
-    if (!file) {
-      return res
-        .status(400)
-        .json({ message: "Please upload a payment screenshot." });
-    }
-
-    const order = await Order.findById(orderId);
-    if (!order) return res.status(404).json({ message: "Order not found." });
-
-    if (String(order.customer) !== String(req.user._id)) {
-      return res.status(403).json({ message: "Not authorized." });
-    }
-
-    if (order.deliveryOption === "delivery" && !order.delivery?.provider) {
+    if (!transactionId) {
       return res.status(400).json({
-        message: "Please select a delivery provider before Telebirr payment.",
+        message: "Transaction ID is required.",
       });
     }
 
-    const uploadResponse = await imagekit.upload({
-      file: file.buffer,
-      fileName: `payment_${orderId}_${Date.now()}.jpg`,
-      folder: "/order-payments",
-    });
+    const order = await Order.findById(orderId);
 
-    const { productAmount, deliveryFee, payableAmount } =
-      getAmountBreakdown(order);
+    if (!order) {
+      return res.status(404).json({
+        message: "Order not found.",
+      });
+    }
+
+    if (String(order.customer) !== String(req.user._id)) {
+      return res.status(403).json({
+        message: "Not authorized.",
+      });
+    }
+
+    if (
+      order.deliveryOption === "delivery" &&
+      !order.delivery?.provider
+    ) {
+      return res.status(400).json({
+        message:
+          "Please select a delivery provider before payment.",
+      });
+    }
+
+    // Verify payment using Leul Verify
+    const verification = await verifyTelebirrPayment(
+      transactionId,
+      suffix
+    );
+
+    console.log("Verification Response:", verification);
+
+    // Adjust this check according to actual API response
+    if (!verification.success) {
+      return res.status(400).json({
+        message: "Payment verification failed.",
+        verification,
+      });
+    }
+
+    let screenshotUrl = "";
+
+    // Optional screenshot upload
+    if (file) {
+      const uploadResponse = await imagekit.upload({
+        file: file.buffer,
+        fileName: `payment_${orderId}_${Date.now()}.jpg`,
+        folder: "/order-payments",
+      });
+
+      screenshotUrl = uploadResponse.url;
+    }
+
+    const {
+      productAmount,
+      deliveryFee,
+      payableAmount,
+    } = getAmountBreakdown(order);
 
     order.payment = {
-      screenshotUrl: uploadResponse.url,
+      screenshotUrl,
+      transactionId,
+      verificationStatus: "verified",
+      verificationProvider: "LeulVerify",
       method: "telebirr",
       amountPaid: payableAmount,
       isPaid: true,
       paidAt: new Date(),
     };
+
     order.status = "in-progress";
+
     await order.save();
 
     return res.status(200).json({
-      message: "Telebirr payment screenshot uploaded successfully.",
+      message: "Payment verified successfully.",
       amount: {
         productAmount,
         deliveryFee,
         payableAmount,
       },
+      verification,
       order,
     });
   } catch (error) {
     console.error("uploadPaymentScreenshot error:", error);
-    return res
-      .status(500)
-      .json({ message: "Server error.", error: error.message });
+
+    return res.status(500).json({
+      message: "Server error.",
+      error: error.message,
+    });
   }
 };
 
