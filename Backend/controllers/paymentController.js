@@ -1,6 +1,9 @@
 import Order from "../models/Order.js";
 import ImageKit from "imagekit";
-import { verifyTelebirrPayment } from "../services/leulVerify.js";
+import {
+  verifyTelebirrPayment,
+  verifyTelebirrImage,
+} from "../services/leulVerify.js";
 
 const DELIVERY_FEE_RATE = 0.03;
 
@@ -34,7 +37,6 @@ const getAmountBreakdown = (order) => {
   return { productAmount, deliveryFee, payableAmount };
 };
 
-/** =============== CUSTOMER UPLOADS TELEBIRR PAYMENT (with Image Upload) =============== */
 export const uploadPaymentScreenshot = async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -47,9 +49,11 @@ export const uploadPaymentScreenshot = async (req, res) => {
       req.files?.screenshot?.[0] ||
       null;
 
-    if (!transactionId) {
+    // User must provide either transactionId OR screenshot
+    if (!transactionId && !file) {
       return res.status(400).json({
-        message: "Transaction ID is required.",
+        message:
+          "Please provide either a transaction ID or payment screenshot.",
       });
     }
 
@@ -77,16 +81,28 @@ export const uploadPaymentScreenshot = async (req, res) => {
       });
     }
 
-    // Verify payment using Leul Verify
-    const verification = await verifyTelebirrPayment(
-      transactionId,
-      suffix
+    let verification;
+    if (transactionId) {
+      verification = await verifyTelebirrPayment(
+        transactionId,
+        suffix
+      );
+    }
+
+    else if (file) {
+      verification = await verifyTelebirrImage(
+        file.buffer,
+        file.originalname,
+        suffix
+      );
+    }
+
+    console.log(
+      "Leul Verify Response:",
+      JSON.stringify(verification, null, 2)
     );
 
-    console.log("Verification Response:", verification);
-
-    // Adjust this check according to actual API response
-    if (!verification.success) {
+    if (!verification?.success) {
       return res.status(400).json({
         message: "Payment verification failed.",
         verification,
@@ -95,7 +111,7 @@ export const uploadPaymentScreenshot = async (req, res) => {
 
     let screenshotUrl = "";
 
-    // Optional screenshot upload
+    // Save screenshot if uploaded
     if (file) {
       const uploadResponse = await imagekit.upload({
         file: file.buffer,
@@ -114,12 +130,23 @@ export const uploadPaymentScreenshot = async (req, res) => {
 
     order.payment = {
       screenshotUrl,
-      transactionId,
+
+      transactionId:
+        transactionId ||
+        verification?.reference ||
+        verification?.transactionId ||
+        "",
+
       verificationStatus: "verified",
+
       verificationProvider: "LeulVerify",
+
       method: "telebirr",
+
       amountPaid: payableAmount,
+
       isPaid: true,
+
       paidAt: new Date(),
     };
 
@@ -128,21 +155,30 @@ export const uploadPaymentScreenshot = async (req, res) => {
     await order.save();
 
     return res.status(200).json({
+      success: true,
+
       message: "Payment verified successfully.",
+
       amount: {
         productAmount,
         deliveryFee,
         payableAmount,
       },
+
       verification,
+
       order,
     });
   } catch (error) {
-    console.error("uploadPaymentScreenshot error:", error);
+    console.error(
+      "uploadPaymentScreenshot error:",
+      error.response?.data || error.message
+    );
 
     return res.status(500).json({
+      success: false,
       message: "Server error.",
-      error: error.message,
+      error: error.response?.data || error.message,
     });
   }
 };
